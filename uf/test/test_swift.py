@@ -9,13 +9,16 @@
 
 import _thread, threading
 import serial
-import sys
+import sys, os
 from time import sleep
 
-sys.path.append("../") # invoke current script at $pyuf/
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from pyuf.ufc import ufc_init
-from pyuf.swift import Swift
+from uf.ufc import ufc_init
+from uf.swift import Swift
+from uf.utils.log import *
+
+logger_init(logging.DEBUG)
 
 print('setup swift ...')
 
@@ -40,7 +43,8 @@ test_iomap = {
         'swift_service': '/swift_service'
 }
 
-ufc.node_init('test', test_ports, test_iomap) # install handle for ports which are listed in the iomap
+# install handle for ports which are listed in the iomap
+ufc.node_init('test', test_ports, test_iomap)
 
 
 print('sleep 2 sec ...')
@@ -50,7 +54,7 @@ sleep(2)
 print('set X330 ...')
 # topics are always async
 # without 'G0', port 'pos' is dedicated for moving
-test_ports['swift_pos']['handle'].publish('X350')
+test_ports['swift_pos']['handle'].publish('X350 Y0 Z50')
 
 
 print('ret1: ' + test_ports['swift_service']['handle'].call('set command G0 X340'))

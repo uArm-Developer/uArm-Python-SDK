@@ -12,7 +12,7 @@ from .ufc import UFC
 
 
 class TopicSub(threading.Thread):
-    def __init__(self, node, topic, callback, queue_size = 100, allow_drop = True):
+    def __init__(self, node, topic, callback, queue_size, allow_drop):
         self.node = node
         self.topic = topic
         self.callback = callback

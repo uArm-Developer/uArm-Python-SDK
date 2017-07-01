@@ -9,7 +9,7 @@
 
 import _thread, threading
 import serial
-
+from ..utils.log import *
 
 class SerialAscii(threading.Thread):
     def __init__(self, ufc, node, iomap, dev_port, baud):
@@ -21,6 +21,7 @@ class SerialAscii(threading.Thread):
         }
         
         self.node = node
+        self.logger = logging.getLogger(node)
         ufc.node_init(node, self.ports, iomap)
         
         # TODO: maintain serial connection by service callback
@@ -37,9 +38,10 @@ class SerialAscii(threading.Thread):
             line = self.com.readline()
             if not line:
                 continue
+            line = ''.join(map(chr, line)).rstrip()
             if self.ports['out']['handle']:
-                self.ports['out']['handle'].publish(line.decode().rstrip())
-            #print('{}: -> '.format(self.node) + line.decode().rstrip())
+                self.ports['out']['handle'].publish(line)
+            self.logger.log(logging.VERBOSE, '-> ' + line)
         self.com.close()
     
     def stop(self):
@@ -47,8 +49,8 @@ class SerialAscii(threading.Thread):
         self.join()
     
     def in_cb(self, message):
-        self.com.write(bytes(message + '\n', 'utf-8'))
-        #print('{}: <- '.format(self.node) + message)
+        self.com.write(bytes(map(ord, message + '\n')))
+        self.logger.log(logging.VERBOSE, '<- ' + message)
     
     def service_cb(self, message):
         pass

@@ -9,10 +9,11 @@
 
 import _thread, threading
 from queue import Queue
+from ..utils.log import *
 
 
 class ProtocolAscii():
-    def __init__(self, ufc, node, iomap, cmd_pend_size = 4):
+    def __init__(self, ufc, node, iomap, cmd_pend_size = 4, timeout = 10):
         
         self.ports = {
             'cmd_async': {'dir': 'in', 'type': 'topic', 'callback': self.cmd_async_cb},
@@ -28,10 +29,11 @@ class ProtocolAscii():
         }
         
         self.node = node
+        self.logger = logging.getLogger(node)
         self.cmd_pend = {}
         self.cmd_pend_size = cmd_pend_size
         self.cmd_pend_c = threading.Condition()
-        self.time_out = 5
+        self.timeout = timeout
         self.cnt_lock = _thread.allocate_lock()
         self.cnt = 1 # no reply if cnt == 0, FIXME
         ufc.node_init(node, self.ports, iomap)
@@ -57,10 +59,10 @@ class ProtocolAscii():
             return self.ret.get()
             
         def timeout_cb(self):
-            print('warn: cmd cnt {} timeout'.format(self.cnt))
+            self.owner.logger.warning('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
             # TODO: avoid KeyError if the 'finish' called at same time
             del self.owner.cmd_pend[self.cnt]
-            self.ret.put('')
+            self.ret.put('err: timeout')
     
     
     def packet_in_cb(self, msg):
@@ -70,7 +72,7 @@ class ProtocolAscii():
         if msg[0:1] == '@':
             if self.ports['report']['handle']:
                 self.ports['report']['handle'].publish(msg[1:])
-                print('dbg: ' + msg)
+                self.logger.log(logging.VERBOSE, 'report: ' + msg)
         elif msg[0:1] == '$':
             index = msg.find(' ')
             index = index if index != -1 else len(msg)
@@ -87,7 +89,7 @@ class ProtocolAscii():
                 self.cmd_pend_c.wait()
         
         with self.cnt_lock:
-            cmd = self.Cmd(self, self.cnt, msg, self.time_out)
+            cmd = self.Cmd(self, self.cnt, msg, self.timeout)
             self.cmd_pend[self.cnt] = cmd
             self.ports['packet_out']['handle'].publish('#{} '.format(self.cnt) + msg)
             self.cnt += 1

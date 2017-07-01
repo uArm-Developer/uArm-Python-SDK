@@ -9,13 +9,16 @@
 
 import _thread, threading
 import serial
-import sys
+import sys, os
 from time import sleep
 
-sys.path.append("../") # invoke current script at $pyuf/
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from pyuf.ufc import ufc_init
-from pyuf.comm.serial_ascii import SerialAscii
+from uf.ufc import ufc_init
+from uf.comm.serial_ascii import SerialAscii
+from uf.utils.log import *
+
+logger_init(logging.VERBOSE)
 
 print('setup ser_ascii ...')
 
@@ -30,9 +33,10 @@ ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap, '/dev/ttyACM0', 115200)
 
 
 print('setup test ...')
+logger = logging.getLogger('test')
 
 def ser_out_cb(msg):
-    print('ser_out_cb: ' + msg)
+    logger.debug('callback: ' + msg)
 
 test_ports = {
         'ser_out': {'dir': 'in', 'type': 'topic', 'callback': ser_out_cb},
@@ -53,7 +57,7 @@ print('\nsleep 2 sec ...\n')
 sleep(2)
 
 print('\nset X330 ...')
-test_ports['ser_in']['handle'].publish('G0 X300')
+test_ports['ser_in']['handle'].publish('G0 X300 Y0 Z50')
 
 print('test service ...')
 print('service ret: ' + test_ports['ser_service']['handle'].call('...'))
