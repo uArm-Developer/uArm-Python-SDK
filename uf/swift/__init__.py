@@ -8,7 +8,7 @@
 
 from ..comm.serial_ascii import SerialAscii
 from ..comm.protocol_ascii import ProtocolAscii
-from .swift_top import SwiftTop
+from .swift_body import SwiftBody
 from .gripper import Gripper
 from .pump import Pump
 
@@ -34,13 +34,15 @@ class Swift():
         top_iomap = {}
         if 'pos_in' in iomap.keys():
             top_iomap['pos_in'] = iomap['pos_in']
+        if 'pos_out' in iomap.keys():
+            top_iomap['pos_out'] = iomap['pos_out']
         if 'service' in iomap.keys():
             top_iomap['service'] = iomap['service']
         if len(top_iomap):
             top_iomap['cmd_async'] = node + '/ptc_async'
             top_iomap['cmd_sync'] = node + '/ptc_sync'
             top_iomap['report'] = node + '/ptc_report'
-            self.swift_top = SwiftTop(ufc, node + '/swift_top', top_iomap)
+            self.swift_body = SwiftBody(ufc, node + '/swift_body', top_iomap)
         
         if 'gripper' in iomap.keys():
             gripper_iomap = {

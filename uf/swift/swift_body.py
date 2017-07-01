@@ -16,7 +16,7 @@ csys_gstr = {
     'cartesian': 'G0 '
 }
 
-class SwiftTop():
+class SwiftBody():
     def __init__(self, ufc, node, iomap):
         
         self.ports = {
@@ -50,6 +50,8 @@ class SwiftTop():
     def report_cb(self, msg):
         if msg == '5 V1': # power on
             pass
+        if msg[:2] == '3 ' and self.ports['pos_out']['handle']:
+            self.ports['pos_out']['handle'].publish(msg[2:])
     
     def pos_in_cb(self, msg):
         if self.ports['cmd_async']['handle']:
@@ -78,6 +80,14 @@ class SwiftTop():
                 self.logger.debug('coordinate_system: %s -> %s' % (self.coordinate_system, words[1]))
                 self.coordinate_system = words[1]
                 return 'ok'
+        
+        if param == 'report_pos':
+            if action == 'set':
+                if words[1] == 'off':
+                    return self.ports['cmd_sync']['handle'].call('M2120 V0')
+                elif words[1].startswith('on '):
+                    # format e.g.: set report_pos on 0.2
+                    return self.ports['cmd_sync']['handle'].call('M2120 V' + words[1][3:])
         
         if param == 'command':
             if action == 'set':

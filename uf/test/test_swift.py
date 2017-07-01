@@ -18,12 +18,15 @@ from uf.ufc import ufc_init
 from uf.swift import Swift
 from uf.utils.log import *
 
-logger_init(logging.DEBUG)
+#logger_init(logging.VERBOSE)
+#logger_init(logging.DEBUG)
+logger_init(logging.INFO)
 
 print('setup swift ...')
 
 swift_iomap = {
         'pos_in': '/swift_pos_in',
+        'pos_out': '/swift_pos_out',
         'service': '/swift_service'
 }
 
@@ -33,13 +36,18 @@ swift = Swift(ufc, 'swift', swift_iomap, '/dev/ttyACM0', 115200)
 
 print('setup test ...')
 
+def pos_cb(msg):
+    print('pos_cb: ' + msg)
+
 test_ports = {
         'swift_pos': {'dir': 'out', 'type': 'topic'},
+        'swift_pos_out': {'dir': 'in', 'type': 'topic', 'callback': pos_cb},
         'swift_service': {'dir': 'out', 'type': 'service'}
 }
 
 test_iomap = {
         'swift_pos': '/swift_pos_in',
+        'swift_pos_out': '/swift_pos_out',
         'swift_service': '/swift_service'
 }
 
@@ -50,6 +58,9 @@ ufc.node_init('test', test_ports, test_iomap)
 print('sleep 2 sec ...')
 sleep(2)
 
+
+print('enable report_pos: ' + test_ports['swift_service']['handle'].call('set report_pos on 0.2'))
+#print('disable report_pos: ' + test_ports['swift_service']['handle'].call('set report_pos off'))
 
 print('set X330 ...')
 # topics are always async
