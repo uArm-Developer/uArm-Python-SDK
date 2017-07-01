@@ -9,6 +9,7 @@
 
 import _thread, threading
 from queue import Queue
+from ..utils.log import *
 
 csys_gstr = {
     'polar': 'G2201 ',
@@ -29,6 +30,7 @@ class SwiftTop():
             'cmd_sync': {'dir': 'out', 'type': 'service'},
         }
         
+        self.logger = logging.getLogger(node)
         self.mode = 'play'
         self.coordinate_system = 'cartesian'
         
@@ -49,16 +51,16 @@ class SwiftTop():
         
         if param == 'mode':
             if action == 'get':
-                return self.mode
-                
+                return 'ok, ' + self.mode
+        
         if param == 'coordinate_system':
             if action == 'get':
-                return self.coordinate_system
+                return 'ok, ' + self.coordinate_system
             if action == 'set':
-                print('coordinate_system: %s -> %s' % (self.coordinate_system, words[1]))
+                self.logger.debug('coordinate_system: %s -> %s' % (self.coordinate_system, words[1]))
                 self.coordinate_system = words[1]
                 return 'ok'
-                
+        
         if param == 'command':
             if action == 'set':
                 return self.ports['cmd_sync']['handle'].call(words[1])

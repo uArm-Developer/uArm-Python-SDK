@@ -62,7 +62,7 @@ class ProtocolAscii():
             self.owner.logger.warning('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
             # TODO: avoid KeyError if the 'finish' called at same time
             del self.owner.cmd_pend[self.cnt]
-            self.ret.put('err: timeout')
+            self.ret.put('err, timeout')
     
     
     def packet_in_cb(self, msg):

@@ -9,6 +9,7 @@
 from ..comm.serial_ascii import SerialAscii
 from ..comm.protocol_ascii import ProtocolAscii
 from .swift_top import SwiftTop
+from .gripper import Gripper
 
 class Swift():
     def __init__(self, ufc, node, iomap, dev_port = '/dev/ttyACM0', baud = 115200):
@@ -37,5 +38,12 @@ class Swift():
         self.ser_ascii = SerialAscii(ufc, node + '/ser_ascii', ser_iomap, dev_port, baud)
         self.ptc_ascii = ProtocolAscii(ufc, node + '/ptc_ascii', ptc_iomap)
         self.swift_top = SwiftTop(ufc, node + '/swift_top', top_iomap)
-
+        
+        if 'gripper' in iomap.keys():
+            gripper_iomap = {
+                'service': iomap['gripper'],
+                
+                'cmd_sync': node + '/ptc_sync'
+            }
+            self.gripper = Gripper(ufc, node + '/gripper', gripper_iomap)
 
