@@ -71,8 +71,8 @@ class ProtocolAscii():
             return
         if msg[0:1] == '@':
             if self.ports['report']['handle']:
-                self.ports['report']['handle'].publish(msg[1:])
                 self.logger.log(logging.VERBOSE, 'report: ' + msg)
+                self.ports['report']['handle'].publish(msg[1:])
         elif msg[0:1] == '$':
             index = msg.find(' ')
             index = index if index != -1 else len(msg)

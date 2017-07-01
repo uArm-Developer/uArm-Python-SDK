@@ -28,6 +28,7 @@ class SwiftTop():
             
             'cmd_async': {'dir': 'out', 'type': 'topic'},
             'cmd_sync': {'dir': 'out', 'type': 'service'},
+            'report': {'dir': 'in', 'type': 'topic', 'callback': self.report_cb}
         }
         
         self.logger = logging.getLogger(node)
@@ -35,7 +36,20 @@ class SwiftTop():
         self.coordinate_system = 'cartesian'
         
         ufc.node_init(node, self.ports, iomap)
-        
+    
+    # TODO: create a thread to maintain device status and read dev_info
+    def read_dev_info(self):
+        info = []
+        for c in range(2201, 2206):
+            ret = ''
+            while not ret.startswith('ok'):
+                ret = self.ports['cmd_sync']['handle'].call('P%d' % c)
+            info.append(ret.split(' ', 1)[1])
+        return ' '.join(info)
+    
+    def report_cb(self, msg):
+        if msg == '5 V1': # power on
+            pass
     
     def pos_in_cb(self, msg):
         if self.ports['cmd_async']['handle']:
@@ -52,6 +66,10 @@ class SwiftTop():
         if param == 'mode':
             if action == 'get':
                 return 'ok, ' + self.mode
+        
+        if param == 'dev_info':
+            if action == 'get':
+                return 'ok, ' + self.read_dev_info()
         
         if param == 'coordinate_system':
             if action == 'get':
