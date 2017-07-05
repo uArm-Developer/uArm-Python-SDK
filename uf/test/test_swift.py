@@ -68,11 +68,11 @@ print('set X330 ...')
 test_ports['swift_pos']['handle'].publish('X350 Y0 Z50')
 
 
-print('ret1: ' + test_ports['swift_service']['handle'].call('set command G0 X340'))
-print('ret2: ' + test_ports['swift_service']['handle'].call('set command G0 X320'))
-print('ret3: ' + test_ports['swift_service']['handle'].call('set command G0 X300'))
-print('ret4: ' + test_ports['swift_service']['handle'].call('set command G0 X200'))
-print('ret5: ' + test_ports['swift_service']['handle'].call('set command G0 X190'))
+print('ret1: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X340'))
+print('ret2: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X320'))
+print('ret3: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X300'))
+print('ret4: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X200'))
+print('ret5: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X190'))
 
 print('done ...')
 while True:

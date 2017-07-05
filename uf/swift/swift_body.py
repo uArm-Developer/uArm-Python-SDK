@@ -23,6 +23,8 @@ class SwiftBody():
             'pos_in': {'dir': 'in', 'type': 'topic', 'callback': self.pos_in_cb},
             'pos_out': {'dir': 'out', 'type': 'topic'}, # report current position
             
+            'buzzer': {'dir': 'in', 'type': 'topic', 'callback': self.buzzer_cb},
+            
             #'status': {'dir': 'out', 'type': 'topic'}, # report unconnect, etc...
             'service': {'dir': 'in', 'type': 'service', 'callback': self.service_cb},
             
@@ -36,6 +38,10 @@ class SwiftBody():
         self.coordinate_system = 'cartesian'
         
         ufc.node_init(node, self.ports, iomap)
+    
+    def buzzer_cb(self, msg):
+        '''msg format: "F1000 T200", F: frequency, T: time period'''
+        self.ports['cmd_async']['handle'].publish('M2210 ' + msg)
     
     # TODO: create a thread to maintain device status and read dev_info
     def read_dev_info(self):
@@ -89,8 +95,13 @@ class SwiftBody():
                     # format e.g.: set report_pos on 0.2
                     return self.ports['cmd_sync']['handle'].call('M2120 V' + words[1][3:])
         
-        if param == 'command':
+        if param == 'cmd_sync':
             if action == 'set':
                 return self.ports['cmd_sync']['handle'].call(words[1])
+        
+        if param == 'cmd_async':
+            if action == 'set':
+                self.ports['cmd_async']['handle'].publish(words[1])
+                return 'ok'
 
 

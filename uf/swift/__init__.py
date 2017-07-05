@@ -11,6 +11,7 @@ from ..comm.protocol_ascii import ProtocolAscii
 from .swift_body import SwiftBody
 from .gripper import Gripper
 from .pump import Pump
+from .keys import Keys
 
 class Swift():
     '''The top module of swift/swift_pro'''
@@ -36,6 +37,8 @@ class Swift():
             top_iomap['pos_in'] = iomap['pos_in']
         if 'pos_out' in iomap.keys():
             top_iomap['pos_out'] = iomap['pos_out']
+        if 'buzzer' in iomap.keys():
+            top_iomap['buzzer'] = iomap['buzzer']
         if 'service' in iomap.keys():
             top_iomap['service'] = iomap['service']
         if len(top_iomap):
@@ -61,4 +64,16 @@ class Swift():
             pump_iomap['cmd_sync'] = node + '/ptc_sync'
             pump_iomap['report'] = node + '/ptc_report'
             self.pump = Pump(ufc, node + '/pump', pump_iomap)
+        
+        keys_iomap = {}
+        if 'keys' in iomap.keys():
+            keys_iomap['service'] = iomap['keys']
+        if 'key0' in iomap.keys():
+            keys_iomap['key0'] = iomap['key0']
+        if 'key1' in iomap.keys():
+            keys_iomap['key1'] = iomap['key1']
+        if len(keys_iomap):
+            keys_iomap['cmd_sync'] = node + '/ptc_sync'
+            keys_iomap['report'] = node + '/ptc_report'
+            self.keys = Keys(ufc, node + '/keys', keys_iomap)
 
