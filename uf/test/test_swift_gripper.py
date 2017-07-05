@@ -29,7 +29,7 @@ swift_iomap = {
 }
 
 ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap, '/dev/ttyACM0', 115200)
+swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
 
 
 print('setup test ...')
