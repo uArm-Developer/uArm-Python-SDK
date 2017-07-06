@@ -24,7 +24,7 @@ class Pump():
         self.logger = logging.getLogger(node)
         ufc.node_init(node, self.ports, iomap)
     
-    def set_gripper(self, val):
+    def set_pump(self, val):
         if val == 'on':
             self.ports['cmd_sync']['handle'].call('M2231 V1')
         else:
@@ -73,7 +73,7 @@ class Pump():
             
             if action == 'set':
                 self.logger.debug('set value: %s' % words[1])
-                return self.set_gripper(words[1])
+                return self.set_pump(words[1])
         
         elif param == 'limit_switch':
             if action == 'get':

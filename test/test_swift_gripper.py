@@ -12,7 +12,7 @@ import serial
 import sys, os
 from time import sleep
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from uf.ufc import ufc_init
 from uf.swift import Swift

@@ -86,6 +86,10 @@ class Swift(ModuleGroup):
     ]
     
     def __init__(self, ufc, node, iomap, **kwargs):
+        if 'dev_port' not in kwargs:
+            kwargs['dev_port'] = '/dev/ttyACM0'
+        if 'baud' not in kwargs:
+            kwargs['baud'] = 115200
         super().__init__(ufc, node, iomap, **kwargs)
 
 
