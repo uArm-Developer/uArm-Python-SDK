@@ -7,16 +7,17 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
+# import _thread, threading
+# import serial
 import sys, os
 from time import sleep
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from __init__ import SERIAL_PORT
 from uf.ufc import ufc_init
 from uf.comm.serial_ascii import SerialAscii
-from uf.utils.log import *
+from uf.utils.log import logger_init, logging
 
 logger_init(logging.VERBOSE)
 
@@ -29,7 +30,7 @@ ser_iomap = {
 }
 
 ufc = ufc_init()
-ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap, '/dev/ttyACM0', 115200)
+ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap, SERIAL_PORT, 115200)
 
 
 print('setup test ...')
@@ -65,4 +66,3 @@ print('service ret: ' + test_ports['ser_service']['handle'].call('...'))
 print('done ...')
 while True:
     sleep(1)
-

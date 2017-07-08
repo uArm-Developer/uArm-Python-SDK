@@ -7,16 +7,17 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
+# import _thread, threading
+# import serial
 import sys, os
 from time import sleep
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from __init__ import SERIAL_PORT
 from uf.ufc import ufc_init
 from uf.swift import Swift
-from uf.utils.log import *
+from uf.utils.log import logger_init, logging
 
 #logger_init(logging.VERBOSE)
 #logger_init(logging.DEBUG)
@@ -31,7 +32,7 @@ swift_iomap = {
 }
 
 ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
+swift = Swift(ufc, 'swift', swift_iomap, dev_port = SERIAL_PORT, baud = 115200)
 
 
 print('setup test ...')
@@ -77,4 +78,3 @@ print('ret5: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X19
 print('done ...')
 while True:
     sleep(1)
-
