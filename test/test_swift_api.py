@@ -7,8 +7,8 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
+# import _thread, threading
+# import serial
 import sys, os
 from time import sleep
 
@@ -60,4 +60,3 @@ swift.set_buzzer()
 print('done ...')
 while True:
     sleep(1)
-
