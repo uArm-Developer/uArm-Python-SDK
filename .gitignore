@@ -22,4 +22,6 @@
 *.orig
 *~
 \#*#
-
+build/*
+dist/*
+pyuf.egg-info
