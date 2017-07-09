@@ -81,7 +81,7 @@ def main():
 
     while True:
         sleep(1)
-        raw_in = input("Press enter to get calibration data, s to set reference... ")
+        raw_in = input("Press enter to get calibration data, r to set reference, h to zero height, ... ")
         # swift.set_servo_attach(wait=True)
         # print("get_position: %s" % swift.get_position())
 
@@ -120,6 +120,8 @@ def main():
 
         if raw_in == "s":
             print("M2401: %s" % swift.send_cmd_sync("M2401 V22765"))
+        elif raw_in == "h":
+            print("M2410: %s" % swift.send_cmd_sync("M2410"))
 
         # swift.set_buzzer()
         # swift.set_servo_detach(wait=True)
