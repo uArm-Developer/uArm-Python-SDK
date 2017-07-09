@@ -5,7 +5,7 @@ from __future__ import print_function
 # Copyright (c) 2017, UFactory, Inc.
 # All rights reserved.
 #
-# Author: Duke Fong <duke@ufactory.cc>
+# Author: Duke Fong <duke@ufactory.cc> / Derwent <derwentx@gmail.com>
 
 
 # import _thread, threading
