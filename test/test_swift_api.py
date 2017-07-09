@@ -7,15 +7,16 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
+# import _thread, threading
+# import serial
 import sys, os
 from time import sleep
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from __init__ import SERIAL_PORT
 from uf.wrapper.swift_api import SwiftAPI
-from uf.utils.log import *
+from uf.utils.log import logger_init, logging
 
 #logger_init(logging.VERBOSE)
 #logger_init(logging.DEBUG)
@@ -23,7 +24,7 @@ logger_init(logging.INFO)
 
 print('setup swift ...')
 
-swift = SwiftAPI(dev_port = '/dev/ttyACM0')
+swift = SwiftAPI(dev_port = SERIAL_PORT)
 
 
 print('sleep 2 sec ...')
@@ -60,4 +61,3 @@ swift.set_buzzer()
 print('done ...')
 while True:
     sleep(1)
-

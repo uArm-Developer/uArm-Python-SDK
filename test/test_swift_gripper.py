@@ -7,16 +7,17 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
+# import _thread, threading
+# import serial
 import sys, os
 from time import sleep
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from __init__ import SERIAL_PORT
 from uf.ufc import ufc_init
 from uf.swift import Swift
-from uf.utils.log import *
+from uf.utils.log import logger_init, logging
 
 logger_init(logging.DEBUG)
 
@@ -29,7 +30,7 @@ swift_iomap = {
 }
 
 ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
+swift = Swift(ufc, 'swift', swift_iomap, dev_port = SERIAL_PORT, baud = 115200)
 
 
 print('setup test ...')
@@ -66,4 +67,3 @@ print('gripper get state return: ' + test_ports['swift_gripper']['handle'].call(
 print('done ...')
 while True:
     sleep(1)
-
