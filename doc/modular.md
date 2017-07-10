@@ -48,7 +48,7 @@ Topic and service provided by UFC are very similar to ROS, except:
   But we prefer to use strings, further strings could append with raw binary data (or use raw only).
 
 #### Example Diagram
-![Diagram of test_swift_gripper](block_diagram.svg)
+![Diagram of test_swift_gripper](block_diagram.png)
 
 
 ### GUI TOOL
