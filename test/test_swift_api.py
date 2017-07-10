@@ -46,7 +46,10 @@ swift.set_position(x = 200)
 print('set X190 ...')
 swift.set_position(x = 190)
 
+# make sure at least one position was sent to device before start checking
 sleep(0.1)
+# make sure corresponding topics was empty before start service call
+# data through different topics and services does not guarantee the order
 while swift.get_is_moving():
     sleep(0.1)
 

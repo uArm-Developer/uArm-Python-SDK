@@ -31,6 +31,8 @@ class SwiftAPI():
     default kwargs: dev_port = '/dev/ttyACM0', baud = 115200
     '''
     def __init__(self, **kwargs):
+        '''
+        '''
         
         self._ufc = ufc_init()
         
@@ -105,11 +107,13 @@ class SwiftAPI():
     def reset(self):
         '''
         Reset include below action:
-        - Attach all servos
-        - Move to default position (150, 0, 150) with speed 200mm/min
-        - Turn off pump/gripper
-        - Set wrist servo to angle 90
-        :return: None
+          - Attach all servos
+          - Move to default position (150, 0, 150) with speed 200mm/min
+          - Turn off pump/gripper
+          - Set wrist servo to angle 90
+        
+        Returns:
+            None
         '''
         self.set_servo_attach()
         sleep(0.1)
@@ -121,23 +125,33 @@ class SwiftAPI():
     def send_cmd_sync(self, msg):
         '''
         This function will block until receive the response message.
-        :param msg: string, serial command
-        :return: string response
+        
+        Args:
+            msg: string, serial command
+        
+        Returns:
+            string response
         '''
         return self._ports['service']['handle'].call('set cmd_sync ' + msg)
     
     def send_cmd_async(self, msg):
         '''
         This function will send out the message and return immediately.
-        :param msg: string, serial command
-        :return: None
+        
+        Args:
+            msg: string, serial command
+        
+        Returns:
+            None
         '''
         self._ports['service']['handle'].call('set cmd_async ' + msg)
     
     def get_device_info(self):
         '''
         Get the device info.
-        :return: string list: [device model, hardware version, firmware version, device api version, device UID]
+        
+        Returns:
+            string list: [device model, hardware version, firmware version, api version, device UID]
         '''
         ret = self._ports['service']['handle'].call('get dev_info')
         if ret.startswith('ok'):
@@ -148,7 +162,9 @@ class SwiftAPI():
     def get_is_moving(self):
         '''
         Get the arm current moving status.
-        :return: boolean True or False
+        
+        Returns:
+            boolean True or False
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync M2200')
         if ret == 'ok V0':
@@ -162,13 +178,17 @@ class SwiftAPI():
                            speed = None, relative = False, wait = False):
         '''
         Move arm to the position (x,y,z) unit is mm, speed unit is mm/sec
-        :param x
-        :param y
-        :param z
-        :param speed
-        :param relative
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: True if successed
+        
+        Args:
+            x
+            y
+            z
+            speed
+            relative
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            True if successed
         '''
         if wait:
             cmd = 'set cmd_sync'
@@ -195,7 +215,9 @@ class SwiftAPI():
     def get_position(self):
         '''
         Get current arm position (x,y,z)
-        :return: returns an float array of the format [x, y, z] of the robots current location
+        
+        Returns:
+            float array of the format [x, y, z] of the robots current location
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync P2220')
         
@@ -209,13 +231,17 @@ class SwiftAPI():
                         speed = None, relative = False, wait = False):
         '''
         Polar coordinate, rotation, stretch, height.
-        :param s: stretch(mm)
-        :param r: rotation(degree)
-        :param h: height(mm)
-        :param speed: speed(mm/min)
-        :param relative
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: True if successed
+        
+        Args:
+            stretch(mm)
+            rotation(degree)
+            height(mm)
+            speed: speed(mm/min)
+            relative
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            True if successed
         '''
         if wait:
             cmd = 'set cmd_sync'
@@ -242,7 +268,9 @@ class SwiftAPI():
     def get_polar(self):
         '''
         Get polar coordinate
-        :return: return an float array of the format [rotation, stretch, height]
+        
+        Returns:
+            float array of the format [rotation, stretch, height]
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync P2221')
         
@@ -255,10 +283,14 @@ class SwiftAPI():
     def set_servo_angle(self, servo_id, angle, wait = False):
         '''
         Set servo angle, 0 - 180 degrees, this Function will include the manual servo offset.
-        :param servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-        :param angle: 0 - 180 degrees
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or failed False
+        
+        Args:
+            servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+            angle: 0 - 180 degrees
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or failed False
         '''
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
         cmd += ' G2202 N{} V{}'.format(servo_id, angle)
@@ -268,18 +300,26 @@ class SwiftAPI():
     def set_wrist(self, angle, wait = False):
         '''
         Set swift hand wrist angle. include servo offset.
-        :param angle: 0 - 180 degrees
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or failed False
+        
+        Args:
+            angle: 0 - 180 degrees
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or failed False
         '''
         return self.set_servo_angle(SERVO_HAND, angle, wait = wait)
     
     def get_servo_angle(self, servo_id = None):
         '''
         Get servo angle
-        :param servo_id: if servo_id not provide, will return a array,
-        else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-        :return: array of float or single float
+        
+        Args:
+            servo_id: return an array if servo_id not provided,
+                      else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+        
+        Returns:
+            array of float or single float
         '''
         values = [None] * 3
         if servo_id != SERVO_HAND:
@@ -303,9 +343,13 @@ class SwiftAPI():
     def set_servo_attach(self, servo_id = None, wait = False):
         '''
         Set servo status attach, servo attach will lock the servo, you can't move swift with your hands.
-        :param servo_id: if None, will attach all servos, else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or Failed False
+        
+        Args:
+            servo_id: if None, will attach all servos, else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or Failed False
         '''
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
         if servo_id == None:
@@ -319,9 +363,13 @@ class SwiftAPI():
         '''
         Set Servo status detach, Servo Detach will unlock the servo, You can move swift with your hands.
         But move function won't be effect until you attach.
-        :param servo_id: if None, will detach all servos, else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or failed False
+        
+        Args:
+            servo_id: if None, will detach all servos, else specify: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or Failed False
         '''
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
         if servo_id == None:
@@ -334,9 +382,13 @@ class SwiftAPI():
     def get_servo_attach(self, servo_id = None):
         '''
         Check servo attach status
-        :param servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or failed False
+        
+        Args:
+            servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or Failed False
         '''
         cmd = 'set cmd_sync M2203 N{:d}'.format(servo_id)
         ret = self._ports['service']['handle'].call(cmd)
@@ -350,9 +402,13 @@ class SwiftAPI():
     def set_report_position(self, interval, wait = False):
         '''
         Report currentpPosition in (interval) seconds.
-        :param interval: seconds, if 0 disable report
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: None
+        
+        Args:
+            interval: seconds, if 0 disable report
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            None
         '''
         cmd = 'set report_pos on {}'.format(round(interval, 2))
         ret = self._ports['service']['handle'].call(cmd)
@@ -363,26 +419,38 @@ class SwiftAPI():
     def register_report_position_callback(self, callback = None):
         '''
         Set function to receiving current position [x, y, z, r], r is wrist angle.
-        :param callback: set the callback function, undo by setting to None
-        :return: None
+        
+        Args:
+            callback: set the callback function, undo by setting to None
+        
+        Returns:
+            None
         '''
         self.pos_from_dev_cb = callback
     
     def set_buzzer(self, freq = 1000, time = 200):
         '''
         Control buzzer.
-        :param freq: frequency
-        :param time: time period
-        :return: None
+        
+        Args:
+            freq: frequency
+            time: time period
+        
+        Returns:
+            None
         '''
         self._ports['buzzer']['handle'].publish('F{} T{}'.format(freq, time))
     
     def set_pump(self, on, timeout = None):
         '''
         Control pump on or off
-        :param on: True on, False off
-        :param timeout: unsupported currently
-        :return: succeed True or failed False
+        
+        Args:
+            on: True on, False off
+            timeout: unsupported currently
+        
+        Returns:
+            succeed True or failed False
         '''
         cmd = 'set value on' if on else 'set value off'
         ret = self._ports['pump']['handle'].call(cmd)
@@ -394,9 +462,13 @@ class SwiftAPI():
     def set_gripper(self, catch, timeout = None):
         '''
         Turn on/off gripper
-        :param catch: True on / False off
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: succeed True or failed False
+        
+        Args:
+            catch: True on / False off
+            wait: if True, will block the thread, until get response or timeout
+        
+        Returns:
+            succeed True or failed False
         '''
         cmd = 'set value on' if catch else 'set value off'
         ret = self._ports['gripper']['handle'].call(cmd)
@@ -408,8 +480,12 @@ class SwiftAPI():
     def get_analog(self, pin):
         '''
         Get analog value from specific pin
-        :param pin: pin number
-        :return: integral value
+        
+        Args:
+            pin: pin number
+        
+        Returns:
+            integral value
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync P2241 N{}'.format(pin))
         if ret.startswith('ok '):
@@ -420,8 +496,12 @@ class SwiftAPI():
     def get_digital(self, pin):
         '''
         Get digital value from specific pin.
-        :param pin: pin number
-        :return: high True or low False
+        
+        Args:
+            pin: pin number
+        
+        Returns:
+            high True or low False
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync P2240 N{}'.format(pin))
         if ret == 'ok V1':
@@ -434,9 +514,13 @@ class SwiftAPI():
     def set_rom_data(self, address, data, data_type = EEPROM_DATA_TYPE_BYTE):
         '''
         Set data to eeprom
-        :param address: 0 - 64K byte
-        :param data_type: EEPROM_DATA_TYPE_FLOAT, EEPROM_DATA_TYPE_INTEGER, EEPROM_DATA_TYPE_BYTE
-        :return: True on success
+        
+        Args:
+            address: 0 - 64K byte
+            data_type: EEPROM_DATA_TYPE_FLOAT, EEPROM_DATA_TYPE_INTEGER, EEPROM_DATA_TYPE_BYTE
+        
+        Returns:
+            True on success
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync M2212 N1 A{} T{} V{}'.format(address, data_type, data))
         if ret.startswith('ok'):
@@ -447,23 +531,28 @@ class SwiftAPI():
     def get_rom_data(self, address, data_type = EEPROM_DATA_TYPE_BYTE):
         '''
         Get data from eeprom
-        :param address: 0 - 64K byte
-        :param data_type: EEPROM_DATA_TYPE_FLOAT, EEPROM_DATA_TYPE_INTEGER, EEPROM_DATA_TYPE_BYTE
-        :return: int or float value
         
-        EEPROM default data format, each item is one offline record data (no header at beginning):
-          [p0, p1, p2, p3, p4, p5 ... p_end]
+        Args:
+            address: 0 - 64K byte
+            data_type: EEPROM_DATA_TYPE_FLOAT, EEPROM_DATA_TYPE_INTEGER, EEPROM_DATA_TYPE_BYTE
         
-        each record data is 10 bytes, and each item inside is 2 bytes:
-          [a0, a1, a2, a3, accessories_state]
+        Returns:
+            int or float value
         
-        a0~3: unsigned fixed point of servos' angle (multiply by 100)
-        
-        accessories_state:
-          bit0: pump on/off
-          bit4: griper on/off
-        
-        p_end indicate the end of records, filled by 0xffff
+        Notes:
+            EEPROM default data format, each item is one offline record data (no header at beginning):
+              [p0, p1, p2, p3, p4, p5 ... p_end]
+            
+            each record data is 10 bytes, and each item inside is 2 bytes:
+              [a0, a1, a2, a3, accessories_state]
+            
+            a0~3: unsigned fixed point of servos' angle (multiply by 100)
+            
+            accessories_state:
+              bit0: pump on/off
+              bit4: griper on/off
+            
+            p_end indicate the end of records, filled by 0xffff
         '''
         ret = self._ports['service']['handle'].call('set cmd_sync M2211 N1 A{} T{}'.format(address, data_type))
         if ret.startswith('ok '):

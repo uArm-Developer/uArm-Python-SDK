@@ -69,7 +69,8 @@ class Swift(ModuleGroup):
             'iomap': {
                 'service':      'outer: pump',
                 'limit_switch': 'outer: limit_switch',
-                'cmd_sync':     'inner: ptc_sync'
+                'cmd_sync':     'inner: ptc_sync',
+                'report':       'inner: ptc_report'
             }
         },
         {

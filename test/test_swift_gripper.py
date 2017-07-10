@@ -23,27 +23,27 @@ logger_init(logging.DEBUG)
 print('setup swift ...')
 
 swift_iomap = {
-        'pos_in': '/swift_pos_in',
-        'service': '/swift_service',
-        'gripper': '/swift_gripper'
+        'pos_in':  'swift_pos_in',
+        'service': 'swift_service',
+        'gripper': 'swift_gripper'
 }
 
 ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
+swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0')
 
 
 print('setup test ...')
 
 test_ports = {
-        'swift_pos': {'dir': 'out', 'type': 'topic'},
+        'swift_pos':     {'dir': 'out', 'type': 'topic'},
         'swift_service': {'dir': 'out', 'type': 'service'},
         'swift_gripper': {'dir': 'out', 'type': 'service'}
 }
 
 test_iomap = {
-        'swift_pos': '/swift_pos_in',
-        'swift_service': '/swift_service',
-        'swift_gripper': '/swift_gripper'
+        'swift_pos':     'swift_pos_in',
+        'swift_service': 'swift_service',
+        'swift_gripper': 'swift_gripper'
 }
 
 # install handle for ports which are listed in the iomap

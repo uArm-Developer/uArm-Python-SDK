@@ -26,12 +26,12 @@ ufc = ufc_init()
 
 print('setup swift ...')
 swift_iomap = {
-        'pos_in': '/swift_pos_in',
-        'service': '/swift_service',
-        'pump': '/swift_pump',
-        'limit_switch': '/limit_switch'
+        'pos_in':       'swift_pos_in',
+        'service':      'swift_service',
+        'pump':         'swift_pump',
+        'limit_switch': 'limit_switch'
 }
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
+swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0')
 
 
 print('setup test ...')
@@ -40,16 +40,16 @@ def limit_switch_cb(msg):
     print('limit_switch state: ' + msg)
 
 test_ports = {
-        'swift_pos': {'dir': 'out', 'type': 'topic'},
+        'swift_pos':     {'dir': 'out', 'type': 'topic'},
         'swift_service': {'dir': 'out', 'type': 'service'},
-        'swift_pump': {'dir': 'out', 'type': 'service'},
-        'limit_switch': {'dir': 'in', 'type': 'topic', 'callback': limit_switch_cb},
+        'swift_pump':    {'dir': 'out', 'type': 'service'},
+        'limit_switch':  {'dir': 'in',  'type': 'topic', 'callback': limit_switch_cb},
 }
 test_iomap = {
-        'swift_pos': '/swift_pos_in',
-        'swift_service': '/swift_service',
-        'swift_pump': '/swift_pump',
-        'limit_switch': '/limit_switch'
+        'swift_pos':     'swift_pos_in',
+        'swift_service': 'swift_service',
+        'swift_pump':    'swift_pump',
+        'limit_switch':  'limit_switch'
 }
 # install handle for ports which are listed in the iomap
 ufc.node_init('test', test_ports, test_iomap)
