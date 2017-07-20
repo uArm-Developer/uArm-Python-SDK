@@ -10,6 +10,7 @@
 import _thread, threading
 import serial
 from serial.tools import list_ports
+from ..utils.select_serial_port import select_port
 from ..utils.log import *
 
 class SerialAscii(threading.Thread):
@@ -25,36 +26,8 @@ class SerialAscii(threading.Thread):
         self.logger = logging.getLogger(node)
         ufc.node_init(node, self.ports, iomap)
         
-        if filters != None and dev_port == None:
-            list_all = False
-            for d in list_ports.comports():
-                is_match = True
-                for k, v in filters.items():
-                    if not hasattr(d, k):
-                        continue
-                    a = getattr(d, k)
-                    if not a:
-                        a = ''
-                    if not a.startswith(v):
-                        is_match = False
-                if is_match:
-                    if dev_port == None:
-                        dev_port = d.device
-                        self.logger.info('choose device: ' + dev_port)
-                        self._dump_port(d)
-                    else:
-                        self.logger.warning('find more than one port')
-                        list_all = True
-            if list_all:
-                self.logger.info('current filter: {}, all ports:'.format(filters))
-                self._dump_ports()
-        
+        dev_port = select_port(logger = self.logger, dev_port = dev_port, filters = filters)
         if not dev_port:
-            if filters:
-                self.logger.error('port not found, current filter: {}, all ports:'.format(filters))
-            else:
-                self.logger.error('please specify dev_port or filters, all ports:')
-            self._dump_ports()
             quit(1)
         
         # TODO: maintain serial connection by service callback
@@ -65,17 +38,6 @@ class SerialAscii(threading.Thread):
         self.daemon = True
         self.alive = True
         self.start()
-    
-    def _dump_port(self, d):
-        self.logger.info('{}:'.format(d.device))
-        self.logger.info('  hwid        : "{}"'.format(d.hwid))
-        self.logger.info('  manufacturer: "{}"'.format(d.manufacturer))
-        self.logger.info('  product     : "{}"'.format(d.product))
-        self.logger.info('  description : "{}"'.format(d.description))
-    
-    def _dump_ports(self):
-        for d in list_ports.comports():
-            self._dump_port(d)
     
     def run(self):
         while self.alive:

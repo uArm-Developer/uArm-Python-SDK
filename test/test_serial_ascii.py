@@ -27,7 +27,7 @@ ser_iomap = {
 }
 
 ufc = ufc_init()
-ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap)
+ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap, filters = {'hwid': 'USB VID:PID=2341:0042'})
 
 
 print('setup test ...')
