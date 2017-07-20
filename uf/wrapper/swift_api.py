@@ -28,7 +28,7 @@ EEPROM_DATA_TYPE_FLOAT = 4
 class SwiftAPI():
     '''
     The API wrapper of swift and swift_pro
-    default kwargs: dev_port = '/dev/ttyACM0', baud = 115200
+    default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
     '''
     def __init__(self, **kwargs):
         '''

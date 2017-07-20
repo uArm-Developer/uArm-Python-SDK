@@ -7,8 +7,6 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
 import sys, os
 from time import sleep
 
@@ -31,7 +29,9 @@ swift_iomap = {
 }
 
 ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0')
+#swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0')
+#swift = Swift(ufc, 'swift', swift_iomap, filters = {'hwid': 'USB VID:PID=2341:0042'})
+swift = Swift(ufc, 'swift', swift_iomap) # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
 
 
 print('setup test ...')

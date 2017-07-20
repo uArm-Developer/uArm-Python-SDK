@@ -7,8 +7,6 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
 import sys, os
 from time import sleep
 
@@ -31,7 +29,7 @@ swift_iomap = {
         'pump':         'swift_pump',
         'limit_switch': 'limit_switch'
 }
-swift = Swift(ufc, 'swift', swift_iomap, dev_port = '/dev/ttyACM0')
+swift = Swift(ufc, 'swift', swift_iomap)
 
 
 print('setup test ...')

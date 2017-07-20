@@ -4,7 +4,7 @@ Python Library Documentation: class SwiftAPI in module uf.wrapper.swift_api
 ****************************************
 ```
 The API wrapper of swift and swift_pro
-default kwargs: dev_port = '/dev/ttyACM0', baud = 115200
+default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
 ```
 
 

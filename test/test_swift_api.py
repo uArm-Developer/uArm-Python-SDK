@@ -7,8 +7,6 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
 import sys, os
 from time import sleep
 
@@ -23,7 +21,9 @@ logger_init(logging.INFO)
 
 print('setup swift ...')
 
-swift = SwiftAPI(dev_port = '/dev/ttyACM0')
+#swift = SwiftAPI(dev_port = '/dev/ttyACM0')
+#swift = SwiftAPI(filters = {'hwid': 'USB VID:PID=2341:0042'})
+swift = SwiftAPI() # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
 
 
 print('sleep 2 sec ...')

@@ -7,8 +7,6 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 
-import _thread, threading
-import serial
 import sys, os
 from time import sleep
 
@@ -29,7 +27,7 @@ ser_iomap = {
 }
 
 ufc = ufc_init()
-ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap, dev_port = '/dev/ttyACM0', baud = 115200)
+ser_ascii = SerialAscii(ufc, 'ser_ascii', ser_iomap)
 
 
 print('setup test ...')

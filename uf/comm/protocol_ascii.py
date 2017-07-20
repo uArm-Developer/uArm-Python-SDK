@@ -13,7 +13,7 @@ from ..utils.log import *
 
 
 class ProtocolAscii():
-    def __init__(self, ufc, node, iomap, cmd_pend_size = 4, timeout = 10):
+    def __init__(self, ufc, node, iomap, cmd_pend_size = 4, timeout = 30):
         
         self.ports = {
             'cmd_async': {'dir': 'in', 'type': 'topic', 'callback': self.cmd_async_cb},

@@ -17,13 +17,13 @@ from .keys import Keys
 class Swift(ModuleGroup):
     '''\
     The top module of swift and swift_pro
-    default kwargs: dev_port = '/dev/ttyACM0', baud = 115200
+    default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
     '''
     sub_nodes = [
         {
             'module': SerialAscii,
             'node': 'serial_ascii',
-            'args': ['dev_port', 'baud'],
+            'args': ['dev_port', 'baud', 'filters'],
             'iomap': {
                 'out': 'inner: pkt_ser2ptc',
                 'in':  'inner: pkt_ptc2ser'
@@ -88,9 +88,11 @@ class Swift(ModuleGroup):
     
     def __init__(self, ufc, node, iomap, **kwargs):
         if 'dev_port' not in kwargs:
-            kwargs['dev_port'] = '/dev/ttyACM0'
+            kwargs['dev_port'] = None
         if 'baud' not in kwargs:
             kwargs['baud'] = 115200
+        if 'filters' not in kwargs:
+            kwargs['filters'] = {'hwid': 'USB VID:PID=2341:0042'}
         super().__init__(ufc, node, iomap, **kwargs)
 
 
