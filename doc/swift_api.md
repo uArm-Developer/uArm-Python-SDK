@@ -249,14 +249,13 @@ Returns:
     succeed True or failed False
 ```
 
-#### def __set_report_position__(self, interval, wait=False):
+#### def __set_report_position__(self, interval):
 
 ```
 Report currentpPosition in (interval) seconds.
 
 Args:
     interval: seconds, if 0 disable report
-    wait: if True, will block the thread, until get response or timeout
 
 Returns:
     None

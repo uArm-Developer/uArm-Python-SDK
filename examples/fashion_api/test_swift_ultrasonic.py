@@ -10,9 +10,9 @@
 import sys, os
 from time import sleep
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from uf.wrapper.swift_api import SwiftAPI
+from uf.wrapper.swift_with_ultrasonic import SwiftWithUltrasonic
 from uf.utils.log import *
 
 #logger_init(logging.VERBOSE)
@@ -23,7 +23,7 @@ print('setup swift ...')
 
 #swift = SwiftAPI(dev_port = '/dev/ttyACM0')
 #swift = SwiftAPI(filters = {'hwid': 'USB VID:PID=2341:0042'})
-swift = SwiftAPI() # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
+swift = SwiftWithUltrasonic() # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
 
 
 print('sleep 2 sec ...')
@@ -60,7 +60,22 @@ swift.set_position(z = 150, wait = True)
 
 swift.set_buzzer()
 
-print('done ...')
+
+# test ultrasonic:
+
+print('ultrasonic auto report...')
+
+def ultrasonic_report_cb(value):
+    print('ultrasonic report value: {}'.format(value))
+
+swift.register_ultrasonic_callback(ultrasonic_report_cb)
+swift.set_report_ultrasonic(500) # microsecond
+sleep(10)
+
+print('\nultrasonic check value...')
+swift.register_ultrasonic_callback(None)
+
 while True:
+    print('distance: {}'.format(swift.get_ultrasonic()))
     sleep(1)
 

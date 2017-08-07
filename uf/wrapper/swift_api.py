@@ -48,7 +48,9 @@ class SwiftAPI():
             'limit_switch': 'limit_switch',
             'keys':         'keys',
             'key0':         'key0',
-            'key1':         'key1'
+            'key1':         'key1',
+            'ptc_sync':     'ptc_sync',
+            'ptc_report':   'ptc_report'
         }
         
         self._nodes = {}
@@ -83,14 +85,13 @@ class SwiftAPI():
             'key1':         'key1'
         }
         
-        self._node = 'swift_api'
-        self._ufc.node_init(self._node, self._ports, self._iomap)
-        
-        self._logger = logging.getLogger(self._node)
         self.pos_from_dev_cb = None
         self._dev_info = None
+        
+        self._node = 'swift_api'
+        self._logger = logging.getLogger(self._node)
         self._ufc.node_init(self._node, self._ports, self._iomap)
-    
+        
     
     def _pos_from_dev_cb(self, msg):
         if self.pos_from_dev_cb != None:
@@ -399,13 +400,12 @@ class SwiftAPI():
         self._logger.error('get_servo_attach ret: %s' % ret)
         return None
     
-    def set_report_position(self, interval, wait = False):
+    def set_report_position(self, interval):
         '''
         Report currentpPosition in (interval) seconds.
         
         Args:
             interval: seconds, if 0 disable report
-            wait: if True, will block the thread, until get response or timeout
         
         Returns:
             None
@@ -414,7 +414,7 @@ class SwiftAPI():
         ret = self._ports['service']['handle'].call(cmd)
         if ret.startswith('ok'):
             return
-        self._logger.error('get_servo_attach ret: %s' % ret)
+        self._logger.error('set_report_position ret: %s' % ret)
     
     def register_report_position_callback(self, callback = None):
         '''

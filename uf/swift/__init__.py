@@ -33,9 +33,9 @@ class Swift(ModuleGroup):
             'module': ProtocolAscii,
             'node': 'ptc_ascii',
             'iomap': {
-                'cmd_async':  'inner: ptc_async',
-                'cmd_sync':   'inner: ptc_sync',
-                'report':     'inner: ptc_report',
+                'cmd_async':  'outer: ptc_async',
+                'cmd_sync':   'outer: ptc_sync',
+                'report':     'outer: ptc_report',
                 
                 'packet_in':  'inner: pkt_ser2ptc',
                 'packet_out': 'inner: pkt_ptc2ser'
@@ -50,9 +50,9 @@ class Swift(ModuleGroup):
                 'buzzer':    'outer: buzzer',
                 'service':   'outer: service',
                 
-                'cmd_async': 'inner: ptc_async',
-                'cmd_sync':  'inner: ptc_sync',
-                'report':    'inner: ptc_report'
+                'cmd_async': 'outer: ptc_async',
+                'cmd_sync':  'outer: ptc_sync',
+                'report':    'outer: ptc_report'
             }
         },
         {
@@ -60,7 +60,7 @@ class Swift(ModuleGroup):
             'node': 'gripper',
             'iomap': {
                 'service':  'outer: gripper',
-                'cmd_sync': 'inner: ptc_sync'
+                'cmd_sync': 'outer: ptc_sync'
             }
         },
         {
@@ -69,8 +69,8 @@ class Swift(ModuleGroup):
             'iomap': {
                 'service':      'outer: pump',
                 'limit_switch': 'outer: limit_switch',
-                'cmd_sync':     'inner: ptc_sync',
-                'report':       'inner: ptc_report'
+                'cmd_sync':     'outer: ptc_sync',
+                'report':       'outer: ptc_report'
             }
         },
         {
@@ -80,8 +80,8 @@ class Swift(ModuleGroup):
                 'service':  'outer: keys',
                 'key0':     'outer: key0',
                 'key1':     'outer: key1',
-                'cmd_sync': 'inner: ptc_sync',
-                'report':   'inner: ptc_report'
+                'cmd_sync': 'outer: ptc_sync',
+                'report':   'outer: ptc_report'
             }
         }
     ]

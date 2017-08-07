@@ -21,7 +21,9 @@ class ModuleGroup():
                     if p in iomap.keys():
                         n['iomap'][io] = iomap[p]
                     else:
-                        del n['iomap'][io]
+                        # del n['iomap'][io]
+                        # don't delete, may used by internal
+                        n['iomap'][io] = node + '/' + p
                 elif t == 'inner':
                     n['iomap'][io] = node + '/' + p
             self.nodes[n['node']] = n['module'](ufc, node + '/' + n['node'], n['iomap'], **args)

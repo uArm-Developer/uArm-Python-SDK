@@ -15,7 +15,7 @@ setup(
     author_email = 'developer@ufactory.cc',
     url = "https://github.com/uarm-developer/pyuf",
     keywords = "pyuf swift uarm ufactory",
-    packages = ['uf', 'uf.ufc', 'uf.utils', 'uf.comm', 'uf.swift', 'uf.wrapper'],
+    packages = ['uf', 'uf.ufc', 'uf.utils', 'uf.comm', 'uf.swift', 'uf.swift.grove', 'uf.wrapper'],
     install_requires = ['pyserial>=3.0'],
     long_description = open('README.md').read(),
     license = 'BSD'

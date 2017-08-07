@@ -6,8 +6,8 @@ and it's python3 only.
 There are two ways to use this library:
 
 - Using the API wrapper just like the old `pyuarm` library,
-  reference to [Swift API document](doc/swift_api.md), and [test/test_swift_api.py](test/test_swift_api.py).
-- Using the [Modular Programming](doc/modular.md) prototype, and checkout all other scripts under `test/` folder.
+  reference to [Swift API document](doc/swift_api.md), and scripts under `examples/fashion_api/` folder.
+- Using the [Modular Programming](doc/modular.md) prototype, and checkout scripts under `examples/fashion_modular/` folder.
 
 #### Attention
 
@@ -20,4 +20,4 @@ before running the tests.
 python3 setup.py install
 ```
 
-Install is not necessary, you can run test scripts without installation.
+Install is not necessary, you can run examples without installation.
