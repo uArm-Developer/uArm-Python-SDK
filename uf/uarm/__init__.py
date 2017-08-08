@@ -9,15 +9,14 @@
 from ..utils.module_group import ModuleGroup
 from ..comm.serial_ascii import SerialAscii
 from ..comm.protocol_ascii import ProtocolAscii
-from .swift_body import SwiftBody
+from .uarm_body import UarmBody
 from .gripper import Gripper
 from .pump import Pump
-from .keys import Keys
 
-class Swift(ModuleGroup):
+class Uarm(ModuleGroup):
     '''\
-    The top module of swift and swift_pro
-    default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
+    The top module of uArm Metal
+    default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=0403:6001'}
     '''
     sub_nodes = [
         {
@@ -32,6 +31,7 @@ class Swift(ModuleGroup):
         {
             'module': ProtocolAscii,
             'node': 'ptc_ascii',
+            'args': ['cmd_pend_size'],
             'iomap': {
                 'cmd_async':  'outer: ptc_async',
                 'cmd_sync':   'outer: ptc_sync',
@@ -43,8 +43,8 @@ class Swift(ModuleGroup):
             }
         },
         {
-            'module': SwiftBody,
-            'node': 'swift_body',
+            'module': UarmBody,
+            'node': 'uarm_body',
             'iomap': {
                 'pos_in':    'outer: pos_in',
                 'pos_out':   'outer: pos_out',
@@ -73,17 +73,6 @@ class Swift(ModuleGroup):
                 'cmd_sync':     'outer: ptc_sync',
                 'report':       'outer: ptc_report'
             }
-        },
-        {
-            'module': Keys,
-            'node': 'keys',
-            'iomap': {
-                'service':  'outer: keys',
-                'key0':     'outer: key0',
-                'key1':     'outer: key1',
-                'cmd_sync': 'outer: ptc_sync',
-                'report':   'outer: ptc_report'
-            }
         }
     ]
     
@@ -93,7 +82,9 @@ class Swift(ModuleGroup):
         if 'baud' not in kwargs:
             kwargs['baud'] = 115200
         if 'filters' not in kwargs:
-            kwargs['filters'] = {'hwid': 'USB VID:PID=2341:0042'}
+            kwargs['filters'] = {'hwid': 'USB VID:PID=0403:6001'}
+        if 'cmd_pend_size' not in kwargs:
+            kwargs['cmd_pend_size'] = 1
         super().__init__(ufc, node, iomap, **kwargs)
 
 

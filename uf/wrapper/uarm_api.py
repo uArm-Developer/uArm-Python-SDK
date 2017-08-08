@@ -9,7 +9,7 @@
 
 from time import sleep
 from ..ufc import ufc_init
-from ..swift import Swift
+from ..uarm import Uarm
 from ..utils.log import *
 
 
@@ -25,9 +25,9 @@ EEPROM_DATA_TYPE_INTEGER = 2
 EEPROM_DATA_TYPE_FLOAT = 4
 
 
-class SwiftAPI():
+class UarmAPI():
     '''
-    The API wrapper of swift and swift_pro
+    The API wrapper of uArm Metal
     default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
     '''
     def __init__(self, **kwargs):
@@ -36,9 +36,9 @@ class SwiftAPI():
         
         self._ufc = ufc_init()
         
-        # init swift node:
+        # init uarm node:
         
-        swift_iomap = {
+        uarm_iomap = {
             'pos_in':       'pos_to_dev',
             'pos_out':      'pos_from_dev',
             'buzzer':       'buzzer',
@@ -46,19 +46,16 @@ class SwiftAPI():
             'gripper':      'gripper',
             'pump':         'pump',
             'limit_switch': 'limit_switch',
-            'keys':         'keys',
-            'key0':         'key0',
-            'key1':         'key1',
             'ptc_sync':     'ptc_sync',
             'ptc_report':   'ptc_report',
             'ptc':          'ptc'
         }
         
         self._nodes = {}
-        self._nodes['swift'] = Swift(self._ufc, 'swift', swift_iomap, **kwargs)
+        self._nodes['uarm'] = Uarm(self._ufc, 'uarm', uarm_iomap, **kwargs)
         
         
-        # init swift_api node:
+        # init uarm_api node:
         
         self._ports = {
             'pos_to_dev':   {'dir': 'out', 'type': 'topic'},
@@ -68,9 +65,6 @@ class SwiftAPI():
             'gripper':      {'dir': 'out', 'type': 'service'},
             'pump':         {'dir': 'out', 'type': 'service'},
             'limit_switch': {'dir': 'in', 'type': 'topic', 'callback': self._limit_switch_cb},
-            'keys':         {'dir': 'out', 'type': 'service'},
-            'key0':         {'dir': 'in', 'type': 'topic', 'callback': self._key0_cb},
-            'key1':         {'dir': 'in', 'type': 'topic', 'callback': self._key1_cb},
             'ptc':          {'dir': 'out', 'type': 'service'}
         }
         
@@ -82,16 +76,13 @@ class SwiftAPI():
             'gripper':      'gripper',
             'pump':         'pump',
             'limit_switch': 'limit_switch',
-            'keys':         'keys',
-            'key0':         'key0',
-            'key1':         'key1',
             'ptc':          'ptc'
         }
         
         self.pos_from_dev_cb = None
         self._dev_info = None
         
-        self._node = 'swift_api'
+        self._node = 'uarm_api'
         self._logger = logging.getLogger(self._node)
         self._ufc.node_init(self._node, self._ports, self._iomap)
         
@@ -102,10 +93,6 @@ class SwiftAPI():
             self.pos_from_dev_cb(values)
     
     def _limit_switch_cb(self, msg):
-        pass
-    def _key0_cb(self, msg):
-        pass
-    def _key1_cb(self, msg):
         pass
     
     def reset(self):
@@ -166,14 +153,15 @@ class SwiftAPI():
     def get_is_moving(self):
         '''
         Get the arm current moving status.
+        (TODO: the gcode document for metal has the M200 command, but not work in real)
         
         Returns:
             boolean True or False
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync M2200')
-        if ret == 'ok V0':
+        ret = self._ports['service']['handle'].call('set cmd_sync M200')
+        if ret == 'OK V0':
             return False
-        if ret == 'ok V1':
+        if ret == 'OK V1':
             return True
         self._logger.error('get_is_moving ret: %s' % ret)
         return None
@@ -191,7 +179,7 @@ class SwiftAPI():
         return False
     
     def set_position(self, x = None, y = None, z = None,
-                           speed = None, relative = False, wait = False):
+                           speed = 150, relative = False, wait = False):
         '''
         Move arm to the position (x,y,z) unit is mm, speed unit is mm/sec
         
@@ -212,18 +200,19 @@ class SwiftAPI():
             cmd = 'set cmd_async'
         
         if relative:
-            cmd += ' G2204'
+            if x is None:
+                x = 0.0
+            if y is None:
+                y = 0.0
+            if z is None:
+                z = 0.0
+            cmd += ' G204'
         else:
+            if x is None or y is None or z is None:
+                raise Exception('x, y, z can not be None in absolute mode')
             cmd += ' G0'
         
-        if x != None:
-            cmd += ' X{}'.format(x)
-        if y != None:
-            cmd += ' Y{}'.format(y)
-        if z != None:
-            cmd += ' Z{}'.format(z)
-        if speed != None:
-            cmd += ' F{}'.format(speed)
+        cmd += ' X{} Y{} Z{} F{}'.format(x, y, z, speed)
         
         ret = self._ports['service']['handle'].call(cmd)
         return ret.startswith('ok') # device return 'ok' even out of range
@@ -235,16 +224,16 @@ class SwiftAPI():
         Returns:
             float array of the format [x, y, z] of the robots current location
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync P2220')
+        ret = self._ports['service']['handle'].call('set cmd_sync P220')
         
-        if ret.startswith('ok '):
+        if ret.startswith('OK '):
             values = list(map(lambda i: float(i[1:]), ret.split(' ')[1:]))
             return values
         self._logger.error('get_position ret: %s' % ret)
         return None
     
     def set_polar(self, s = None, r = None, h = None, 
-                        speed = None, relative = False, wait = False):
+                        speed = 150, wait = False):
         '''
         Polar coordinate, rotation, stretch, height.
         
@@ -253,21 +242,20 @@ class SwiftAPI():
             rotation(degree)
             height(mm)
             speed: speed(mm/min)
-            relative
             wait: if True, will block the thread, until get response or timeout
         
         Returns:
             True if successed
         '''
+        if s is None or r is None or h is None:
+            raise Exception('s, r, h can not be None')
+        
         if wait:
             cmd = 'set cmd_sync'
         else:
             cmd = 'set cmd_async'
         
-        if relative:
-            cmd += ' G2205'
-        else:
-            cmd += ' G2201'
+        cmd += ' G201'
         
         if s != None:
             cmd += ' S{}'.format(s)
@@ -288,9 +276,9 @@ class SwiftAPI():
         Returns:
             float array of the format [rotation, stretch, height]
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync P2221')
+        ret = self._ports['service']['handle'].call('set cmd_sync P221')
         
-        if ret.startswith('ok '):
+        if ret.startswith('OK '):
             values = list(map(lambda i: float(i[1:]), ret.split(' ')[1:]))
             return values
         self._logger.error('get_polar ret: %s' % ret)
@@ -309,7 +297,7 @@ class SwiftAPI():
             succeed True or failed False
         '''
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
-        cmd += ' G2202 N{} V{}'.format(servo_id, angle)
+        cmd += ' G202 N{} V{}'.format(servo_id, angle)
         ret = self._ports['service']['handle'].call(cmd)
         return ret.startswith('ok')
     
@@ -337,19 +325,11 @@ class SwiftAPI():
         Returns:
             array of float or single float
         '''
-        values = [None] * 3
-        if servo_id != SERVO_HAND:
-            ret = self._ports['service']['handle'].call('set cmd_sync P2200')
-            if ret.startswith('ok '):
-                values = list(map(lambda i: float(i[1:]), ret.split(' ')[1:]))
-            else:
-                self._logger.error('get_servo_angle N0~2 ret: %s' % ret)
-        if servo_id == SERVO_HAND or servo_id == None:
-            ret = self._ports['service']['handle'].call('set cmd_sync P2206 N3')
-            if ret.startswith('ok '):
-                values.append(float(ret[4:]))
-            else:
-                self._logger.error('get_servo_angle N3 ret: %s' % ret)
+        ret = self._ports['service']['handle'].call('set cmd_sync P200')
+        if ret.startswith('OK '):
+            values = list(map(lambda i: float(i[1:]), ret.split(' ')[1:]))
+        else:
+            self._logger.error('get_servo_angle ret: %s' % ret)
         
         if servo_id == None:
             return values
@@ -367,13 +347,22 @@ class SwiftAPI():
         Returns:
             succeed True or Failed False
         '''
+        if servo_id == None and wait == False:
+            return False
+        
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
         if servo_id == None:
-            cmd += ' M17'
+            #FIXME: attach is not current position
+            #pos = self.get_position()
+            #self.set_position(pos[0], pos[1], pos[2], speed = 100, wait = True)
+            for i in range(0, 4):
+                if not self.set_servo_attach(i, True):
+                    return False
+            return True
         else:
-            cmd += ' M2201 N{}'.format(servo_id)
-        ret = self._ports['service']['handle'].call(cmd)
-        return ret.startswith('ok')
+            cmd += ' M201 N{}'.format(servo_id)
+            ret = self._ports['service']['handle'].call(cmd)
+            return ret.startswith('OK')
     
     def set_servo_detach(self, servo_id = None, wait = False):
         '''
@@ -387,33 +376,19 @@ class SwiftAPI():
         Returns:
             succeed True or Failed False
         '''
+        if servo_id == None and wait == False:
+            return False
+        
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
         if servo_id == None:
-            cmd += ' M2019'
-        else:
-            cmd += ' M2202 N{}'.format(servo_id)
-        ret = self._ports['service']['handle'].call(cmd)
-        return ret.startswith('ok')
-    
-    def get_servo_attach(self, servo_id = None):
-        '''
-        Check servo attach status
-        
-        Args:
-            servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-            wait: if True, will block the thread, until get response or timeout
-        
-        Returns:
-            succeed True or Failed False
-        '''
-        cmd = 'set cmd_sync M2203 N{:d}'.format(servo_id)
-        ret = self._ports['service']['handle'].call(cmd)
-        if ret == 'ok V0':
-            return False
-        if ret == 'ok V1':
+            for i in range(0, 4):
+                if not self.set_servo_detach(i, True):
+                    return False
             return True
-        self._logger.error('get_servo_attach ret: %s' % ret)
-        return None
+        else:
+            cmd += ' M202 N{}'.format(servo_id)
+            ret = self._ports['service']['handle'].call(cmd)
+            return ret.startswith('OK')
     
     def set_report_position(self, interval):
         '''
@@ -443,13 +418,13 @@ class SwiftAPI():
         '''
         self.pos_from_dev_cb = callback
     
-    def set_buzzer(self, freq = 1000, time = 200):
+    def set_buzzer(self, freq = 1000, time = 0.2):
         '''
         Control buzzer.
         
         Args:
             freq: frequency
-            time: time period
+            time: time period (second)
         
         Returns:
             None
@@ -502,8 +477,8 @@ class SwiftAPI():
         Returns:
             integral value
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync P2241 N{}'.format(pin))
-        if ret.startswith('ok '):
+        ret = self._ports['service']['handle'].call('set cmd_sync P241 N{}'.format(pin))
+        if ret.startswith('OK '):
             return int(ret[4:])
         self._logger.error('get_analog ret: %s' % ret)
         return None
@@ -518,10 +493,10 @@ class SwiftAPI():
         Returns:
             high True or low False
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync P2240 N{}'.format(pin))
-        if ret == 'ok V1':
+        ret = self._ports['service']['handle'].call('set cmd_sync P240 N{}'.format(pin))
+        if ret == 'OK V1':
             return True
-        elif ret == 'ok V0':
+        elif ret == 'OK V0':
             return False
         self._logger.error('get_digital ret: %s' % ret)
         return None
@@ -537,7 +512,7 @@ class SwiftAPI():
         Returns:
             True on success
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync M2212 N1 A{} T{} V{}'.format(address, data_type, data))
+        ret = self._ports['service']['handle'].call('set cmd_sync M212 N1 A{} T{} V{}'.format(address, data_type, data))
         if ret.startswith('ok'):
             return True
         self._logger.error('get_rom_data ret: %s' % ret)
@@ -553,24 +528,9 @@ class SwiftAPI():
         
         Returns:
             int or float value
-        
-        Notes:
-            EEPROM default data format, each item is one offline record data (no header at beginning):
-              [p0, p1, p2, p3, p4, p5 ... p_end]
-            
-            each record data is 10 bytes, and each item inside is 2 bytes:
-              [a0, a1, a2, a3, accessories_state]
-            
-            a0~3: unsigned fixed point of servos' angle (multiply by 100)
-            
-            accessories_state:
-              bit0: pump on/off
-              bit4: griper on/off
-            
-            p_end indicate the end of records, filled by 0xffff
         '''
-        ret = self._ports['service']['handle'].call('set cmd_sync M2211 N1 A{} T{}'.format(address, data_type))
-        if ret.startswith('ok '):
+        ret = self._ports['service']['handle'].call('set cmd_sync M211 N1 A{} T{}'.format(address, data_type))
+        if ret.startswith('OK '):
             return int(ret[4:]) if data_type != EEPROM_DATA_TYPE_FLOAT else float(ret[4:])
         self._logger.error('get_rom_data ret: %s' % ret)
         return None

@@ -96,12 +96,22 @@ class ProtocolAscii():
             if self.cnt == 10000:
                 self.cnt = 1
         return cmd
-
+    
     def cmd_sync_cb(self, msg):
         cmd = self.cmd_async_cb(msg)
         return cmd.get_ret()
     
-    def service_cb(self, message):
-        return ''
-
+    def service_cb(self, msg):
+        words = msg.split(' ', 1)
+        action = words[0]
+        
+        words = words[1].split(' ', 1)
+        param = words[0]
+        
+        if param == 'flush':
+            if action == 'set':
+                with self.cmd_pend_c:
+                    while len(self.cmd_pend) != 0:
+                        self.cmd_pend_c.wait()
+                return 'ok'
 

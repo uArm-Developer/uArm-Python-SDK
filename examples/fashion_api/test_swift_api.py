@@ -32,7 +32,9 @@ sleep(2)
 print('device info: ')
 print(swift.get_device_info())
 
-print('\nset X350 Y0 Z50 F500 ...')
+print('\nset X350 Y0 Z50 F1500 ...')
+# for the non-pro swift by current firmware,
+# you have to specify all arguments for x, y, z and the speed
 swift.set_position(350, 0, 50, speed = 1500)
 
 print('set X340 ...')
@@ -46,12 +48,8 @@ swift.set_position(x = 200)
 print('set X190 ...')
 swift.set_position(x = 190)
 
-# make sure at least one position was sent to device before start checking
-sleep(0.1)
-# make sure corresponding topics was empty before start service call
-# data through different topics and services does not guarantee the order
-while swift.get_is_moving():
-    sleep(0.1)
+# wait all async cmd return before send sync cmd
+swift.flush_cmd()
 
 print('set Z100 ...')
 swift.set_position(z = 100, wait = True)

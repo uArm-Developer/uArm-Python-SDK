@@ -1,9 +1,9 @@
-Python Library Documentation: class SwiftAPI in module uf.wrapper.swift_api
+Python Library Documentation: class UarmAPI in module uf.wrapper.uarm_api
 
-## class __SwiftAPI__
+## class __UarmAPI__
 ****************************************
 ```
-The API wrapper of swift and swift_pro
+The API wrapper of uArm Metal
 default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=2341:0042'}
 ```
 
@@ -12,6 +12,15 @@ default kwargs: dev_port = None, baud = 115200, filters = {'hwid': 'USB VID:PID=
 ****************************************
 #### def __\__init__\__(self, **kwargs):
 
+
+#### def __flush_cmd__(self):
+
+```
+Wait until all async command return
+
+Returns:
+    boolean True or False
+```
 
 #### def __get_analog__(self, pin):
 
@@ -50,6 +59,7 @@ Returns:
 
 ```
 Get the arm current moving status.
+(TODO: the gcode document for metal has the M200 command, but not work in real)
 
 Returns:
     boolean True or False
@@ -84,21 +94,6 @@ Args:
 
 Returns:
     int or float value
-
-Notes:
-    EEPROM default data format, each item is one offline record data (no header at beginning):
-      [p0, p1, p2, p3, p4, p5 ... p_end]
-    
-    each record data is 10 bytes, and each item inside is 2 bytes:
-      [a0, a1, a2, a3, accessories_state]
-    
-    a0~3: unsigned fixed point of servos' angle (multiply by 100)
-    
-    accessories_state:
-      bit0: pump on/off
-      bit4: griper on/off
-    
-    p_end indicate the end of records, filled by 0xffff
 ```
 
 #### def __get_servo_angle__(self, servo_id=None):
@@ -112,19 +107,6 @@ Args:
 
 Returns:
     array of float or single float
-```
-
-#### def __get_servo_attach__(self, servo_id=None):
-
-```
-Check servo attach status
-
-Args:
-    servo_id: SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-    wait: if True, will block the thread, until get response or timeout
-
-Returns:
-    succeed True or Failed False
 ```
 
 #### def __register_report_position_callback__(self, callback=None):
@@ -176,14 +158,14 @@ Returns:
     string response
 ```
 
-#### def __set_buzzer__(self, freq=1000, time=200):
+#### def __set_buzzer__(self, freq=1000, time=0.2):
 
 ```
 Control buzzer.
 
 Args:
     freq: frequency
-    time: time period
+    time: time period (second)
 
 Returns:
     None
@@ -202,7 +184,7 @@ Returns:
     succeed True or failed False
 ```
 
-#### def __set_polar__(self, s=None, r=None, h=None, speed=None, relative=False, wait=False):
+#### def __set_polar__(self, s=None, r=None, h=None, speed=150, wait=False):
 
 ```
 Polar coordinate, rotation, stretch, height.
@@ -212,14 +194,13 @@ Args:
     rotation(degree)
     height(mm)
     speed: speed(mm/min)
-    relative
     wait: if True, will block the thread, until get response or timeout
 
 Returns:
     True if successed
 ```
 
-#### def __set_position__(self, x=None, y=None, z=None, speed=None, relative=False, wait=False):
+#### def __set_position__(self, x=None, y=None, z=None, speed=150, relative=False, wait=False):
 
 ```
 Move arm to the position (x,y,z) unit is mm, speed unit is mm/sec

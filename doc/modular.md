@@ -48,7 +48,7 @@ Topic and service provided by UFC are very similar to ROS, except:
   But we prefer to use strings, further strings could append with raw binary data (or use raw only).
 
 #### Example Diagram
-![Diagram of test_swift_gripper](block_diagram.png)
+![Diagram of test_swift_gripper](img/block_diagram.png)
 
 
 ### GUI TOOL
@@ -57,11 +57,11 @@ and can use the GUI tool to monitor or change status of nodes, and monitor data 
 
 Demo of recording and playback:
 
-![Demo of recording and playback](record_n_play.png)
+![Demo of recording and playback](img/record_n_play.png)
 
 Demo of face detection (port `results` output positions of detected faces):
 
-![Demo of face_detect](face_detect.png)
+![Demo of face_detect](img/face_detect.png)
 
 This tool is under development currently, it will be published in the near future.
 
