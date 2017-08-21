@@ -15,4 +15,4 @@ def logger_init(level=logging.INFO, filename=None):
     if filename is None:
         filename = datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
     logging.addLevelName(logging.VERBOSE, 'VERBOSE')
-    logging.basicConfig(filename=filename, format='%(levelname)s: %(name)s: %(message)s', level=level)
+    logging.basicConfig(filename=filename, format='%(asctime)s %(levelname)s: %(name)s: %(message)s', level=level)
