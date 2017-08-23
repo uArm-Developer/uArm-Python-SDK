@@ -9,6 +9,7 @@
 
 import _thread, threading
 from queue import Queue
+from time import sleep
 from ..utils.log import *
 
 
@@ -47,21 +48,23 @@ class ProtocolAscii():
             self.ret = Queue(1)
             self.timer = threading.Timer(timeout, self.timeout_cb)
             self.timer.start()
-            
+        
+        def delete(self):
+            del self.owner.cmd_pend[self.cnt]
+            with self.owner.cmd_pend_c:
+                self.owner.cmd_pend_c.notifyAll()
+        
         def finish(self, msg):
             self.timer.cancel()
-            del self.owner.cmd_pend[self.cnt]
+            self.delete()
             self.ret.put(msg)
-            with self.owner.cmd_pend_c:
-                self.owner.cmd_pend_c.notify()
-            
+        
         def get_ret(self):
             return self.ret.get()
-            
+        
         def timeout_cb(self):
+            self.delete() # TODO: avoid KeyError if the 'finish' called at same time
             self.owner.logger.warning('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
-            # TODO: avoid KeyError if the 'finish' called at same time
-            del self.owner.cmd_pend[self.cnt]
             self.ret.put('err, timeout')
     
     
@@ -82,13 +85,12 @@ class ProtocolAscii():
                 self.cmd_pend[cnt].finish(msg[index + 1:])
             else:
                 pass # warning...
-
+    
     def cmd_async_cb(self, msg):
-        with self.cmd_pend_c:
-            while len(self.cmd_pend) >= self.cmd_pend_size:
-                self.cmd_pend_c.wait()
-        
         with self.cnt_lock:
+            with self.cmd_pend_c:
+                while len(self.cmd_pend) >= self.cmd_pend_size:
+                    self.cmd_pend_c.wait()
             cmd = self.Cmd(self, self.cnt, msg, self.timeout)
             self.cmd_pend[self.cnt] = cmd
             self.ports['packet_out']['handle'].publish('#{} '.format(self.cnt) + msg)
@@ -110,8 +112,9 @@ class ProtocolAscii():
         
         if param == 'flush':
             if action == 'set':
+                sleep(0.1)
                 with self.cmd_pend_c:
-                    while len(self.cmd_pend) != 0:
+                    while len(self.cmd_pend) != 0 or self.cnt_lock.locked():
                         self.cmd_pend_c.wait()
                 return 'ok'
 

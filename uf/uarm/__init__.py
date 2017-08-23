@@ -84,7 +84,7 @@ class Uarm(ModuleGroup):
         if 'filters' not in kwargs:
             kwargs['filters'] = {'hwid': 'USB VID:PID=0403:6001'}
         if 'cmd_pend_size' not in kwargs:
-            kwargs['cmd_pend_size'] = 1
+            kwargs['cmd_pend_size'] = 2
         super().__init__(ufc, node, iomap, **kwargs)
 
 

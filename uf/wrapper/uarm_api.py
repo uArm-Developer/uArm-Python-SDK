@@ -179,7 +179,7 @@ class UarmAPI():
         return False
     
     def set_position(self, x = None, y = None, z = None,
-                           speed = 150, relative = False, wait = False):
+                           speed = 100, relative = False, wait = False):
         '''
         Move arm to the position (x,y,z) unit is mm, speed unit is mm/sec
         

@@ -32,6 +32,7 @@ class Swift(ModuleGroup):
         {
             'module': ProtocolAscii,
             'node': 'ptc_ascii',
+            'args': ['cmd_pend_size'],
             'iomap': {
                 'cmd_async':  'outer: ptc_async',
                 'cmd_sync':   'outer: ptc_sync',
@@ -94,6 +95,8 @@ class Swift(ModuleGroup):
             kwargs['baud'] = 115200
         if 'filters' not in kwargs:
             kwargs['filters'] = {'hwid': 'USB VID:PID=2341:0042'}
+        if 'cmd_pend_size' not in kwargs:
+            kwargs['cmd_pend_size'] = 4
         super().__init__(ufc, node, iomap, **kwargs)
 
 
