@@ -64,6 +64,15 @@ Returns:
     boolean True or False
 ```
 
+#### def __get_limit_switch__(self):
+
+```
+Get the limit switch status.
+
+Returns:
+    boolean True or False
+```
+
 #### def __get_polar__(self):
 
 ```
@@ -134,6 +143,57 @@ Args:
 
 Returns:
     succeed True or Failed False
+```
+
+#### def __register_key0_callback__(self, callback=None):
+
+```
+Set function to receiving key0 state change event.
+
+Args:
+    callback: set the callback function, undo by setting to None
+
+Returns:
+    None
+
+Notes:
+    callback with one string argument:
+      'short press'
+      'long press'
+```
+
+#### def __register_key1_callback__(self, callback=None):
+
+```
+Set function to receiving key1 state change event.
+
+Args:
+    callback: set the callback function, undo by setting to None
+
+Returns:
+    None
+
+Notes:
+    callback with one string argument:
+      'short press'
+      'long press'
+```
+
+#### def __register_limit_switch_callback__(self, callback=None):
+
+```
+Set function to receiving limit switch state change event.
+
+Args:
+    callback: set the callback function, undo by setting to None
+
+Returns:
+    None
+
+Notes:
+    callback with one argument:
+      True: switch state change to close
+      False: switch state change to open
 ```
 
 #### def __register_report_position_callback__(self, callback=None):
@@ -256,6 +316,20 @@ Args:
 
 Returns:
     succeed True or failed False
+```
+
+#### def __set_report_keys__(self, is_on=True):
+
+```
+Change default function of base buttons
+
+Args:
+    is_on:
+      True: enable report
+      False: disable report, for offline teach by default
+
+Returns:
+    True if success
 ```
 
 #### def __set_report_position__(self, interval):

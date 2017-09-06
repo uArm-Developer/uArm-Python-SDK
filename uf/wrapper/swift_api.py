@@ -89,6 +89,9 @@ class SwiftAPI():
         }
         
         self.pos_from_dev_cb = None
+        self.limit_switch_cb = None
+        self.key0_cb = None
+        self.key1_cb = None
         self._dev_info = None
         
         self._node = 'swift_api'
@@ -102,11 +105,16 @@ class SwiftAPI():
             self.pos_from_dev_cb(values)
     
     def _limit_switch_cb(self, msg):
-        pass
+        if self.limit_switch_cb != None:
+            self.limit_switch_cb(msg == 'on')
+    
     def _key0_cb(self, msg):
-        pass
+        if self.key0_cb != None:
+            self.key0_cb(msg)
+    
     def _key1_cb(self, msg):
-        pass
+        if self.key1_cb != None:
+            self.key1_cb(msg)
     
     def reset(self):
         '''
@@ -443,6 +451,76 @@ class SwiftAPI():
         '''
         self.pos_from_dev_cb = callback
     
+    def register_limit_switch_callback(self, callback = None):
+        '''
+        Set function to receiving limit switch state change event.
+        
+        Args:
+            callback: set the callback function, undo by setting to None
+        
+        Returns:
+            None
+        
+        Notes:
+            callback with one argument:
+              True: switch state change to close
+              False: switch state change to open
+        '''
+        self.limit_switch_cb = callback
+    
+    def set_report_keys(self, is_on = True):
+        '''
+        Change default function of base buttons
+        
+        Args:
+            is_on:
+              True: enable report
+              False: disable report, for offline teach by default
+        
+        Returns:
+            True if success
+        '''
+        cmd = 'set cmd_sync M2213 V{}'.format('0' if is_on else '1')
+        ret = self._ports['service']['handle'].call(cmd)
+        if ret == 'ok':
+            return True
+        self._logger.error('set_report_keys ret: %s' % ret)
+        return False
+    
+    def register_key0_callback(self, callback = None):
+        '''
+        Set function to receiving key0 state change event.
+        
+        Args:
+            callback: set the callback function, undo by setting to None
+        
+        Returns:
+            None
+        
+        Notes:
+            callback with one string argument:
+              'short press'
+              'long press'
+        '''
+        self.key0_cb = callback
+    
+    def register_key1_callback(self, callback = None):
+        '''
+        Set function to receiving key1 state change event.
+        
+        Args:
+            callback: set the callback function, undo by setting to None
+        
+        Returns:
+            None
+        
+        Notes:
+            callback with one string argument:
+              'short press'
+              'long press'
+        '''
+        self.key1_cb = callback
+    
     def set_buzzer(self, freq = 1000, time = 200):
         '''
         Control buzzer.
@@ -491,6 +569,21 @@ class SwiftAPI():
             return True
         self._logger.warning('set_gripper ret: %s' % ret)
         return False
+    
+    def get_limit_switch(self):
+        '''
+        Get the limit switch status.
+        
+        Returns:
+            boolean True or False
+        '''
+        ret = self._ports['service']['handle'].call('set cmd_sync P2233')
+        if ret == 'ok V0':
+            return False
+        if ret == 'ok V1':
+            return True
+        self._logger.error('get_limit_switch ret: %s' % ret)
+        return None
     
     def get_analog(self, pin):
         '''
