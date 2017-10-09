@@ -9,9 +9,8 @@
 # pip3.6 install pycrc --user
 from PyCRC.CRC16 import CRC16
 
-import _thread, threading
+import threading
 import serial
-from serial.tools import list_ports
 from ...utils.select_serial_port import select_port
 from ...utils.log import *
 
@@ -33,7 +32,7 @@ class CdbusSerial(threading.Thread):
         }
         
         self.local_filter = [b'\xaa']
-        self.remote_filter = [b'\x55']
+        self.remote_filter = [b'\x55', b'\x56']
         
         self.rx_bytes = b''
         
@@ -94,7 +93,7 @@ class CdbusSerial(threading.Thread):
         data += modbus_crc(data).to_bytes(2, byteorder='little')
         self.com.write(data)
     
-    def service_cb(self, message):
+    def service_cb(self, msg):
         # set filter, bond rates ...
         words = msg.split(' ', 1)
         action = words[0]
