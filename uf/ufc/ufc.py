@@ -45,9 +45,12 @@ class UFC():
             item['handle'] = None
         
         for k, path in iomap.items():
+            kwargs = {}
+            if 'data_type' in ports[k]:
+                kwargs['data_type'] = ports[k]['data_type'] # 'str' by default, can change to 'bytes'
+            
             if ports[k]['type'] == 'topic':
                 if ports[k]['dir'] == 'in':
-                    kwargs = {}
                     if 'queue_size' in ports[k]:
                         kwargs['queue_size'] = ports[k]['queue_size']
                     if 'allow_drop' in ports[k]:
@@ -57,7 +60,7 @@ class UFC():
                     ports[k]['handle'] = self.topic_publisher(node, path)
             elif ports[k]['type'] == 'service':
                 if ports[k]['dir'] == 'in':
-                    ports[k]['handle'] = self.service_register(node, path, ports[k]['callback'])
+                    ports[k]['handle'] = self.service_register(node, path, ports[k]['callback'], **kwargs)
                 elif ports[k]['dir'] == 'out':
                     ports[k]['handle'] = self.service_proxy(node, path)
 

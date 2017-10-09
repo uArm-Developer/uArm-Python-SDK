@@ -11,12 +11,24 @@ import _thread, threading
 from .ufc import UFC
 
 
+def case_to_type(dst_type, data):
+    assert dst_type == str or dst_type == bytes
+    assert isinstance(data, str) or isinstance(data, bytes)
+    if isinstance(data, dst_type):
+        return data
+    if isinstance(data, str):
+        return bytes(map(ord, data))
+    else:
+        return ''.join(map(chr, data))
+
+
 class TopicSub(threading.Thread):
-    def __init__(self, node, topic, callback, queue_size, allow_drop):
+    def __init__(self, node, topic, callback, queue_size, allow_drop, data_type):
         self.node = node
         self.topic = topic
         self.callback = callback
         self.allow_drop = allow_drop
+        self.data_type = data_type
         self.queue = Queue(queue_size)
         threading.Thread.__init__(self)
         self.daemon = True
@@ -25,7 +37,9 @@ class TopicSub(threading.Thread):
     
     def run(self):
         while self.alive:
-            self.callback(self.queue.get())
+            msg = self.queue.get()
+            msg = case_to_type(self.data_type, msg)
+            self.callback(msg)
     
     def stop(self):
         self.alive = False
@@ -36,10 +50,11 @@ class TopicPub():
         self.node = node
         self.topic = topic
     
-    def publish(self, message):
+    def publish(self, msg):
         # TODO: check for allow_drop
         for _, item in self.topic.subs.items():
-            item.queue.put(message)
+            assert isinstance(msg, str) or isinstance(msg, bytes)
+            item.queue.put(msg)
 
 class Topic():
     def __init__(self, path):
@@ -56,19 +71,25 @@ class Topic():
 
 
 class ServiceProvider():
-    def __init__(self, node, service, callback):
+    def __init__(self, node, service, callback, data_type):
         self.node = node
         self.service = service
         self.callback = callback
+        self.data_type = data_type
 
 class ServiceReq():
     def __init__(self, node, service):
         self.node = node
         self.service = service
     
-    def call(self, message):
-        ret = self.service.provider.callback(message)
-        return ret if ret != None else ''
+    def call(self, msg):
+        assert isinstance(msg, str) or isinstance(msg, bytes)
+        req_type = type(msg)
+        msg = case_to_type(self.service.provider.data_type, msg)
+        ret = self.service.provider.callback(msg)
+        if ret == None:
+            ret = b''
+        return case_to_type(req_type, ret)
 
 class Service():
     def __init__(self, path):
@@ -92,9 +113,9 @@ class UFCThread(UFC):
     def __init__(self):
         self._buses = {} # format: 'path: handle, ...'
     
-    def topic_subscriber(self, node, path, callback, queue_size = 100, allow_drop = True):
+    def topic_subscriber(self, node, path, callback, queue_size = 100, allow_drop = True, req_type = str):
         b = self._get_bus(path, ctype = Topic)
-        i = TopicSub(node, b, callback, queue_size = queue_size, allow_drop = allow_drop)
+        i = TopicSub(node, b, callback, queue_size = queue_size, allow_drop = allow_drop, req_type = req_type)
         b.add_sub(i)
         return i
     
@@ -104,9 +125,9 @@ class UFCThread(UFC):
         b.add_pub(i)
         return i
     
-    def service_register(self, node, path, callback):
+    def service_register(self, node, path, callback, req_type = str):
         b = self._get_bus(path, ctype = Service)
-        i = ServiceProvider(node, b, callback = callback)
+        i = ServiceProvider(node, b, callback = callback, req_type = req_type)
         b.add_provider(i)
         return i
     
