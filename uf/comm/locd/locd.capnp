@@ -10,12 +10,12 @@ struct LoCD {
   dstMac       @5 :UInt8;
 
   union {
-    icmp :group {
-      type     @6 :UInt8;
-    }
     udp :group {
-      srcPort  @7 :UInt16;
-      dstPort  @8 :UInt16;
+      srcPort  @6 :UInt16;
+      dstPort  @7 :UInt16;
+    }
+    icmp :group {
+      type     @8 :UInt8;
     }
   }
   # call .which() to determine the packet type

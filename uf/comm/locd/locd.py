@@ -20,7 +20,7 @@ LO_ADDR_M8      = 0xb
 LO_ADDR_M32     = 0xa
 LO_ADDR_M128    = 0x8
 
-LO_NH_UDP       = 0xf4       # C = 'b1
+LO_NH_UDP       = 0xf4 # C = 'b1
 LO_NH_ICMP      = 0xf8
 
 
@@ -187,7 +187,6 @@ def lo_exchange_src_dst(intf, packet):
             packet.srcAddrType = LO_ADDR_LL0
         elif packet.srcAddrType == LO_ADDR_M32 or packet.srcAddrType == LO_ADDR_M128:
             packet.srcAddrType = LO_ADDR_UGC16
-            
             packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') +
                              b'\x00' * 7 + intf.mac.to_bytes(1, 'big')
         lo_pkt.srcMac = intf.mac
@@ -202,4 +201,5 @@ def lo_fill_src_addr(intf, packet):
         packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') +
                          b'\x00' * 7 + intf.mac.to_bytes(1, 'big')
         packet.srcMac = intf.mac
+
 

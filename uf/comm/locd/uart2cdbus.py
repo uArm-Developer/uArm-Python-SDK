@@ -14,22 +14,28 @@ from .locd import *
 from ...utils.log import *
 
 class Uart2Cdbus():
-    def __init__(self, ufc, node, iomap):
+    def __init__(self, ufc, node, iomap, mac = 255):
         
         self.ports = {
             'service': {'dir': 'in', 'type': 'service', 'callback': self.service_cb},
             
             'lo_down2up': {'dir': 'out', 'type': 'topic'},
-            'lo_up2down': {'dir': 'in', 'type': 'topic', 'callback': self.lo_up2down, 'data_type': bytes},
+            'lo_up2down': {'dir': 'in', 'type': 'topic',
+                    'callback': self.lo_up2down, 'data_type': bytes},
+            'lo_up2down_repl_src': {'dir': 'in', 'type': 'topic',
+                    'callback': self.lo_up2down_repl_src, 'data_type': bytes},
+            'lo_up2down_xchg': {'dir': 'in', 'type': 'topic',
+                    'callback': self.lo_up2down_xchg, 'data_type': bytes},
             
             #'cd_service': {'dir': 'out', 'type': 'service'},
             'cd_up2down': {'dir': 'out', 'type': 'topic'},
-            'cd_down2up': {'dir': 'in', 'type': 'topic', 'callback': self.cd_down2up, 'data_type': bytes}
+            'cd_down2up': {'dir': 'in', 'type': 'topic',
+                    'callback': self.cd_down2up, 'data_type': bytes}
         }
         
         self.logger = logging.getLogger(node)
         self.site = 0
-        self.mac = 255
+        self.mac = mac
         self.gate_ans = queue.Queue(1)
         ufc.node_init(node, self.ports, iomap)
     
@@ -102,16 +108,35 @@ class Uart2Cdbus():
                 self.site = int(words[1], 16)
                 return 'ok'
     
-    def lo_up2down(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+    def lo_send_packet(self, packet):
+        if self.mac == 255 and packet.which() == 'udp':
+            self.logger.error('send udp is not allowd if mac == 255')
+            return
         frame = lo_to_frame(packet)
         frame = b'\xaa\x56' + len(frame).to_bytes(1, 'little') + frame
         self.ports['cd_up2down']['handle'].publish(frame)
     
+    def lo_up2down(self, msg):
+        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        self.lo_send_packet(packet)
+    
+    def lo_up2down_repl_src(self, msg):
+        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        lo_fill_src_addr(self, packet)
+        self.lo_send_packet(packet)
+    
+    def lo_up2down_xchg(self, msg):
+        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        lo_exchange_src_dst(self, packet)
+        self.lo_send_packet(packet)
+    
     def cd_down2up(self, msg):
         if msg.startswith(b'\x56\xaa'):
             packet = lo_from_frame(msg[3:])
-            self.ports['lo_down2up']['handle'].publish(frame)
+            if self.mac == 255 and packet.which() == 'udp':
+                return
+            data = packet.to_bytes_packed()
+            self.ports['lo_down2up']['handle'].publish(data)
         elif msg.startswith(b'\x55\xaa'):
             self.gate_ans.queue.clear()
             self.gate_ans.put(frame)
