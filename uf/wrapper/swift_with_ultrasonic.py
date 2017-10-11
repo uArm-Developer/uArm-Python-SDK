@@ -6,8 +6,6 @@
 #
 # Author: Duke Fong <duke@ufactory.cc>
 
-
-from time import sleep
 from .swift_api import SwiftAPI
 from ..swift.grove.ultrasonic import Ultrasonic
 from ..utils.log import *

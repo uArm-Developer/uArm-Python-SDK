@@ -6,9 +6,6 @@
 #
 # Author: Duke Fong <duke@ufactory.cc>
 
-
-import _thread, threading
-from queue import Queue
 from ..utils.log import *
 
 csys_gstr = {

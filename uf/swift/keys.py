@@ -6,7 +6,6 @@
 #
 # Author: Duke Fong <duke@ufactory.cc>
 
-from time import sleep
 from ..utils.log import *
 
 

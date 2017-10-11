@@ -113,9 +113,9 @@ class UFCThread(UFC):
     def __init__(self):
         self._buses = {} # format: 'path: handle, ...'
     
-    def topic_subscriber(self, node, path, callback, queue_size = 100, allow_drop = True, req_type = str):
+    def topic_subscriber(self, node, path, callback, queue_size = 100, allow_drop = True, data_type = str):
         b = self._get_bus(path, ctype = Topic)
-        i = TopicSub(node, b, callback, queue_size = queue_size, allow_drop = allow_drop, req_type = req_type)
+        i = TopicSub(node, b, callback, queue_size = queue_size, allow_drop = allow_drop, data_type = data_type)
         b.add_sub(i)
         return i
     
@@ -125,9 +125,9 @@ class UFCThread(UFC):
         b.add_pub(i)
         return i
     
-    def service_register(self, node, path, callback, req_type = str):
+    def service_register(self, node, path, callback, data_type = str):
         b = self._get_bus(path, ctype = Service)
-        i = ServiceProvider(node, b, callback = callback, req_type = req_type)
+        i = ServiceProvider(node, b, callback = callback, data_type = data_type)
         b.add_provider(i)
         return i
     

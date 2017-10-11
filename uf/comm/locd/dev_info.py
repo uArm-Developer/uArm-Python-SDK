@@ -5,12 +5,14 @@
 # All rights reserved.
 #
 # Author: Duke Fong <duke@ufactory.cc>
+#
+# Each node on the bus must answer dev_info request, which at UDP port 1000
 
 import queue
 import capnp
 from socket import gethostname
 
-import locd_capnp
+from . import locd_capnp
 from .locd import *
 from ...utils.log import *
 
@@ -18,7 +20,7 @@ class DevInfo():
     def __init__(self, ufc, node, iomap):
         
         self.ports = {
-            'lo_up2down_repl_src': {'dir': 'out', 'type': 'topic'},
+            'lo_up2down_xchg': {'dir': 'out', 'type': 'topic'},
             'lo_down2up': {'dir': 'in', 'type': 'topic',
                     'callback': self.lo_down2up, 'data_type': bytes}
         }
@@ -30,9 +32,15 @@ class DevInfo():
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
         if packet.which() != 'udp' or packet.udp.dstPort != 1000:
             return
-        packet.data = 'pyuf, ser ' + gethostname()
+        in_data = packet.data
+        packet.data = 'M: pyuf; S: ' + gethostname() # replace data content
+        
+        if len(in_data) != 0 and packet.data.find(in_data) == -1:
+            self.logger.debug('filtered by: ', in_data)
+            return
+        
         self.logger.debug('answer: pyuf, ser ' + gethostname())
         data = packet.to_bytes_packed()
-        self.ports['lo_up2down_repl_src']['handle'].publish(data)
+        self.ports['lo_up2down_xchg']['handle'].publish(data)
 
 

@@ -5,13 +5,19 @@
 # All rights reserved.
 #
 # Author: Duke Fong <duke@ufactory.cc>
+#
+# The UART2CDBUS hardware module converts CDBUS frame between UART and RS485
+# The module has two address:
+#   0x55: check module info, set/get module settings
+#   0x56: data transparent transmission
 
 import queue
 import capnp
 
-import locd_capnp
+from . import locd_capnp
 from .locd import *
 from ...utils.log import *
+
 
 class Uart2Cdbus():
     def __init__(self, ufc, node, iomap, mac = 255):
@@ -59,9 +65,11 @@ class Uart2Cdbus():
         try:
             ret_frame = self.gate_ans.get(timeout = 0.5)
         except queue.Empty:
+            self.logger.error('gate_command no answer')
             return None
         ret_packet = lo_from_frame(ret_frame)
         if ret_packet.udp.srcPort != port:
+            self.logger.error('gate_command wrong answer port')
             return None
         return ret_packet.data
     
@@ -139,12 +147,12 @@ class Uart2Cdbus():
             self.ports['lo_down2up']['handle'].publish(data)
         elif msg.startswith(b'\x55\xaa'):
             self.gate_ans.queue.clear()
-            self.gate_ans.put(frame)
+            self.gate_ans.put(msg)
     
     def service_cb(self, msg):
         if msg.startswith('get info') or msg.startswith('set filter'):
-            return gate_setting(msg)
+            return self.gate_setting(msg)
         if msg.find(' mac')  == 3 or msg.find(' site') == 3:
-            return local_setting(msg)
+            return self.local_setting(msg)
 
 

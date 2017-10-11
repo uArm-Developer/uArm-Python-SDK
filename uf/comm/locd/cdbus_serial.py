@@ -5,6 +5,9 @@
 # All rights reserved.
 #
 # Author: Duke Fong <duke@ufactory.cc>
+#
+# CDBUS protocol based on but not limited to RS485,
+# we use CDBUS protocol through Serial at here
 
 # pip3.6 install pycrc --user
 from PyCRC.CRC16 import CRC16
@@ -26,8 +29,8 @@ class CdbusSerial(threading.Thread):
     def __init__(self, ufc, node, iomap, dev_port = None, baud = 115200, filters = None):
         
         self.ports = {
-            'in': {'dir': 'in', 'type': 'topic', 'callback': self.in_cb, 'data_type': bytes},
-            'out': {'dir': 'out', 'type': 'topic'},
+            'up2down': {'dir': 'in', 'type': 'topic', 'callback': self.up2down_cb, 'data_type': bytes},
+            'down2up': {'dir': 'out', 'type': 'topic'},
             'service': {'dir': 'in', 'type': 'service', 'callback': self.service_cb}
         }
         
@@ -66,19 +69,19 @@ class CdbusSerial(threading.Thread):
             #self.logger.log(logging.VERBOSE, '>>> ' + to_hexstr(bchar))
             
             if len(self.rx_bytes) == 1:
-                if bchar not in self.local_filter:
+                if bchar not in self.remote_filter:
                     self.logger.debug('byte0 filtered: ' + to_hexstr(bchar))
                     self.rx_bytes = b''
             elif len(self.rx_bytes) == 2:
-                if bchar not in self.remote_filter:
+                if bchar not in self.local_filter:
                     self.logger.debug('byte1 filtered: ' + to_hexstr(bchar))
                     self.rx_bytes = b''
             elif len(self.rx_bytes) == self.rx_bytes[2] + 5:
                 if modbus_crc(self.rx_bytes) != 0:
                     self.logger.debug('crc error: ' + to_hexstr(self.rx_bytes))
-                elif self.ports['out']['handle']:
+                elif self.ports['down2up']['handle']:
                     self.logger.log(logging.VERBOSE, '-> ' + to_hexstr(self.rx_bytes[:-2]))
-                    self.ports['out']['handle'].publish(self.rx_bytes[:-2])
+                    self.ports['down2up']['handle'].publish(self.rx_bytes[:-2])
                 self.rx_bytes = b''
         
         self.com.close()
@@ -88,7 +91,7 @@ class CdbusSerial(threading.Thread):
         self.alive = False
         self.join()
     
-    def in_cb(self, data):
+    def up2down_cb(self, data):
         self.logger.log(logging.VERBOSE, '<- ' + to_hexstr(data))
         data += modbus_crc(data).to_bytes(2, byteorder='little')
         self.com.write(data)

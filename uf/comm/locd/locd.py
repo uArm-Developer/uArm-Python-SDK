@@ -5,11 +5,14 @@
 # All rights reserved.
 #
 # Author: Duke Fong <duke@ufactory.cc>
+#
+# 6LoCD:
+#   Compression Format for IPv6 Datagrams over CDBUS, depends on 6LoWPAN.
 
 import struct
 import capnp
 
-import locd_capnp
+from . import locd_capnp
 from ...utils.log import *
 
 LO_ADDR_LL0     = 0x3
@@ -27,7 +30,7 @@ LO_NH_ICMP      = 0xf8
 def lo_to_frame(packet):
     header = b''
     header += packet.srcMac.to_bytes(1, 'little')
-    header += packet.srcMac.to_bytes(1, 'little')
+    header += packet.dstMac.to_bytes(1, 'little')
     
     payload = b'\x7f'
     payload += (packet.srcAddrType << 4 | packet.dstAddrType).to_bytes(1, 'big')
@@ -53,7 +56,7 @@ def lo_to_frame(packet):
         payload += packet.dstAddr[7:8]
         payload += packet.dstAddr[15:16]
         assert packet.dstMac != 0xff
-    elif packet.dstAddrType == LO_ADDR_UG128 or
+    elif packet.dstAddrType == LO_ADDR_UG128 or \
             packet.dstAddrType == LO_ADDR_M128:
         payload += packet.dstAddr
         assert len(packet.dstAddr) == 16
@@ -121,12 +124,12 @@ def lo_from_frame(frame):
         assert False
 
     if packet.dstAddrType == LO_ADDR_LL0:
-        assert packet.srcMac != 0xff
+        assert packet.dstMac != 0xff
     elif packet.dstAddrType == LO_ADDR_UGC16:
         packet.dstAddr = b'\x00' * 7 + remains[0:1] + b'\x00' * 7 + remains[1:2]
         remains = remains[2:]
-        assert packet.srcMac != 0xff
-    elif packet.dstAddrType == LO_ADDR_UG128 or
+        assert packet.dstMac != 0xff
+    elif packet.dstAddrType == LO_ADDR_UG128 or \
             packet.dstAddrType == LO_ADDR_M128:
         packet.dstAddr = remains[0:16]
         remains = remains[16:]
@@ -187,7 +190,7 @@ def lo_exchange_src_dst(intf, packet):
             packet.srcAddrType = LO_ADDR_LL0
         elif packet.srcAddrType == LO_ADDR_M32 or packet.srcAddrType == LO_ADDR_M128:
             packet.srcAddrType = LO_ADDR_UGC16
-            packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') +
+            packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') + \
                              b'\x00' * 7 + intf.mac.to_bytes(1, 'big')
         lo_pkt.srcMac = intf.mac
 
@@ -198,7 +201,7 @@ def lo_fill_src_addr(intf, packet):
         packet.srcMac = intf.mac
     else:
         packet.srcAddrType = LO_ADDR_UGC16
-        packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') +
+        packet.srcAddr = b'\x00' * 7 + intf.site.to_bytes(1, 'big') + \
                          b'\x00' * 7 + intf.mac.to_bytes(1, 'big')
         packet.srcMac = intf.mac
 

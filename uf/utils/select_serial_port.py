@@ -32,7 +32,7 @@ def select_port(logger = None, dev_port = None, filters = None, must_unique = Fa
                 a = getattr(d, k)
                 if not a:
                     a = ''
-                if not a.startswith(v):
+                if a.find(v) == -1:
                     is_match = False
             if is_match:
                 if dev_port == None:

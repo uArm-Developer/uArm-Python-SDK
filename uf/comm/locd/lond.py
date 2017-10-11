@@ -5,10 +5,15 @@
 # All rights reserved.
 #
 # Author: Duke Fong <duke@ufactory.cc>
+#
+# Neighbor Discovery for IP version 6 (IPv6)
+# Adapt for 6LoCD
 
 import threading
 from time import sleep
 from random import randint
+from . import locd_capnp
+from .locd import *
 from ...utils.log import *
 
 ND_TYPE_NS = 135
@@ -58,11 +63,13 @@ class LoND(threading.Thread):
             if self.state == 'BEGIN':
                 self.target_mac = randint(0, 254) if self.mac == 255 else self.mac
                 self.identify = randint(0, 0xffffffff)
-                ret = self.ports['lo_service']['handle'].call('set filter %02x' % self.target_mac)
-                if not ret.startswith('ok'):
-                    self.logger.error('set filter failed: ' + ret)
+                if self.mac == 255:
+                    ret = self.ports['lo_service']['handle'].call('set filter %02x' % self.target_mac)
+                    if not ret.startswith('ok'):
+                        self.logger.error('set filter failed: ' + ret)
                 self.state = 'SEND_NS'
             if self.state == 'SEND_NS':
+                self.logger.log(logging.VERBOSE, 'send ns...')
                 packet = locd_capnp.LoCD.new_message()
                 packet.srcAddrType = LO_ADDR_UNSP
                 packet.srcMac = 255
@@ -89,7 +96,7 @@ class LoND(threading.Thread):
                         self.state = 'IDLE'
                     else:
                         self.logger.debug('re SEND_NS')
-                        self.satte = 'SEND_NS'
+                        self.state = 'SEND_NS'
             if self.state == 'IDLE':
                 if self.times > 0:
                     self.times -= 1
