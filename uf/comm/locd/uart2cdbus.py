@@ -44,6 +44,12 @@ class Uart2Cdbus():
         self.mac = mac
         self.gate_ans = queue.Queue(1)
         ufc.node_init(node, self.ports, iomap)
+        
+        ret = self.gate_command(1000, b'')
+        if ret != None:
+            self.logger.info('dev info: ' + ''.join(map(chr, ret)))
+        else:
+            raise Exception('get dev info failed')
     
     def gate_command(self, port, data):
         packet = locd_capnp.LoCD.new_message()
@@ -82,7 +88,7 @@ class Uart2Cdbus():
         
         if param == 'info':
             if action == 'get':
-                ret = self.gate_command(1000, None)
+                ret = self.gate_command(1000, b'')
                 if ret != None:
                     return 'ok, ' + ''.join(map(chr, ret))
                 else:
