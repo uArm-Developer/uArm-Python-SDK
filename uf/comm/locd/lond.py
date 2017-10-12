@@ -21,7 +21,7 @@ ND_TYPE_NA = 136
 
 
 class LoND(threading.Thread):
-    def __init__(self, ufc, node, iomap, times = -1, interval = 5):
+    def __init__(self, ufc, node, iomap, times = -1, interval = 30):
         
         self.ports = {
             'lo_service': {'dir': 'out', 'type': 'service'},

@@ -135,12 +135,12 @@ class Uart2Cdbus():
         self.lo_send_packet(packet)
     
     def lo_up2down_repl_src(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = locd_capnp.LoCD.from_bytes_packed(msg).as_builder()
         lo_fill_src_addr(self, packet)
         self.lo_send_packet(packet)
     
     def lo_up2down_xchg(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = locd_capnp.LoCD.from_bytes_packed(msg).as_builder()
         lo_exchange_src_dst(self, packet)
         self.lo_send_packet(packet)
     
