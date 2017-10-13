@@ -26,7 +26,9 @@ class LoND(threading.Thread):
         self.ports = {
             'lo_service': {'dir': 'out', 'type': 'service'},
             'lo_up2down': {'dir': 'out', 'type': 'topic'},
-            'lo_down2up': {'dir': 'in', 'type': 'topic',
+            'IA135_ns': {'dir': 'in', 'type': 'topic',
+                    'callback': self.lo_down2up, 'data_type': bytes},
+            'IA136_na': {'dir': 'in', 'type': 'topic',
                     'callback': self.lo_down2up, 'data_type': bytes}
         }
         
@@ -107,7 +109,6 @@ class LoND(threading.Thread):
         
         self.com.close()
     
-    
     def stop(self):
         self.alive = False
         self.join()
@@ -115,8 +116,6 @@ class LoND(threading.Thread):
     
     def lo_down2up(self, msg):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
-        if packet.which() != 'icmp':
-            return
         if packet.icmp.type == ND_TYPE_NS:
             if self.mac != 255 and (self.state != 'WAIT_RX' or
                     packet.data != self.identify.to_bytes(6, 'little')):

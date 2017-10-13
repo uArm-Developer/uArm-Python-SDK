@@ -27,8 +27,10 @@ print('setup LocdViaUart2Cdbus ...')
 
 locd_via_uart2cdbus_iomap = {
         'lo_service':           'lo_service',
-        'lo_up2down_repl_src':  'lo_up2down_repl_src',
-        'lo_down2up':           'lo_down2up'
+                                                # first field: (A: down2up; V: up2down)
+        'RV_test':              'RV_test',      # RV: UDP request
+        'RA_test':              'RA_test',      # RA: UDP answer
+        'SA2000_rpt':           'SA2000_rpt'    # SA+num: UDP service request
 }
 
 ufc = ufc_init()
@@ -38,21 +40,28 @@ locd_via_uart2cdbus = LocdViaUart2Cdbus(ufc, 'locd_via_uart2cdbus', locd_via_uar
 
 print('setup test ...')
 
-def lo_down2up_cb(msg):
+def RA_test_cb(msg):
     packet = locd_capnp.LoCD.from_bytes_packed(msg)
-    print('test: lo_down2up_cb: ', packet)
+    print('RA: ', packet)
+
+def SA2000_rpt_cb(msg):
+    packet = locd_capnp.LoCD.from_bytes_packed(msg)
+    print('RPT: ', packet)
 
 test_ports = {
         'lo_service':           {'dir': 'out', 'type': 'service'},
-        'lo_up2down_repl_src':  {'dir': 'out', 'type': 'topic'},
-        'lo_down2up':           {'dir': 'in',  'type': 'topic',
-                                 'callback': lo_down2up_cb, 'data_type': bytes}
+        'RV_test':              {'dir': 'out', 'type': 'topic'},
+        'RA_test':              {'dir': 'in',  'type': 'topic',
+                                 'callback': RA_test_cb, 'data_type': bytes},
+        'SA2000_rpt':           {'dir': 'in',  'type': 'topic',
+                                 'callback': SA2000_rpt_cb, 'data_type': bytes}
 }
 
 test_iomap = {
         'lo_service':           'lo_service',
-        'lo_up2down_repl_src':  'lo_up2down_repl_src',
-        'lo_down2up':           'lo_down2up'
+        'RV_test':              'RV_test',
+        'RA_test':              'RA_test',
+        'SA2000_rpt':           'SA2000_rpt'
 }
 
 # install handle for ports which are listed in the iomap
@@ -71,10 +80,9 @@ packet = locd_capnp.LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'
-packet.udp.srcPort = 0xf000
 packet.udp.dstPort = 1000
 data = packet.to_bytes_packed()
-test_ports['lo_up2down_repl_src']['handle'].publish(data)
+test_ports['RV_test']['handle'].publish(data)
 sleep(2)
 
 print('\nsending test_data...')
@@ -82,22 +90,20 @@ packet = locd_capnp.LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'
-packet.udp.srcPort = 0xf000
 packet.udp.dstPort = 2001
 packet.data = "test_data...\n"
 data = packet.to_bytes_packed()
-test_ports['lo_up2down_repl_src']['handle'].publish(data)
+test_ports['RV_test']['handle'].publish(data)
 
 packet = locd_capnp.LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'
-packet.udp.srcPort = 0xf000
 packet.udp.dstPort = 2000
 packet.data = pc_mac.to_bytes(1, 'big') + (2000).to_bytes(2, 'big') + \
               (LO_ADDR_LL0).to_bytes(1, 'big') + b'\x00' * 16
 data = packet.to_bytes_packed()
-test_ports['lo_up2down_repl_src']['handle'].publish(data)
+test_ports['RV_test']['handle'].publish(data)
 
 print('done ...')
 while True:

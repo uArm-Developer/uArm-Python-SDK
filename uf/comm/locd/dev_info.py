@@ -21,7 +21,7 @@ class DevInfo():
         
         self.ports = {
             'lo_up2down_xchg': {'dir': 'out', 'type': 'topic'},
-            'lo_down2up': {'dir': 'in', 'type': 'topic',
+            'SA1000_dev_info': {'dir': 'in', 'type': 'topic',
                     'callback': self.lo_down2up, 'data_type': bytes}
         }
         
@@ -30,8 +30,6 @@ class DevInfo():
     
     def lo_down2up(self, msg):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
-        if packet.which() != 'udp' or packet.udp.dstPort != 1000:
-            return
         in_data = packet.data
         packet.data = 'M: pyuf; S: ' + gethostname() # replace data content
         

@@ -10,7 +10,7 @@
 class ModuleGroup():
     def __init__(self, ufc, node, iomap, **kwargs):
         self.nodes = {}
-        for n in self.__class__.sub_nodes:
+        for n in self.sub_nodes:
             args = {}
             if 'args' in n.keys():
                 for k in n['args']:

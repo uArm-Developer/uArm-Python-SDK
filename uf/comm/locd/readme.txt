@@ -5,6 +5,3 @@ both are Compression Format for IPv6 Datagrams.
 
 Reference to C implementation of 6LoCD Protocol Stack for details and documents.
 
-TODO:
-    Add a dispatch module between interface and apps.
-
