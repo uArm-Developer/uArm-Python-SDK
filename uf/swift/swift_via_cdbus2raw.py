@@ -7,7 +7,6 @@
 # Author: Duke Fong <duke@ufactory.cc>
 
 from ..utils.module_group import ModuleGroup
-from ..comm.locd_via_uart2cdbus import LocdViaUart2Cdbus
 from ..comm.cdbus2raw import Cdbus2Raw
 from ..comm.protocol_ascii import ProtocolAscii
 from .swift_body import SwiftBody
@@ -24,30 +23,19 @@ class Swift(ModuleGroup):
         
         self.sub_nodes = [
             {
-                'module': LocdViaUart2Cdbus,
-                'node': 'locd_via_uart2cdbus',
-                'args': ['dev_port', 'filters'],
-                'iomap': {
-                    'lo_service':   'inner: lo_service',
-                    'RV_socket':    'inner: RV_socket',
-                    'RA_socket':    'inner: RA_socket',
-                    'SA2000_rpt':   'inner: SA2000_rpt'
-                }
-            },
-            {
                 'module': Cdbus2Raw,
                 'node': 'cdbus2raw',
-                'args': ['dev_filter'],
+                'args': ['dev_filter', 'listen_port'],
                 'iomap': {
                     'service':      'outer: cdbus2raw',
                     
                     'raw_down2up':  'inner: pkt_ser2ptc',
                     'raw_up2down':  'inner: pkt_ptc2ser',
                     
-                    'lo_service':   'inner: lo_service',
-                    'RV_socket':    'inner: RV_socket',
-                    'RA_socket':    'inner: RA_socket',
-                    'SA2000_rpt':   'inner: SA2000_rpt'
+                    'lo_service':   'outer: lo_service',
+                    'RV_socket':    'outer: cdbus2raw_RV',
+                    'RA_socket':    'outer: cdbus2raw_RA',
+                    'SA_listen':    'outer: cdbus2raw_SA'
                 }
             },
             {

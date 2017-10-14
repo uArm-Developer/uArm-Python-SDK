@@ -19,7 +19,8 @@ from .locd.locd import *
 from ..utils.log import *
 
 class Cdbus2Raw(threading.Thread):
-    def __init__(self, ufc, node, iomap, by_line = True, dev_filter = 'M: cdbus2raw'):
+    def __init__(self, ufc, node, iomap, listen_port, by_line = True,
+                 dev_filter = 'M: cdbus2raw'):
         
         self.ports = {
             'service':      {'dir': 'in', 'type': 'service', 'callback': self.service_cb},
@@ -31,12 +32,13 @@ class Cdbus2Raw(threading.Thread):
             'RV_socket':    {'dir': 'out', 'type': 'topic'},
             'RA_socket':    {'dir': 'in', 'type': 'topic',
                              'callback': self.RA_socket_cb, 'data_type': bytes},
-            'SA2000_rpt':   {'dir': 'in', 'type': 'topic',
-                             'callback': self.SA2000_rpt_cb, 'data_type': bytes}
+            'SA_listen':    {'dir': 'in', 'type': 'topic',
+                             'callback': self.SA_listen_cb, 'data_type': bytes}
         }
         
         self.by_line = by_line
         self.dev_filter = dev_filter
+        self.listen_port = listen_port
         self.dev_state = 'BEGIN' # 'UNCONNECT', 'CONNECTED', 'CONFIGURED'
         self.pc_mac = 0xff
         self.dev_site = 0
@@ -109,12 +111,12 @@ class Cdbus2Raw(threading.Thread):
                 packet.dstMac = self.dev_local_mac
                 if self.dev_site == 0:
                     packet.dstAddrType = LO_ADDR_LL0
-                    packet.data = self.dev_report_mac.to_bytes(1, 'big') + (2000).to_bytes(2, 'big') + \
+                    packet.data = self.dev_report_mac.to_bytes(1, 'big') + self.listen_port.to_bytes(2, 'big') + \
                                   (LO_ADDR_LL0).to_bytes(1, 'big') + b'\x00' * 16
                 else:
                     packet.dstAddrType = LO_ADDR_UGC16
                     packet.dstAddr = b'\x00' * 15 + self.dev_ip.to_bytes(1, 'big')
-                    packet.data = self.dev_report_mac.to_bytes(1, 'big') + (2000).to_bytes(2, 'big') + \
+                    packet.data = self.dev_report_mac.to_bytes(1, 'big') + self.listen_port.to_bytes(2, 'big') + \
                                   (LO_ADDR_UGC16).to_bytes(1, 'big') + \
                                   b'\x00' * 15 + self.pc_mac.to_bytes(1, 'big') # site: 0
                 data = packet.to_bytes_packed()
@@ -140,7 +142,7 @@ class Cdbus2Raw(threading.Thread):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
         self.ans_pkts.put(packet)
     
-    def SA2000_rpt_cb(self, msg):
+    def SA_listen_cb(self, msg):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
         #self.logger.log(logging.VERBOSE, '-> ', packet.data)
         data = packet.data.strip() if self.by_line else packet.data

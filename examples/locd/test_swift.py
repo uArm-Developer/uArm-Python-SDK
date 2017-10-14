@@ -13,6 +13,7 @@ from time import sleep
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from uf.ufc import ufc_init
+from uf.comm.locd_via_uart2cdbus import LocdViaUart2Cdbus
 from uf.swift.swift_via_cdbus2raw import Swift
 from uf.utils.log import *
 
@@ -20,19 +21,38 @@ from uf.utils.log import *
 logger_init(logging.DEBUG)
 #logger_init(logging.INFO)
 
+
+ufc = ufc_init()
+
+print('setup locd net ...')
+
+lo_dev_iomap = {
+        'lo_service': 'lo_service',
+        'RV_socket':  'cdbus2raw_RV',
+        'RA_socket':  'cdbus2raw_RA',
+        'SA2000_rpt': 'cdbus2raw_SA'
+}
+
+lo_dev = LocdViaUart2Cdbus(ufc, 'locd_via_uart2cdbus', lo_dev_iomap)
+              #filters = {'hwid': 'LOCATION=1-6.1'})
+
+
 print('setup swift ...')
 
 swift_iomap = {
-        'cdbus2raw': 'cdbus2raw',
-        'pos_in':  'swift_pos_in',
-        'pos_out': 'swift_pos_out',
-        'service': 'swift_service'
+        'cdbus2raw':  'cdbus2raw',
+        'pos_in':     'swift_pos_in',
+        'pos_out':    'swift_pos_out',
+        'service':    'swift_service',
+        
+        'lo_service':   'lo_service',
+        'cdbus2raw_RV': 'cdbus2raw_RV',
+        'cdbus2raw_RA': 'cdbus2raw_RA',
+        'cdbus2raw_SA': 'cdbus2raw_SA'
 }
 
-ufc = ufc_init()
-swift = Swift(ufc, 'swift', swift_iomap)
+swift = Swift(ufc, 'swift', swift_iomap, listen_port = 2000)
               #dev_filter = 'M: cdbus2raw; S: 13ffc6604374634355832175')
-              #filters = {'hwid': 'LOCATION=1-6.1'})
 
 
 print('setup test ...')
