@@ -104,14 +104,10 @@ class ProtocolAscii():
         return cmd.get_ret()
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'flush':
-            if action == 'set':
+        if msg[0] == 'flush':
+            if msg[1] == 'set':
                 sleep(0.1)
                 with self.cmd_pend_c:
                     while len(self.cmd_pend) != 0 or self.cnt_lock.locked():

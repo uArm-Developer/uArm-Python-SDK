@@ -32,25 +32,21 @@ class Ultrasonic():
                 self.ports['distance']['handle'].publish(self.distance)
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'value':
-            if action == 'get':
+        if msg[1] == 'value':
+            if msg[0] == 'get':
                 return 'ok, ' + self.distance
             else:
                 return 'err, action "{}" not allowed for value'.format(action)
         
-        if param == 'report_distance':
-            if action == 'set':
-                if words[1] == 'off':
+        if msg[1] == 'report_distance':
+            if msg[0] == 'set':
+                if msg[2] == 'off':
                     return self.ports['cmd_sync']['handle'].call('M2301 N12 V0')
-                elif words[1].startswith('on '):
+                elif msg[2].startswith('on '):
                     # init, choose port D8 or D9, the buggy firmware always return ok even set to a wrong port number
                     self.ports['cmd_sync']['handle'].call('M2300 N12 ' + self.port)
                     # unit: microsecond, format e.g.: set report_distance on 500
-                    return self.ports['cmd_sync']['handle'].call('M2301 N12 V' + words[1][3:])
+                    return self.ports['cmd_sync']['handle'].call('M2301 N12 V' + msg[2][3:])
 

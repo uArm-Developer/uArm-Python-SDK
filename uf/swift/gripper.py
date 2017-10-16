@@ -41,14 +41,10 @@ class Gripper():
         return 'err, timeout for {}, last ret: {}'.format(val, ret)
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'value':
-            if action == 'get':
+        if msg[1] == 'value':
+            if msg[0] == 'get':
                 ret = self.ports['cmd_sync']['handle'].call('P2232')
                 self.logger.debug('get value ret: %s' % ret)
                 
@@ -61,8 +57,8 @@ class Gripper():
                 else:
                     return 'err, unkown ret: %s' % ret
             
-            if action == 'set':
-                self.logger.debug('set value: %s' % words[1])
-                return self.set_gripper(words[1])
+            if msg[0] == 'set':
+                self.logger.debug('set value: %s' % msg[2])
+                return self.set_gripper(msg[2])
 
 

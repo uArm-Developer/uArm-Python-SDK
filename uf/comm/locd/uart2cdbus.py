@@ -80,22 +80,18 @@ class Uart2Cdbus():
         return ret_packet.data
     
     def gate_setting(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'info':
-            if action == 'get':
+        if msg[1] == 'info':
+            if msg[0] == 'get':
                 ret = self.gate_command(1000, b'')
                 if ret != None:
                     return 'ok, ' + ''.join(map(chr, ret))
                 else:
                     return 'err'
-        if param == 'filter':
-            if action == 'set':
-                data = int(words[1], 16).to_bytes(1, 'little')
+        if msg[1] == 'filter':
+            if msg[0] == 'set':
+                data = int(msg[2], 16).to_bytes(1, 'little')
                 ret = self.gate_command(2000, data)
                 if ret == b'':
                     return 'ok'
@@ -103,23 +99,19 @@ class Uart2Cdbus():
                     return 'err'
     
     def local_setting(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'mac':
-            if action == 'get':
+        if msg[1] == 'mac':
+            if msg[0] == 'get':
                 return 'ok, ' + '%02x' % self.mac
-            if action == 'set':
-                self.mac = int(words[1], 16)
+            if msg[0] == 'set':
+                self.mac = int(msg[2], 16)
                 return 'ok'
-        if param == 'site':
-            if action == 'get':
+        if msg[1] == 'site':
+            if msg[0] == 'get':
                 return 'ok, ' + '%02x' % self.site
-            if action == 'set':
-                self.site = int(words[1], 16)
+            if msg[0] == 'set':
+                self.site = int(msg[2], 16)
                 return 'ok'
     
     def lo_send_packet(self, packet):

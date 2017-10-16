@@ -51,14 +51,10 @@ class Pump():
             self.ports['limit_switch']['handle'].publish('on')
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'value':
-            if action == 'get':
+        if msg[1] == 'value':
+            if msg[0] == 'get':
                 ret = self.ports['cmd_sync']['handle'].call('P231')
                 self.logger.debug('get value ret: %s' % ret)
                 
@@ -72,11 +68,11 @@ class Pump():
                     return 'err, unkown ret: %s' % ret
             
             if action == 'set':
-                self.logger.debug('set value: %s' % words[1])
-                return self.set_pump(words[1])
+                self.logger.debug('set value: %s' % msg[2])
+                return self.set_pump(msg[2])
         
-        elif param == 'limit_switch':
-            if action == 'get':
+        elif msg[1] == 'limit_switch':
+            if msg[0] == 'get':
                 ret = self.ports['cmd_sync']['handle'].call('P233')
                 self.logger.debug('get limit_switch ret: %s' % ret)
                 

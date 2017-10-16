@@ -83,11 +83,11 @@ class Cdbus2Raw(threading.Thread):
                 elif ans_size > 1:
                     self.logger.warning('multi dev found on net by filter: ' + self.dev_filter)
                     while self.ans_pkts.qsize() > 0:
-                        self.logger.warning('packet: ', self.ans_pkts.get())
+                        self.logger.warning('packet: {}'.format(self.ans_pkts.get()))
                 else:
                     packet = self.ans_pkts.get()
                     if packet.srcAddrType != LO_ADDR_UGC16:
-                        self.logger.error('wrong srcAddrType: ', packet)
+                        self.logger.error('wrong srcAddrType: {}'.format(packet))
                         continue
                     self.dev_local_mac = packet.srcMac
                     self.dev_site = packet.srcAddr[7]
@@ -166,14 +166,10 @@ class Cdbus2Raw(threading.Thread):
         self.ports['RV_socket']['handle'].publish(data)
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'state':
-            if action == 'get':
+        if msg[1] == 'state':
+            if msg[0] == 'get':
                 ret = 'ok, ' + self.dev_state
                 self.logger.debug('get state ret: %s' % ret)
                 return ret

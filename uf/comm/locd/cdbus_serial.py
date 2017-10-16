@@ -98,29 +98,25 @@ class CdbusSerial(threading.Thread):
     
     def service_cb(self, msg):
         # set filter, bond rates ...
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'local_filter':
-            if action == 'get':
+        if msg[1] == 'local_filter':
+            if msg[0] == 'get':
                 ret = 'ok, ' + ' '.join('%02x' % b[0] for b in self.local_filter)
                 self.logger.debug('get local_filter ret: %s' % ret)
                 return ret
-            if action == 'set':
-                self.logger.debug('set local_filter: %s' % words[1])
-                self.local_filter = [int(n, 16).to_bytes(1, 'little') for n in words[1].split(' ')]
+            if msg[0] == 'set':
+                self.logger.debug('set local_filter: %s' % msg[2])
+                self.local_filter = [int(n, 16).to_bytes(1, 'little') for n in msg[2].split(' ')]
                 return 'ok'
-        if param == 'remote_filter':
-            if action == 'get':
+        if msg[1] == 'remote_filter':
+            if msg[0] == 'get':
                 ret = 'ok, ' + ' '.join('%02x' % b[0] for b in self.remote_filter)
                 self.logger.debug('get remote_filter ret: %s' % ret)
                 return ret
-            if action == 'set':
-                self.logger.debug('set remote_filter: %s' % words[1])
-                self.remote_filter = [int(n, 16).to_bytes(1, 'little') for n in words[1].split(' ')]
+            if msg[0] == 'set':
+                self.logger.debug('set remote_filter: %s' % msg[2])
+                self.remote_filter = [int(n, 16).to_bytes(1, 'little') for n in msg[2].split(' ')]
                 return 'ok'
 
 

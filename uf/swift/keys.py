@@ -37,21 +37,17 @@ class Keys():
                 self.ports['key1']['handle'].publish('long press')
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'key_owner':
-            if action == 'get':
+        if msg[1] == 'key_owner':
+            if msg[0] == 'get':
                 return 'err, get not support'
             
-            if action == 'set':
-                self.logger.debug('set value: %s' % words[1])
-                if words[1] == 'default':
+            if msg[0] == 'set':
+                self.logger.debug('set value: %s' % msg[2])
+                if msg[2] == 'default':
                     return self.ports['cmd_sync']['handle'].call('P2213 V1')
-                elif words[1] == 'user':
+                elif msg[2] == 'user':
                     return self.ports['cmd_sync']['handle'].call('P2213 V0')
                 return 'err, value not support'
 

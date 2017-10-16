@@ -60,43 +60,39 @@ class UarmBody():
             self.ports['cmd_async']['handle'].publish(cmd)
     
     def service_cb(self, msg):
-        words = msg.split(' ', 1)
-        action = words[0]
+        msg = msg.split(' ', 2)
         
-        words = words[1].split(' ', 1)
-        param = words[0]
-        
-        if param == 'mode':
-            if action == 'get':
+        if msg[1] == 'mode':
+            if msg[0] == 'get':
                 return 'ok, ' + self.mode
         
-        if param == 'dev_info':
-            if action == 'get':
+        if msg[1] == 'dev_info':
+            if msg[0] == 'get':
                 return 'ok, ' + self.read_dev_info()
         
-        if param == 'coordinate_system':
-            if action == 'get':
+        if msg[1] == 'coordinate_system':
+            if msg[0] == 'get':
                 return 'ok, ' + self.coordinate_system
-            if action == 'set':
-                self.logger.debug('coordinate_system: %s -> %s' % (self.coordinate_system, words[1]))
-                self.coordinate_system = words[1]
+            if msg[0] == 'set':
+                self.logger.debug('coordinate_system: %s -> %s' % (self.coordinate_system, msg[2]))
+                self.coordinate_system = msg[2]
                 return 'ok'
         
-        if param == 'report_pos':
-            if action == 'set':
-                if words[1] == 'off':
+        if msg[1] == 'report_pos':
+            if msg[0] == 'set':
+                if msg[2] == 'off':
                     return self.ports['cmd_sync']['handle'].call('M120 V0')
-                elif words[1].startswith('on '):
+                elif msg[2].startswith('on '):
                     # unit: second, format e.g.: set report_pos on 0.2
-                    return self.ports['cmd_sync']['handle'].call('M120 V' + words[1][3:])
+                    return self.ports['cmd_sync']['handle'].call('M120 V' + msg[2][3:])
         
-        if param == 'cmd_sync':
-            if action == 'set':
-                return self.ports['cmd_sync']['handle'].call(words[1])
+        if msg[1] == 'cmd_sync':
+            if msg[0] == 'set':
+                return self.ports['cmd_sync']['handle'].call(msg[2])
         
-        if param == 'cmd_async':
-            if action == 'set':
-                self.ports['cmd_async']['handle'].publish(words[1])
+        if msg[1] == 'cmd_async':
+            if msg[0] == 'set':
+                self.ports['cmd_async']['handle'].publish(msg[2])
                 return 'ok'
 
 
