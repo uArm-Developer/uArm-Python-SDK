@@ -106,11 +106,16 @@ class ProtocolAscii():
     def service_cb(self, msg):
         msg = msg.split(' ', 2)
         
-        if msg[0] == 'flush':
-            if msg[1] == 'set':
+        if msg[1] == 'flush':
+            if msg[0] == 'set':
                 sleep(0.1)
                 with self.cmd_pend_c:
                     while len(self.cmd_pend) != 0 or self.cnt_lock.locked():
                         self.cmd_pend_c.wait()
                 return 'ok'
+        
+        if msg[1] == 'pend':
+            if msg[0] == 'get':
+                return 'ok, pend: %d' % len(self.cmd_pend)
+
 

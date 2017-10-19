@@ -172,7 +172,7 @@ class LinearMotion(threading.Thread):
     
     def wait_move_stop(self):
         while True:
-            sleep(0.5)
+            sleep(0.1)
             ret = self.get_move_state()
             if ret == 'sleep' or ret == 'stop' or ret[:3] == 'err':
                 return ret
@@ -209,7 +209,7 @@ class LinearMotion(threading.Thread):
                 self.logger.debug('get state ret: %s' % ret)
                 return ret
         
-        if msg[1] == 'pos':
+        if msg[1].startswith('pos'):
             if msg[0] == 'get':
                 ret = self.cmd_sync(2049, b'\x01')
                 if not ret or ret[0] != 0x80:
@@ -224,10 +224,17 @@ class LinearMotion(threading.Thread):
                 args = msg[2].split(' ')
                 pos = float(args[0])
                 speed = float(args[1]) if len(args) == 2 else 10 # by default
-                self.logger.debug('set pos {}, speed {}'.format(pos, speed))
+                self.logger.debug('set {} {}, speed {}'.format(msg[1], pos, speed))
                 ret = self.cmd_sync(2041, b'\x00' + bytes(struct.pack("ff", pos, speed)))
-                # TODO: check ret value
-                ret = self.wait_move_stop()
-                return 'ok' if ret[:3] != 'err' else ret
+                if msg[1] == 'pos_sync':
+                    ret = self.wait_move_stop()
+                    return 'ok' if ret[:3] != 'err' else ret
+                else:
+                    return 'ok, pend: %d' % ret[-1]
+        
+        if msg[1] == 'pend':
+            if msg[0] == 'get':
+                ret = self.cmd_sync(2025, b'')
+                return 'ok, pend: %d' % ret[-1]
 
 

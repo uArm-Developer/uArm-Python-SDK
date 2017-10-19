@@ -144,7 +144,7 @@ class Cdbus2Raw(threading.Thread):
     
     def SA_listen_cb(self, msg):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
-        #self.logger.log(logging.VERBOSE, '-> ', packet.data)
+        self.logger.log(logging.VERBOSE, '-> {}'.format(packet.data))
         data = packet.data.strip() if self.by_line else packet.data
         self.ports['raw_down2up']['handle'].publish(data)
     
@@ -162,7 +162,7 @@ class Cdbus2Raw(threading.Thread):
         packet.udp.dstPort = 2001
         packet.data = (msg + b'\n') if self.by_line else msg
         data = packet.to_bytes_packed()
-        #self.logger.log(logging.VERBOSE, '<- ', packet.data)
+        self.logger.log(logging.VERBOSE, '<- {}'.format(packet.data))
         self.ports['RV_socket']['handle'].publish(data)
     
     def service_cb(self, msg):
