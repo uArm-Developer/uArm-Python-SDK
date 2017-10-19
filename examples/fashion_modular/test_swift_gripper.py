@@ -52,7 +52,7 @@ print('sleep 2 sec ...')
 sleep(2)
 
 
-print('set X190: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X190 Z50'))
+print('set X190: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T20 G0 X190 Z50'))
 
 # FIXME: 'set on' always timeout according to firmware's bug
 print('gripper set on return: ' + test_ports['swift_gripper']['handle'].call('set value on'))

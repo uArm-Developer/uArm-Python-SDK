@@ -59,7 +59,7 @@ sleep(2)
 print('get dev_info return: ' + test_ports['swift_service']['handle'].call('get dev_info'))
 
 # send arbitrary command
-print('set X190: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X190 Z50'))
+print('set X190: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T20 G0 X190 Z50'))
 
 # FIXME: 'set on' never timeout according to the firmware or hardware
 print('pump set on return: ' + test_ports['swift_pump']['handle'].call('set value on'))

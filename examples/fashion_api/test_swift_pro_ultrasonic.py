@@ -33,7 +33,8 @@ print('device info: ')
 print(swift.get_device_info())
 
 print('\nset X350 Y0 Z50 F500 ...')
-swift.set_position(350, 0, 50, speed = 1500)
+swift.set_position(350, 0, 50, speed = 1500, timeout = 20)
+swift.flush_cmd() # avoid follow 5 command timeout
 
 print('set X340 ...')
 swift.set_position(x = 340)

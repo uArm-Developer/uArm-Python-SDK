@@ -56,7 +56,13 @@ class UarmBody():
     
     def pos_in_cb(self, msg):
         if self.ports['cmd_async']['handle']:
-            cmd = csys_gstr[self.coordinate_system] + msg
+            if not msg.startswith('_T'):
+                cmd = '_T10 ' # timeout 10s
+            else:
+                tmp = msg.split(' ', 1)
+                cmd = tmp[0] + ' '
+                msg = tmp[1]
+            cmd += csys_gstr[self.coordinate_system] + msg
             self.ports['cmd_async']['handle'].publish(cmd)
     
     def service_cb(self, msg):

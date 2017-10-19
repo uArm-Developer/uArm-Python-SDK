@@ -37,6 +37,7 @@ class Cdbus2Raw(threading.Thread):
         }
         
         self.by_line = by_line
+        self.line_buffer = b''
         self.dev_filter = dev_filter
         self.listen_port = listen_port
         self.dev_state = 'BEGIN' # 'UNCONNECT', 'CONNECTED', 'CONFIGURED'
@@ -144,9 +145,17 @@ class Cdbus2Raw(threading.Thread):
     
     def SA_listen_cb(self, msg):
         packet = locd_capnp.LoCD.from_bytes_packed(msg)
-        self.logger.log(logging.VERBOSE, '-> {}'.format(packet.data))
-        data = packet.data.strip() if self.by_line else packet.data
-        self.ports['raw_down2up']['handle'].publish(data)
+        if self.by_line:
+            self.line_buffer += packet.data
+            if not packet.data.endswith(b'\n'):
+                return
+            for line in self.line_buffer.splitlines():
+                self.logger.log(logging.VERBOSE, '-> {}'.format(line))
+                self.ports['raw_down2up']['handle'].publish(line)
+            self.line_buffer = b''
+        else:
+            self.logger.log(logging.VERBOSE, '-> {}'.format(packet.data))
+            self.ports['raw_down2up']['handle'].publish(packet.data)
     
     def raw_up2down_cb(self, msg):
         if self.dev_state != 'CONFIGURED':

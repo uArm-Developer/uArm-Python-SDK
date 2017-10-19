@@ -14,7 +14,7 @@ from ..utils.log import *
 
 
 class ProtocolAscii():
-    def __init__(self, ufc, node, iomap, cmd_pend_size = 4, timeout = 30):
+    def __init__(self, ufc, node, iomap, cmd_pend_size = 4, timeout = 1):
         
         self.ports = {
             'cmd_async': {'dir': 'in', 'type': 'topic', 'callback': self.cmd_async_cb},
@@ -91,7 +91,13 @@ class ProtocolAscii():
             with self.cmd_pend_c:
                 while len(self.cmd_pend) >= self.cmd_pend_size:
                     self.cmd_pend_c.wait()
-            cmd = self.Cmd(self, self.cnt, msg, self.timeout)
+            if msg.startswith('_T'):
+                tmps = msg[2:].split(' ', 1)
+                timeout = int(tmps[0])
+                msg = tmps[1]
+            else:
+                timeout = self.timeout
+            cmd = self.Cmd(self, self.cnt, msg, timeout)
             self.cmd_pend[self.cnt] = cmd
             self.ports['packet_out']['handle'].publish('#{} '.format(self.cnt) + msg)
             self.cnt += 1

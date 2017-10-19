@@ -35,7 +35,8 @@ print(swift.get_device_info())
 print('\nset X350 Y0 Z100 F1500 ...')
 # for the non-pro swift by current firmware,
 # you have to specify all arguments for x, y, z and the speed
-swift.set_position(330, 0, 100, speed = 1500)
+swift.set_position(330, 0, 100, speed = 1500, timeout = 20)
+swift.flush_cmd() # avoid follow 5 command timeout
 
 print('\nset X340 ...')
 swift.set_position(330, 0, 150, speed = 1500)

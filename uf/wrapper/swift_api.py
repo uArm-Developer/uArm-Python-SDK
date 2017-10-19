@@ -199,7 +199,8 @@ class SwiftAPI():
         return False
     
     def set_position(self, x = None, y = None, z = None,
-                           speed = None, relative = False, wait = False):
+                           speed = None, relative = False,
+                           wait = False, timeout = 10):
         '''
         Move arm to the position (x,y,z) unit is mm, speed unit is mm/sec
         
@@ -218,6 +219,8 @@ class SwiftAPI():
             cmd = 'set cmd_sync'
         else:
             cmd = 'set cmd_async'
+        
+        cmd += ' _T%d' % timeout
         
         if relative:
             cmd += ' G2204'
@@ -252,7 +255,8 @@ class SwiftAPI():
         return None
     
     def set_polar(self, s = None, r = None, h = None, 
-                        speed = None, relative = False, wait = False):
+                        speed = None, relative = False,
+                        wait = False, timeout = 10):
         '''
         Polar coordinate, rotation, stretch, height.
         
@@ -271,6 +275,8 @@ class SwiftAPI():
             cmd = 'set cmd_sync'
         else:
             cmd = 'set cmd_async'
+        
+        cmd += ' _T%d' % timeout
         
         if relative:
             cmd += ' G2205'
@@ -304,7 +310,7 @@ class SwiftAPI():
         self._logger.error('get_polar ret: %s' % ret)
         return None
     
-    def set_servo_angle(self, servo_id, angle, wait = False):
+    def set_servo_angle(self, servo_id, angle, wait = False, timeout = 10):
         '''
         Set servo angle, 0 - 180 degrees, this Function will include the manual servo offset.
         
@@ -317,11 +323,12 @@ class SwiftAPI():
             succeed True or failed False
         '''
         cmd = 'set cmd_sync' if wait else 'set cmd_async'
+        cmd += ' _T%d' % timeout
         cmd += ' G2202 N{} V{}'.format(servo_id, angle)
         ret = self._ports['service']['handle'].call(cmd)
         return ret.startswith('ok')
     
-    def set_wrist(self, angle, wait = False):
+    def set_wrist(self, angle, wait = False, timeout = 10):
         '''
         Set swift hand wrist angle. include servo offset.
         
@@ -332,7 +339,7 @@ class SwiftAPI():
         Returns:
             succeed True or failed False
         '''
-        return self.set_servo_angle(SERVO_HAND, angle, wait = wait)
+        return self.set_servo_angle(SERVO_HAND, angle, wait = wait, timeout = timeout)
     
     def get_servo_angle(self, servo_id = None):
         '''
