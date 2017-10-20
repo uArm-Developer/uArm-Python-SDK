@@ -81,7 +81,7 @@ class Dispatcher():
                         eph.has_answer = True
         
         self.node = node
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
     
     def lo_down2up(self, msg):

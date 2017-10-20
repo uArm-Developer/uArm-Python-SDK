@@ -37,7 +37,7 @@ class LinearMotion(threading.Thread):
         self.dev_ip = 0xff
         self.dev_local_mac = 0xff
         self.ans_pkts = queue.Queue(10)
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
         
         threading.Thread.__init__(self)

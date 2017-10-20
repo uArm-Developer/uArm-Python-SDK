@@ -30,7 +30,7 @@ class ProtocolAscii():
         }
         
         self.node = node
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         self.cmd_pend = {}
         self.cmd_pend_size = cmd_pend_size
         self.cmd_pend_c = threading.Condition()

@@ -31,7 +31,7 @@ class SwiftBody():
             'report': {'dir': 'in', 'type': 'topic', 'callback': self.report_cb}
         }
         
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         self.mode = 'play'
         self.coordinate_system = 'cartesian'
         

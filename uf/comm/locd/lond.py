@@ -40,7 +40,7 @@ class LoND(threading.Thread):
         self.evt = threading.Event()
         
         self.node = node
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
         
         self.mac = self.get_intf_mac()

@@ -19,7 +19,7 @@ class Gripper():
             'cmd_sync': {'dir': 'out', 'type': 'service'},
         }
         
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
     
     def set_gripper(self, val):

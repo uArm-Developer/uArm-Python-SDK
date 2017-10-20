@@ -21,7 +21,7 @@ class Keys():
             'report': {'dir': 'in', 'type': 'topic', 'callback': self.report_cb}
         }
         
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
     
     def report_cb(self, msg):

@@ -22,7 +22,7 @@ class Ultrasonic():
         
         self.distance = '-1'
         self.port = port
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
     
     def report_cb(self, msg):

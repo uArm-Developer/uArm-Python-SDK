@@ -25,7 +25,7 @@ class DevInfo():
                     'callback': self.lo_down2up, 'data_type': bytes}
         }
         
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
     
     def lo_down2up(self, msg):

@@ -39,7 +39,7 @@ class Uart2Cdbus():
                     'callback': self.cd_down2up, 'data_type': bytes}
         }
         
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         self.site = 0
         self.mac = mac
         self.gate_ans = queue.Queue(1)

@@ -16,9 +16,10 @@ from uf.ufc import ufc_init
 from uf.swift import Swift
 from uf.utils.log import *
 
-logger_init(logging.VERBOSE)
+#logger_init(logging.VERBOSE)
 #logger_init(logging.DEBUG)
-#logger_init(logging.INFO)
+logger_init(logging.INFO)
+logging.getLogger('uf.swift').setLevel(logging.DEBUG)
 
 print('setup swift ...')
 

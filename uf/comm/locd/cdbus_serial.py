@@ -40,7 +40,7 @@ class CdbusSerial(threading.Thread):
         self.rx_bytes = b''
         
         self.node = node
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
         
         dev_port = select_port(logger = self.logger, dev_port = dev_port, filters = filters)

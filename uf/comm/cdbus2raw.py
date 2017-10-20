@@ -47,7 +47,7 @@ class Cdbus2Raw(threading.Thread):
         self.dev_local_mac = 0xff
         self.dev_report_mac = 0xff
         self.ans_pkts = queue.Queue(10)
-        self.logger = logging.getLogger(node)
+        self.logger = logging.getLogger('uf.' + node.replace('/', '.'))
         ufc.node_init(node, self.ports, iomap)
         
         threading.Thread.__init__(self)

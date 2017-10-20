@@ -12,7 +12,7 @@ import logging
 logging.VERBOSE = 5
 
 def logger_init(level = logging.INFO):
-    logging.basicConfig(format = '%(levelname)s: %(name)s: %(message)s', level = level)
+    logging.basicConfig(format = '%(name)s: %(levelname)s: %(message)s', level = level)
     logging.addLevelName(logging.VERBOSE, 'VERBOSE')
 
 

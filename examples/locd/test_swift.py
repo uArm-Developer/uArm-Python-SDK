@@ -43,6 +43,7 @@ swift_iomap = {
         'cdbus2raw':  'cdbus2raw',
         'pos_in':     'swift_pos_in',
         'pos_out':    'swift_pos_out',
+        'ptc':        'swift_ptc',
         'service':    'swift_service',
         
         'lo_service':   'lo_service',
@@ -64,6 +65,7 @@ test_ports = {
         'cdbus2raw': {'dir': 'out', 'type': 'service'},
         'swift_pos':     {'dir': 'out', 'type': 'topic'},
         'swift_pos_out': {'dir': 'in',  'type': 'topic', 'callback': pos_cb},
+        'swift_ptc':     {'dir': 'out', 'type': 'service'},
         'swift_service': {'dir': 'out', 'type': 'service'}
 }
 
@@ -71,6 +73,7 @@ test_iomap = {
         'cdbus2raw':     'cdbus2raw',
         'swift_pos':     'swift_pos_in',
         'swift_pos_out': 'swift_pos_out',
+        'swift_ptc':     'swift_ptc',
         'swift_service': 'swift_service'
 }
 
@@ -90,14 +93,15 @@ while True:
 print('set X330 ...')
 # topics are always async
 # without 'G0', port 'pos' is dedicated for moving
-test_ports['swift_pos']['handle'].publish('X350 Y0 Z50')
+test_ports['swift_pos']['handle'].publish('_T20 X350 Y0 Z50')
+test_ports['swift_ptc']['handle'].call('set flush') # wait for first command send out
 
 
-print('ret1: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X340'))
-print('ret2: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X320'))
-print('ret3: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X300'))
-print('ret4: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X200'))
-print('ret5: ' + test_ports['swift_service']['handle'].call('set cmd_sync G0 X190'))
+print('ret1: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T10 G0 X340'))
+print('ret2: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T10 G0 X320'))
+print('ret3: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T10 G0 X300'))
+print('ret4: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T10 G0 X200'))
+print('ret5: ' + test_ports['swift_service']['handle'].call('set cmd_sync _T10 G0 X190'))
 
 print('done ...')
 while True:
