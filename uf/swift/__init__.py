@@ -98,7 +98,7 @@ class Swift(ModuleGroup):
         if 'filters' not in kwargs:
             kwargs['filters'] = {'hwid': 'USB VID:PID=2341:0042'}
         if 'cmd_pend_size' not in kwargs:
-            kwargs['cmd_pend_size'] = 4
+            kwargs['cmd_pend_size'] = 2
         super().__init__(ufc, node, iomap, **kwargs)
 
 

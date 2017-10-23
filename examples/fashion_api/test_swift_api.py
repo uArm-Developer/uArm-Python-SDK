@@ -23,7 +23,7 @@ print('setup swift ...')
 
 #swift = SwiftAPI(dev_port = '/dev/ttyACM0')
 #swift = SwiftAPI(filters = {'hwid': 'USB VID:PID=2341:0042'})
-swift = SwiftAPI(cmd_pend_size = 3) # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
+swift = SwiftAPI() # default by filters: {'hwid': 'USB VID:PID=2341:0042'}
 
 
 print('sleep 2 sec ...')
