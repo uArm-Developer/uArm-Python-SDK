@@ -10,9 +10,8 @@
 #   Compression Format for IPv6 Datagrams over CDBUS, depends on 6LoWPAN.
 
 import struct
-import capnp
 
-from . import locd_capnp
+from .locd_serdes import LoCD
 from ...utils.log import *
 
 LO_ADDR_LL0     = 0x3
@@ -91,14 +90,15 @@ def lo_to_frame(packet):
     else:
         assert False
 
-    payload += packet.data
+    payload += packet.data if isinstance(packet.data, bytes) \
+                           else bytes(map(ord, packet.data))
     frame = header + len(payload).to_bytes(1, 'little') + payload
     assert len(frame) <= 256
     return frame
 
 
 def lo_from_frame(frame):
-    packet = locd_capnp.LoCD.new_message()
+    packet = LoCD.new_message()
     
     packet.srcMac = frame[0]
     packet.dstMac = frame[1]

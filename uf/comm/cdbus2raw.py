@@ -11,10 +11,9 @@
 
 import threading
 import queue
-import capnp
 from time import sleep
 
-from .locd import locd_capnp
+from .locd.locd_serdes import LoCD
 from .locd.locd import *
 from ..utils.log import *
 
@@ -68,7 +67,7 @@ class Cdbus2Raw(threading.Thread):
                     sleep(1)
             
             if self.dev_state == 'UNCONNECT':
-                packet = locd_capnp.LoCD.new_message()
+                packet = LoCD.new_message()
                 packet.dstMac = 0xff
                 packet.dstAddrType = LO_ADDR_M32
                 packet.dstAddr = b'\x00\x05' + b'\x00' * 13 + b'\x01' # ff05::01
@@ -107,7 +106,7 @@ class Cdbus2Raw(threading.Thread):
                 else:
                     self.dev_report_mac = self.pc_mac
                 
-                packet = locd_capnp.LoCD.new_message()
+                packet = LoCD.new_message()
                 packet.udp.dstPort = 2000
                 packet.dstMac = self.dev_local_mac
                 if self.dev_site == 0:
@@ -140,11 +139,11 @@ class Cdbus2Raw(threading.Thread):
         self.join()
     
     def RA_socket_cb(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         self.ans_pkts.put(packet)
     
     def SA_listen_cb(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         if self.by_line:
             self.line_buffer += packet.data
             if not packet.data.endswith(b'\n'):
@@ -161,7 +160,7 @@ class Cdbus2Raw(threading.Thread):
         if self.dev_state != 'CONFIGURED':
             self.logger.error('raw_up2down: dev not ready...')
             return
-        packet = locd_capnp.LoCD.new_message()
+        packet = LoCD.new_message()
         packet.dstMac = self.dev_local_mac
         if self.dev_site == 0:
             packet.dstAddrType = LO_ADDR_LL0

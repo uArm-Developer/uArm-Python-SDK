@@ -12,7 +12,8 @@
 import threading
 from time import sleep
 from random import randint
-from . import locd_capnp
+
+from .locd_serdes import LoCD
 from .locd import *
 from ...utils.log import *
 
@@ -72,7 +73,7 @@ class LoND(threading.Thread):
                 self.state = 'SEND_NS'
             if self.state == 'SEND_NS':
                 self.logger.log(logging.VERBOSE, 'send ns...')
-                packet = locd_capnp.LoCD.new_message()
+                packet = LoCD.new_message()
                 packet.srcAddrType = LO_ADDR_UNSP
                 packet.srcMac = 255
                 packet.dstAddrType = LO_ADDR_LL0
@@ -115,11 +116,11 @@ class LoND(threading.Thread):
     
     
     def lo_down2up(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         if packet.icmp.type == ND_TYPE_NS:
             if self.mac != 255 and (self.state != 'WAIT_RX' or
                     packet.data != self.identify.to_bytes(6, 'little')):
-                packet = locd_capnp.LoCD.new_message()
+                packet = LoCD.new_message()
                 packet.srcAddrType = LO_ADDR_UNSP
                 packet.srcMac = 255
                 packet.dstAddrType = LO_ADDR_LL0

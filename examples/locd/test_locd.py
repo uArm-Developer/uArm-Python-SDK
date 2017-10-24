@@ -9,12 +9,11 @@
 
 import sys, os
 from time import sleep
-import capnp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from uf.ufc import ufc_init
-from uf.comm.locd import locd_capnp
+from uf.comm.locd.locd_serdes import LoCD
 from uf.comm.locd.locd import *
 from uf.comm.locd_via_uart2cdbus import LocdViaUart2Cdbus
 from uf.utils.log import *
@@ -41,11 +40,11 @@ locd_via_uart2cdbus = LocdViaUart2Cdbus(ufc, 'locd_via_uart2cdbus', locd_via_uar
 print('setup test ...')
 
 def RA_test_cb(msg):
-    packet = locd_capnp.LoCD.from_bytes_packed(msg)
+    packet = LoCD.from_bytes_packed(msg)
     print('RA: ', packet)
 
 def SA2000_rpt_cb(msg):
-    packet = locd_capnp.LoCD.from_bytes_packed(msg)
+    packet = LoCD.from_bytes_packed(msg)
     print('RPT: ', packet)
 
 test_ports = {
@@ -76,7 +75,7 @@ print('current mac address: ' + pc_mac)
 pc_mac = int(pc_mac[-2:], 16)
 
 print('\nsearching online devices...')
-packet = locd_capnp.LoCD.new_message()
+packet = LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'
@@ -86,7 +85,7 @@ test_ports['RV_test']['handle'].publish(data)
 sleep(2)
 
 print('\nsending test_data...')
-packet = locd_capnp.LoCD.new_message()
+packet = LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'
@@ -95,7 +94,7 @@ packet.data = "test_data...\n"
 data = packet.to_bytes_packed()
 test_ports['RV_test']['handle'].publish(data)
 
-packet = locd_capnp.LoCD.new_message()
+packet = LoCD.new_message()
 packet.dstMac = 0xff
 packet.dstAddrType = LO_ADDR_M8
 packet.dstAddr = b'\x00' * 15 + b'\x01'

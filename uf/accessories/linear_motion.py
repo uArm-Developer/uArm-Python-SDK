@@ -10,11 +10,10 @@
 
 import threading
 import queue
-import capnp
 import struct
 from time import sleep
 
-from ..comm.locd import locd_capnp
+from ..comm.locd.locd_serdes import LoCD
 from ..comm.locd.locd import *
 from ..utils.log import *
 
@@ -58,7 +57,7 @@ class LinearMotion(threading.Thread):
                     sleep(1)
             
             if self.dev_state == 'UNCONNECT':
-                packet = locd_capnp.LoCD.new_message()
+                packet = LoCD.new_message()
                 packet.dstMac = 0xff
                 packet.dstAddrType = LO_ADDR_M32
                 packet.dstAddr = b'\x00\x05' + b'\x00' * 13 + b'\x01' # ff05::01
@@ -133,7 +132,7 @@ class LinearMotion(threading.Thread):
         self.join()
     
     def cmd_sync(self, port, msg): # call after CONNECTED only
-        packet = locd_capnp.LoCD.new_message()
+        packet = LoCD.new_message()
         packet.dstMac = self.dev_local_mac
         if self.dev_site == 0:
             packet.dstAddrType = LO_ADDR_LL0
@@ -178,14 +177,14 @@ class LinearMotion(threading.Thread):
                 return ret
     
     def RA_socket_cb(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         self.ans_pkts.put(packet)
     
     def raw_up2down_cb(self, msg):
         if self.dev_state != 'CONFIGURED':
             self.logger.error('raw_up2down: dev not ready...')
             return
-        packet = locd_capnp.LoCD.new_message()
+        packet = LoCD.new_message()
         packet.dstMac = self.dev_local_mac
         if self.dev_site == 0:
             packet.dstAddrType = LO_ADDR_LL0

@@ -12,9 +12,8 @@
 #   0x56: data transparent transmission
 
 import queue
-import capnp
 
-from . import locd_capnp
+from .locd_serdes import LoCD
 from .locd import *
 from ...utils.log import *
 
@@ -52,7 +51,7 @@ class Uart2Cdbus():
             raise Exception('get dev info failed')
     
     def gate_command(self, port, data):
-        packet = locd_capnp.LoCD.new_message()
+        packet = LoCD.new_message()
         packet.init('udp')
         
         packet.srcAddrType = LO_ADDR_LL0
@@ -123,16 +122,16 @@ class Uart2Cdbus():
         self.ports['cd_up2down']['handle'].publish(frame)
     
     def lo_up2down(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         self.lo_send_packet(packet)
     
     def lo_up2down_repl_src(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg).as_builder()
+        packet = LoCD.from_bytes_packed(msg).as_builder()
         lo_fill_src_addr(self, packet)
         self.lo_send_packet(packet)
     
     def lo_up2down_xchg(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg).as_builder()
+        packet = LoCD.from_bytes_packed(msg).as_builder()
         lo_exchange_src_dst(self, packet)
         self.lo_send_packet(packet)
     

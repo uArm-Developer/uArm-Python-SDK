@@ -7,7 +7,7 @@
 # Author: Duke Fong <duke@ufactory.cc>
 #
 
-from . import locd_capnp
+from .locd_serdes import LoCD
 from ...utils.log import *
 
 
@@ -37,7 +37,7 @@ class Dispatcher():
                 self.name = name # with out first field
             
             def repl_srcport_cb(self, msg):
-                packet = locd_capnp.LoCD.from_bytes_packed(msg).as_builder()
+                packet = LoCD.from_bytes_packed(msg).as_builder()
                 packet.udp.srcPort = self.cur
                 data = packet.to_bytes_packed()
                 self.owner.ports['lo_up2down_repl_src']['handle'].publish(data)
@@ -85,7 +85,7 @@ class Dispatcher():
         ufc.node_init(node, self.ports, iomap)
     
     def lo_down2up(self, msg):
-        packet = locd_capnp.LoCD.from_bytes_packed(msg)
+        packet = LoCD.from_bytes_packed(msg)
         if packet.which() == 'udp':
             if packet.udp.dstPort >= 0xf000:
                 for eph in self.ephemerals:
