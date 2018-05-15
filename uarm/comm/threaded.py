@@ -66,6 +66,7 @@ class ReaderThread(threading.Thread):
             try:
                 # read all that is there or wait for one byte (blocking)
                 data = self.serial.read(self.serial.in_waiting or 1)
+                # data = self.serial.readline()
             except serial.SerialException as e:
                 # probably some I/O problem such as disconnected USB serial
                 # adapters -> exit
@@ -79,6 +80,8 @@ class ReaderThread(threading.Thread):
                     # make a separated try-except for called used code
                     try:
                         self.protocol.data_received(data)
+                        # line = ''.join(map(chr, data)).rstrip()
+                        # self.protocol.handle_line(line)
                     except Exception as e:
                         error = e
                         break

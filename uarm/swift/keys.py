@@ -22,8 +22,9 @@ class Keys(object):
     def register_key1_callback(self, callback=None):
         return self._register_report_callback(REPORT_KEY1_ID, callback)
 
-    def set_report_keys(self, on=True):
+    def set_report_keys(self, on=True, is_on=None):
+        on = is_on if is_on is not None else on
         assert isinstance(on, bool) or (isinstance(on, int) and on >= 0)
-        cmd = protocol.SET_REPORT_KEYS.format(int(not on))
+        cmd = protocol.SET_REPORT_KEYS.format(int(not is_on))
         return self.send_cmd_sync(cmd)
 

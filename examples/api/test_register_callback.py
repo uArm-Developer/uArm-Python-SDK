@@ -45,5 +45,7 @@ swift.register_key0_callback(functools.partial(key_callback, key='key0'))
 swift.register_key1_callback(functools.partial(key_callback, key='key1'))
 swift.register_limit_switch(functools.partial(limit_switch_callback))
 
+import threading
 while True:
     time.sleep(1)
+    print('>>>', len(threading.enumerate()))

@@ -39,6 +39,7 @@ class UArmReader(LineReader):
         self.rx_que.put(line.strip())
 
     def connection_lost(self, exc):
+        # print(exc)
         connect_ports.remove(self.transport.serial.port)
         self.rx_que.queue.clear()
         logger.verbose('connection is lost')
@@ -117,7 +118,13 @@ class Serial(object):
         if self._tx_que is not None:
             self._tx_que.put(data)
         else:
-            self.protocol.write_line(data)
+            if isinstance(data, dict):
+                cmd = data.get('cmd')
+                msg = data.get('msg')
+                cmd.start()
+            else:
+                msg = data
+            self.protocol.write_line(msg)
 
     def read(self, timeout=1):
         if self._rx_que.empty():
@@ -135,9 +142,16 @@ class Serial(object):
                 continue
             try:
                 data = self._tx_que.get(timeout=0.2)
-                self.protocol.write_line(data)
+                if isinstance(data, dict):
+                    cmd = data.get('cmd')
+                    msg = data.get('msg')
+                    cmd.start()
+                else:
+                    msg = data
+                self.protocol.write_line(msg)
             except:
                 pass
+            time.sleep(0.001)
         logger.debug('serial write thread exit ...')
 
 
