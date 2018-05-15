@@ -343,29 +343,29 @@ class Swift(Pump, Keys, Gripper, Grove):
 
     @catch_exception
     def get_device_info(self, timeout=None):
-        def _handle(ret, key=None):
-            if ret[0] == protocol.OK:
-                value = ret[1]
+        def _handle(_ret, _key=None):
+            if _ret[0] == protocol.OK:
+                value = _ret[1]
                 if value.startswith(('v', 'V')):
                     value = value[1:]
-                setattr(self, key, value)
+                setattr(self, _key, value)
         if not isinstance(timeout, (int, float)) or timeout <= 0:
             timeout = 10
         if self.device_type is None:
             cmd = protocol.GET_DEVICE_TYPE
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='device_type'))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='device_type'))
         if self.hardware_version is None:
             cmd = protocol.GET_HARDWARE_VERSION
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='hardware_version'))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='hardware_version'))
         if self.firmware_version is None:
             cmd = protocol.GET_FIRMWARE_VERSION
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='firmware_version'))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='firmware_version'))
         if self.api_version is None:
             cmd = protocol.GET_API_VERSION
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='api_version'))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='api_version'))
         if self.device_unique is None:
             cmd = protocol.GET_DEVICE_UNIQUE
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='device_unique'))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='device_unique'))
 
         self.flush_cmd(timeout=timeout)
         return {
@@ -387,65 +387,66 @@ class Swift(Pump, Keys, Gripper, Grove):
 
     @catch_exception
     def get_mode(self, wait=True, timeout=None, callback=None):
-        def _handle(ret, key=None, callback=None):
-            if ret[0] == protocol.OK:
-                value = int(ret[1][1:])
-                setattr(self, key, value)
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _key=None, _value=None, _callback=None):
+            if _ret[0] == protocol.OK:
+                _value = int(_ret[1][1:])
+                setattr(self, _key, _value)
+            if callable(_callback):
+                _callback(_value)
 
         cmd = protocol.GET_MODE
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
-            _handle(ret, key='mode')
+            _handle(ret, _key='mode')
             return self.mode
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='mode', callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout,
+                                callback=functools.partial(_handle, _key='mode', _value=self.mode, _callback=callback))
 
     @catch_exception
     def set_mode(self, mode=0, wait=True, timeout=None, callback=None):
-        def _handle(ret, key=None, value=None, callback=None):
-            if ret[0] == protocol.OK:
-                setattr(self, key, value)
-            if callable(callback):
-                callback(int(value))
+        def _handle(_ret, _key=None, _value=None, _callback=None):
+            if _ret[0] == protocol.OK:
+                setattr(self, _key, _value)
+            if callable(_callback):
+                _callback(int(_value))
         cmd = protocol.SET_MODE.format(mode)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
-            _handle(ret, key='mode', value=int(mode))
+            _handle(ret, _key='mode', _value=int(mode))
             return self.mode
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='mode', value=int(mode), callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout,
+                                callback=functools.partial(_handle, _key='mode', _value=int(mode), _callback=callback))
 
     @catch_exception
     def get_position(self, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                x = float(ret[1][1:])
-                y = float(ret[2][1:])
-                z = float(ret[3][1:])
-                ret = [x, y, z]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                x = float(_ret[1][1:])
+                y = float(_ret[2][1:])
+                z = float(_ret[3][1:])
+                _ret = [x, y, z]
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         cmd = protocol.GET_POSITION
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
         self._x = x if isinstance(x, (int, float)) else self._x
         self._y = y if isinstance(y, (int, float)) else self._y
         self._z = z if isinstance(z, (int, float)) else self._z
@@ -458,34 +459,33 @@ class Swift(Pump, Keys, Gripper, Grove):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def get_polar(self, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = [float(i[1:]) for i in ret[1:]]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = [float(i[1:]) for i in _ret[1:]]
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         cmd = protocol.GET_POLAR
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_polar(self, stretch=None, rotation=None, height=None, speed=None, relative=False, wait=False, timeout=10, callback=None, **kwargs):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
         stretch = stretch if stretch is not None else kwargs.get('s', self._stretch)
         rotation = rotation if rotation is not None else kwargs.get('r', self._rotation)
         height = height if height is not None else kwargs.get('h', self._height)
@@ -502,63 +502,62 @@ class Swift(Pump, Keys, Gripper, Grove):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = [float(i[1:]) for i in ret[1:]]
-                if isinstance(servo_id, int) and 0 <= servo_id < len(ret):
-                    ret = ret[servo_id]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = [float(i[1:]) for i in _ret[1:]]
+                if isinstance(servo_id, int) and 0 <= servo_id < len(_ret):
+                    _ret = _ret[servo_id]
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         cmd = protocol.GET_SERVO_ANGLE
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_servo_angle(self, servo_id=0, angle=90, wait=False, timeout=10, speed=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
         self._speed = speed if isinstance(speed, (int, float)) else self._speed
         cmd = protocol.SET_SERVO_ANGLE.format(servo_id, angle, self._speed)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     def set_wrist(self, angle=90, wait=False, timeout=10, speed=None, callback=None):
         return self.set_servo_angle(servo_id=3, angle=angle, speed=speed, wait=wait, timeout=timeout, callback=callback)
 
     @catch_exception
     def get_servo_attach(self, servo_id=0, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = bool(int(ret[1][1]))
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = bool(int(_ret[1][1]))
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         cmd = protocol.GET_SERVO_ATTACH.format(servo_id)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
@@ -571,7 +570,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                     if value.startswith(('v', 'V')):
                         value = value[1:]
                     setattr(self, 'device_type', value)
-            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro1':
+            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
                 cmds = [protocol.SET_ATTACH_ALL_SERVO]
             else:
                 cmds = [
@@ -584,16 +583,15 @@ class Swift(Pump, Keys, Gripper, Grove):
             cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
         rets = []
 
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-                with lock:
-                    rets.append(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            with lock:
+                rets.append(_ret)
             if len(rets) == len(cmds):
-                if callable(callback):
-                    callback(ret)
+                if callable(_callback):
+                    _callback(_ret)
                 else:
-                    return ret
+                    return _ret
         if wait:
             for cmd in cmds:
                 self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
@@ -605,7 +603,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             return protocol.OK
         else:
             for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
@@ -618,7 +616,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                     if value.startswith(('v', 'V')):
                         value = value[1:]
                     setattr(self, 'device_type', value)
-            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro1':
+            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
                 cmds = [protocol.SET_DETACH_ALL_SERVO]
             else:
                 cmds = [
@@ -631,16 +629,15 @@ class Swift(Pump, Keys, Gripper, Grove):
             cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
         rets = []
 
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-                with lock:
-                    rets.append(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            with lock:
+                rets.append(_ret)
             if len(rets) == len(cmds):
-                if callable(callback):
-                    callback(ret)
+                if callable(_callback):
+                    _callback(_ret)
                 else:
-                    return ret
+                    return _ret
 
         if wait:
             for cmd in cmds:
@@ -653,17 +650,16 @@ class Swift(Pump, Keys, Gripper, Grove):
             return protocol.OK
         else:
             for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_buzzer(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
         frequency = frequency if frequency is not None else kwargs.get('freq', 1000)
         duration = duration if duration is not None else kwargs.get('time', 2)
         cmd = protocol.SET_BUZZER.format(frequency, duration * 1000)
@@ -672,50 +668,50 @@ class Swift(Pump, Keys, Gripper, Grove):
             time.sleep(duration)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = int(ret[1][1:])
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = int(_ret[1][1:])
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         cmd = protocol.GET_ANALOG.format(pin)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def get_digital(self, pin=0, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = int(ret[1][1])
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = int(_ret[1][1])
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
         cmd = protocol.GET_DIGITAL.format(pin)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def get_rom_data(self, address, data_type=None, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
-                ret = int(ret[1][1:]) if data_type != protocol.EEPROM_DATA_TYPE_FLOAT else float(ret[1][1:])
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = int(_ret[1][1:]) if data_type != protocol.EEPROM_DATA_TYPE_FLOAT else float(_ret[1][1:])
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         if data_type is None:
             data_type = protocol.EEPROM_DATA_TYPE_BYTE
@@ -724,17 +720,16 @@ class Swift(Pump, Keys, Gripper, Grove):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_rom_data(self, address, data, data_type=None, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         if data_type is None:
             data_type = protocol.EEPROM_DATA_TYPE_BYTE
@@ -743,7 +738,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_report_position(self, interval=1):

@@ -18,13 +18,12 @@ class Grove(object):
 
     @catch_exception
     def grove_init(self, pin=None, grove_type=None, value=None, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         assert pin is not None and grove_type is not None
         cmd = protocol.SET_GROVE_INIT.format(pin, grove_type)
@@ -34,17 +33,16 @@ class Grove(object):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def grove_control(self, pin=None, value=None, wait=True, timeout=None, callback=None):
-        def _handle(ret, callback=None):
-            if ret != protocol.TIMEOUT:
-                ret = ret[0]
-            if callable(callback):
-                callback(ret)
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
             else:
-                return ret
+                return _ret
 
         assert pin is not None and value is not None
         cmd = protocol.SET_GROVE_CONTROL.format(pin, value)
@@ -52,7 +50,7 @@ class Grove(object):
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     def register_grove_callback(self, pin=None, grove_type=None, callback=None):
         assert pin is not None and grove_type is not None

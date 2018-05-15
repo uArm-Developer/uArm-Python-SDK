@@ -120,6 +120,9 @@ class SwiftAPI(object):
     def get_gripper_catch(self, wait=True, timeout=None, callback=None):
         return self._arm.get_gripper_catch(wait=wait, timeout=timeout, callback=callback)
 
+    def get_pump_status(self, wait=True, timeout=None, callback=None):
+        return self._arm.get_pump_status(wait=wait, timeout=timeout, callback=callback)
+
     def grove_init(self, pin=None, grove_type=None, value=None, wait=True, timeout=None, callback=None):
         return self._arm.grove_init(pin=pin, grove_type=grove_type, value=value, wait=wait, timeout=timeout, callback=callback)
 
