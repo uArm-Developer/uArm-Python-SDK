@@ -8,17 +8,18 @@
 
 import functools
 from . import protocol
-
-REPORT_GROVE = 'GROVE'
+from .utils import catch_exception
+from .utils import REPORT_GROVE
 
 
 class Grove(object):
     def __init__(self):
         pass
 
+    @catch_exception
     def grove_init(self, pin=None, grove_type=None, value=None, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -35,9 +36,10 @@ class Grove(object):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def grove_control(self, pin=None, value=None, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -56,6 +58,7 @@ class Grove(object):
         assert pin is not None and grove_type is not None
         return self._register_report_callback(REPORT_GROVE + '_{}_{}'.format(grove_type, pin), callback)
 
+    @catch_exception
     def set_report_grove(self, pin=None, interval=0.5):
         assert isinstance(interval, (int, float)) and interval >= 0
         cmd = protocol.SET_GROVE_REPORT.format(pin, interval)

@@ -21,22 +21,7 @@ from .keys import Keys
 from .pump import Pump
 from .gripper import Gripper
 from .grove import Grove
-
-REPORT_POWER_ID = 'POWER'
-REPORT_POSITION_ID = 'POSITION'
-REPORT_KEY0_ID = 'KEY0'
-REPORT_KEY1_ID = 'KEY1'
-REPORT_LIMIT_SWITCH_ID = 'LIMIT_SWITCH'
-REPORT_GROVE_ID = 'GROVE'
-
-SERVO_BOTTOM = 0
-SERVO_LEFT = 1
-SERVO_RIGHT = 2
-SERVO_HAND = 3
-
-EEPROM_DATA_TYPE_BYTE = 1
-EEPROM_DATA_TYPE_INTEGER = 2
-EEPROM_DATA_TYPE_FLOAT = 4
+from .utils import *
 
 
 class HandleQueue(Queue):
@@ -153,6 +138,14 @@ class Swift(Pump, Keys, Gripper, Grove):
     def baudrate(self):
         return self.serial.baudrate
 
+    @catch_exception
+    def waiting_ready(self, timeout=3):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            if self.power_status:
+                break
+            time.sleep(0.01)
+
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
         if self.thread_pool_size > 1 and ThreadPool is not None:
@@ -160,6 +153,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
         self.handle_report_thread.start()
 
+    @catch_exception
     def disconnect(self, is_clean=True):
         self.serial.disconnect()
         if self.handle_report_thread:
@@ -186,7 +180,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._speed = 1000
         self._stretch = 150
         self._rotation = 90
-        self._height=  150
+        self._height = 150
 
     def clean(self):
         if self.pool:
@@ -261,7 +255,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         elif ret[0] == protocol.REPORT_GROVE_PREFIX:
             pin = ret[1][1:]
             grove_type = ret[2][1:]
-            report_grove_id = REPORT_GROVE_ID + '_' + grove_type + '_' + pin
+            report_grove_id = REPORT_GROVE + '_' + grove_type + '_' + pin
             if report_grove_id in self._report_callbacks.keys():
                 for callback in self._report_callbacks[report_grove_id]:
                     callback(ret[2:])
@@ -274,17 +268,18 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.ret = Queue()
             self.timeout = timeout if isinstance(timeout, (int, float)) else self.owner.cmd_timeout
             self.callback = callback
-            self.timer = threading.Timer(self.timeout, self.timeout_cb)
+            self.timer = None
             self.start_time = time.time()
 
         def start(self):
+            self.timer = threading.Timer(self.timeout, self.timeout_cb)
             self.timer.start()
             self.start_time = time.time()
 
         def timeout_cb(self):
             logger.warn('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
             # self.finish('timeout,{}'.format(self.cnt))
-            self.finish('timeout')
+            self.finish(protocol.TIMEOUT)
 
         def finish(self, msg):
             self.timer.cancel()
@@ -292,7 +287,11 @@ class Swift(Pump, Keys, Gripper, Grove):
                 self.timer.join(0.2)
             except:
                 pass
-            self.owner.delete_cmd(self.cnt)
+            cmd = self.owner.cmd_pend.pop(self.cnt, None)
+            if cmd:
+                del cmd
+            with self.owner.cmd_pend_c:
+                self.owner.cmd_pend_c.notifyAll()
             if callable(self.callback):
                 try:
                     if self.owner.pool is not None:
@@ -310,13 +309,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 time.sleep(0.001)
             return self.ret.get()
 
-    def delete_cmd(self, cnt):
-        cmd = self.cmd_pend.pop(cnt, None)
-        if cmd:
-            del cmd
-        with self.cmd_pend_c:
-            self.cmd_pend_c.notifyAll()
-
+    @catch_exception
     def send_cmd_async(self, msg=None, timeout=None, callback=None):
         if not isinstance(msg, str) or not msg:
             return
@@ -341,12 +334,14 @@ class Swift(Pump, Keys, Gripper, Grove):
                 self._cnt = 1
         return cmd
 
+    @catch_exception
     def send_cmd_sync(self, msg=None, timeout=None):
         if not isinstance(msg, str) or not msg:
             return protocol.OK
         cmd = self.send_cmd_async(msg, timeout)
         return cmd.get_ret()
 
+    @catch_exception
     def get_device_info(self, timeout=None):
         def _handle(ret, key=None):
             if ret[0] == protocol.OK:
@@ -381,6 +376,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             'device_unique': self.device_unique
         }
 
+    @catch_exception
     def reset(self, speed=None, wait=True, timeout=None):
         self.set_servo_attach(wait=True, timeout=timeout)
         time.sleep(0.1)
@@ -389,6 +385,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.set_gripper(False, wait=wait, timeout=timeout)
         self.set_wrist(90, wait=wait, timeout=timeout)
 
+    @catch_exception
     def get_mode(self, wait=True, timeout=None, callback=None):
         def _handle(ret, key=None, callback=None):
             if ret[0] == protocol.OK:
@@ -405,6 +402,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='mode', callback=callback))
 
+    @catch_exception
     def set_mode(self, mode=0, wait=True, timeout=None, callback=None):
         def _handle(ret, key=None, value=None, callback=None):
             if ret[0] == protocol.OK:
@@ -419,6 +417,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, key='mode', value=int(mode), callback=callback))
 
+    @catch_exception
     def get_position(self, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -438,9 +437,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -460,6 +460,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_polar(self, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -476,18 +477,21 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_polar(self, stretch=None, rotation=None, height=None, speed=None, relative=False, wait=False, timeout=10, callback=None, **kwargs):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
             else:
                 return ret
-
-        self._stretch = stretch if stretch is not None else kwargs.get('s', self._stretch)
-        self._rotation = rotation if rotation is not None else kwargs.get('r', self._rotation)
-        self._height = height if height is not None else kwargs.get('h', self._height)
+        stretch = stretch if stretch is not None else kwargs.get('s', self._stretch)
+        rotation = rotation if rotation is not None else kwargs.get('r', self._rotation)
+        height = height if height is not None else kwargs.get('h', self._height)
+        self._stretch = stretch if isinstance(stretch, (int, float)) else self._stretch
+        self._rotation = rotation if isinstance(rotation, (int, float)) else self._rotation
+        self._height = height if isinstance(height, (int, float)) else self._height
         self._speed = speed if isinstance(speed, (int, float)) else self._speed
 
         if relative:
@@ -500,6 +504,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -518,9 +523,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_servo_angle(self, servo_id=0, angle=90, wait=False, timeout=10, speed=None, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -537,6 +543,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def set_wrist(self, angle=90, wait=False, timeout=10, speed=None, callback=None):
         return self.set_servo_angle(servo_id=3, angle=angle, speed=speed, wait=wait, timeout=timeout, callback=callback)
 
+    @catch_exception
     def get_servo_attach(self, servo_id=0, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -553,6 +560,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
         lock = threading.Lock()
         if servo_id is None:
@@ -567,17 +575,17 @@ class Swift(Pump, Keys, Gripper, Grove):
                 cmds = [protocol.SET_ATTACH_ALL_SERVO]
             else:
                 cmds = [
-                    protocol.SET_ATTACH_SERVO.format(SERVO_BOTTOM),
-                    protocol.SET_ATTACH_SERVO.format(SERVO_LEFT),
-                    protocol.SET_ATTACH_SERVO.format(SERVO_RIGHT),
-                    protocol.SET_ATTACH_SERVO.format(SERVO_HAND),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_BOTTOM),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_LEFT),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_RIGHT),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_HAND),
                 ]
         else:
             cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
         rets = []
 
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
                 with lock:
                     rets.append(ret)
@@ -599,6 +607,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             for cmd in cmds:
                 self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
         lock = threading.Lock()
         if servo_id is None:
@@ -613,17 +622,17 @@ class Swift(Pump, Keys, Gripper, Grove):
                 cmds = [protocol.SET_DETACH_ALL_SERVO]
             else:
                 cmds = [
-                    protocol.SET_DETACH_SERVO.format(SERVO_BOTTOM),
-                    protocol.SET_DETACH_SERVO.format(SERVO_LEFT),
-                    protocol.SET_DETACH_SERVO.format(SERVO_RIGHT),
-                    protocol.SET_DETACH_SERVO.format(SERVO_HAND),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_BOTTOM),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_LEFT),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_RIGHT),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_HAND),
                 ]
         else:
             cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
         rets = []
 
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
                 with lock:
                     rets.append(ret)
@@ -646,9 +655,10 @@ class Swift(Pump, Keys, Gripper, Grove):
             for cmd in cmds:
                 self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_buzzer(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -664,6 +674,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -680,6 +691,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_digital(self, pin=0, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
@@ -695,17 +707,18 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_rom_data(self, address, data_type=None, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:
-                ret = int(ret[1][1:]) if data_type != EEPROM_DATA_TYPE_FLOAT else float(ret[1][1:])
+                ret = int(ret[1][1:]) if data_type != protocol.EEPROM_DATA_TYPE_FLOAT else float(ret[1][1:])
             if callable(callback):
                 callback(ret)
             else:
                 return ret
 
         if data_type is None:
-            data_type = EEPROM_DATA_TYPE_BYTE
+            data_type = protocol.EEPROM_DATA_TYPE_BYTE
         cmd = protocol.GET_EEPROM.format(address, data_type)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
@@ -713,9 +726,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_rom_data(self, address, data, data_type=None, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -723,7 +737,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 return ret
 
         if data_type is None:
-            data_type = EEPROM_DATA_TYPE_BYTE
+            data_type = protocol.EEPROM_DATA_TYPE_BYTE
         cmd = protocol.SET_EEPROM.format(address, data_type, data)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
@@ -731,6 +745,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def set_report_position(self, interval=1):
         assert isinstance(interval, (int, float)) and interval >= 0
         cmd = protocol.SET_REPORT_POSITION.format(interval)
@@ -760,7 +775,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 if len(self.cmd_pend) == 0:
                     return protocol.OK
                 time.sleep(0.001)
-            return 'timeout'
+            return protocol.TIMEOUT
         else:
             while True:
                 if len(self.cmd_pend) == 0:

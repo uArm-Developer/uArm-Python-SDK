@@ -41,6 +41,9 @@ class SwiftAPI(object):
     def disconnect(self, is_clean=True):
         self._arm.disconnect(is_clean)
 
+    def waiting_ready(self, timeout=3):
+        return self._arm.waiting_ready(timeout=timeout)
+
     def send_cmd_sync(self, msg=None, timeout=None):
         return self._arm.send_cmd_sync(msg=msg, timeout=timeout)
 

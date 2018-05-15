@@ -21,7 +21,7 @@ com = Serial(filters={'hwid': 'USB VID:PID=2341:0042'})
 com.connect()
 
 import threading
-time.sleep(100)
+time.sleep(2)
 print(len(threading.enumerate()))
 com.disconnect()
 print(len(threading.enumerate()))

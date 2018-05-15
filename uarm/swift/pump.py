@@ -8,8 +8,8 @@
 
 import functools
 from . import protocol
-
-REPORT_LIMIT_SWITCH_ID = 'LIMIT_SWITCH'
+from .utils import catch_exception
+from .utils import REPORT_LIMIT_SWITCH_ID
 
 
 class Pump(object):
@@ -19,9 +19,10 @@ class Pump(object):
     def register_limit_switch_callback(self, callback=None):
         return self._register_report_callback(REPORT_LIMIT_SWITCH_ID, callback)
 
+    @catch_exception
     def set_pump(self, on=False, timeout=None, wait=True, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -36,6 +37,7 @@ class Pump(object):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_limit_switch(self, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:

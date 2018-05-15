@@ -7,6 +7,7 @@
 # Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
 
 OK = "OK"
+TIMEOUT = 'TIMEOUT'
 
 # Device Info Cmd
 GET_DEVICE_TYPE = "P2201"
@@ -66,4 +67,14 @@ SET_GROVE_RELEASE = "M2304 P{}"
 SET_GROVE_CONTROL = "M2307 P{} V{}"
 SET_GROVE_REPORT = "M2306 P{} V{}"
 REPORT_GROVE_PREFIX = "@11"  # @10 N10  "@11"
+
+
+SERVO_BOTTOM = 0
+SERVO_LEFT = 1
+SERVO_RIGHT = 2
+SERVO_HAND = 3
+
+EEPROM_DATA_TYPE_BYTE = 1
+EEPROM_DATA_TYPE_INTEGER = 2
+EEPROM_DATA_TYPE_FLOAT = 4
 

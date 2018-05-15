@@ -9,15 +9,17 @@
 import time
 import functools
 from . import protocol
+from .utils import catch_exception
 
 
 class Gripper(object):
     def __init__(self):
         pass
 
+    @catch_exception
     def set_gripper(self, catch=False, timeout=None, wait=True, callback=None):
         def _handle(ret, callback=None):
-            if ret[0] == protocol.OK:
+            if ret != protocol.TIMEOUT:
                 ret = ret[0]
             if callable(callback):
                 callback(ret)
@@ -39,6 +41,7 @@ class Gripper(object):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, callback=callback))
 
+    @catch_exception
     def get_gripper_catch(self, wait=True, timeout=None, callback=None):
         def _handle(ret, callback=None):
             if ret[0] == protocol.OK:

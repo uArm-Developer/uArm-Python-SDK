@@ -33,7 +33,7 @@ class UArmReader(LineReader):
             self.handle_packet(packet)
 
     def handle_line(self, line):
-        logger.verbose(line)
+        logger.verbose('recv: {}'.format(line))
         if self.rx_que.full():
             self.rx_que.get()
         self.rx_que.put(line.strip())
@@ -42,7 +42,7 @@ class UArmReader(LineReader):
         # print(exc)
         connect_ports.remove(self.transport.serial.port)
         self.rx_que.queue.clear()
-        logger.verbose('connection is lost')
+        logger.info('connection is lost')
 
 
 class Serial(object):
@@ -88,7 +88,7 @@ class Serial(object):
         if not self.com.isOpen():
             raise Exception('serial open failed')
         connect_ports.append(self._port)
-        logger.verbose('connect {} success'.format(self._port))
+        logger.info('connect {} success'.format(self._port))
         if self._rx_que is None:
             self._rx_que = Queue()
         self._tx_que = Queue()

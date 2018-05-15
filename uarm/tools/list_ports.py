@@ -9,10 +9,23 @@
 from serial.tools import list_ports
 
 
-def get_ports():
+def get_ports(filters=None):
     ports = []
     for i in list_ports.comports():
         if i.pid is not None:
+            if isinstance(filters, dict):
+                is_match = True
+                for k, v in filters.items():
+                    if not hasattr(i, k):
+                        continue
+                    a = getattr(i, k)
+                    if not a:
+                        a = ''
+                    if a.find(v) == -1:
+                        is_match = False
+                        break
+                if not is_match:
+                    continue
             ports.append({
                 'pid': '{:04x}'.format(i.pid),
                 'vid': '{:04x}'.format(i.vid),
@@ -29,7 +42,7 @@ def get_ports():
     return ports
 
 
-def select_port(filters, connect_ports=[]):
+def select_port(filters=None, connect_ports=[]):
     port = None
     for i in list_ports.comports():
         if i.pid is None:

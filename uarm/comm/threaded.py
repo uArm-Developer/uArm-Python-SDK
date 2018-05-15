@@ -95,7 +95,7 @@ class ReaderThread(threading.Thread):
         """Thread safe writing (uses lock)"""
         with self._lock:
             try:
-                print('send:', data)
+                logger.verbose('send: {}'.format(data))
                 self.serial.write(data)
             except serial.SerialException as e:
                 self.alive = False
