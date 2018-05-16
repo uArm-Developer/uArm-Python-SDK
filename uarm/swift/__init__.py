@@ -7,6 +7,7 @@
 # Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
 
 import time
+import re
 import functools
 import threading
 try:
@@ -74,6 +75,9 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._stretch = 150
         self._rotation = 90
         self._height = 150
+
+        self._current_temperature = 0.0
+        self._target_temperature = 0.0
 
         self.rx_que = HandleQueue(handle=self.handle_line)
 
@@ -182,6 +186,9 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._rotation = 90
         self._height = 150
 
+        self._current_temperature = 0.0
+        self._target_temperature = 0.0
+
     def clean(self):
         if self.pool:
             try:
@@ -210,6 +217,17 @@ class Swift(Pump, Keys, Gripper, Grove):
                 self.report_que.get()
             self.report_que.put(line)
             # self._handle_report(line)
+        else:
+            if line.startswith('T:'):
+                r = re.search(r"T:(\d+\S\d+\s/\d+\S\d+)?", line)
+                if r:
+                    tmp = r.group(1)
+                    if isinstance(tmp, str):
+                        t1, t2 = tmp.split(' /')
+                        self._current_temperature = float(t1)
+                        # self._target_temperature = float(t2)
+            elif line.startswith('Error'):
+                logger.error(line)
 
     def _handle_report(self, line):
         ret = line.split(' ')
@@ -776,5 +794,45 @@ class Swift(Pump, Keys, Gripper, Grove):
                 if len(self.cmd_pend) == 0:
                     return protocol.OK
 
+    @catch_exception
+    def set_fans(self, on=False, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+        if on:
+            cmd = protocol.OPEN_FAN
+        else:
+            cmd = protocol.CLOSE_FAN
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def set_temperature(self, temperature=0, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+        assert isinstance(temperature, (int, float)) and temperature >= 0
+        self._target_temperature = temperature
+        cmd = protocol.SET_TEMPERATURE.format(temperature)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    def get_temperature(self):
+        return {
+            'current_temperature': self._current_temperature,
+            'target_temperature': self._target_temperature
+        }
 
 

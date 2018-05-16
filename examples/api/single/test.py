@@ -8,6 +8,7 @@
 
 import os
 import sys
+import time
 import functools
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
@@ -17,5 +18,8 @@ swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 swift.waiting_ready()
 
 
-swift.flush_cmd()
-swift.disconnect()
+print(swift.set_temperature(temperature=100))
+
+while True:
+    print(swift.get_temperature())
+    time.sleep(1)

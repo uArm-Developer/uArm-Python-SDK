@@ -158,3 +158,14 @@ class SwiftAPI(object):
 
     def flush_cmd(self, timeout=None):
         return self._arm.flush_cmd(timeout=timeout)
+
+    def set_fans(self, on=False, wait=True, timeout=None, callback=None):
+        return self._arm.set_fans(on=on, wait=wait, timeout=timeout, callback=callback)
+
+    def set_temperature(self, temperature=0, wait=True, timeout=None, callback=None):
+        return self._arm.set_temperature(temperature=temperature, wait=wait, timeout=timeout, callback=callback)
+
+    def get_temperature(self):
+        return self._arm.get_temperature()
+
+
