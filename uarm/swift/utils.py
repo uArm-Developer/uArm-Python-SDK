@@ -21,6 +21,8 @@ def catch_exception(func):
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         try:
+            if args[0].blocked:
+                return 'uArm is blocked, please waiting or restart'
             if args[0].connected:
                 return func(*args, **kwargs)
             else:

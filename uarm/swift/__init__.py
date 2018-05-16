@@ -76,6 +76,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._rotation = 90
         self._height = 150
 
+        self._blocked = False
         self._current_temperature = 0.0
         self._target_temperature = 0.0
 
@@ -111,7 +112,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def _loop_handle_report(self):
         while self.connected:
             try:
-                if not self.report_que.empty():
+                if self.report_que.empty():
                     time.sleep(0.001)
                     continue
                 item = self.report_que.get(timeout=0.2)
@@ -142,13 +143,22 @@ class Swift(Pump, Keys, Gripper, Grove):
     def baudrate(self):
         return self.serial.baudrate
 
+    @property
+    def blocked(self):
+        return self._blocked
+
     @catch_exception
-    def waiting_ready(self, timeout=3):
+    def waiting_ready(self, timeout=5):
         start_time = time.time()
+        while time.time() - start_time < 2:
+            if self.power_status:
+                break
+            time.sleep(0.05)
         while time.time() - start_time < timeout:
             if self.power_status:
                 break
-            time.sleep(0.01)
+            self.get_power_status(wait=False, debug=False)
+            time.sleep(0.1)
 
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
@@ -186,6 +196,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._rotation = 90
         self._height = 150
 
+        self._blocked = False
         self._current_temperature = 0.0
         self._target_temperature = 0.0
 
@@ -218,14 +229,17 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.report_que.put(line)
             # self._handle_report(line)
         else:
-            if line.startswith('T:'):
+            if 'T:' in line:
                 r = re.search(r"T:(\d+\S\d+\s/\d+\S\d+)?", line)
                 if r:
                     tmp = r.group(1)
                     if isinstance(tmp, str):
                         t1, t2 = tmp.split(' /')
                         self._current_temperature = float(t1)
-                        # self._target_temperature = float(t2)
+                        self._target_temperature = float(t2)
+                        if self._current_temperature >= self._target_temperature:
+                            self._blocked = False
+
             elif line.startswith('Error'):
                 logger.error(line)
 
@@ -279,10 +293,11 @@ class Swift(Pump, Keys, Gripper, Grove):
                     callback(ret[2:])
 
     class Cmd:
-        def __init__(self, owner, cnt, msg, timeout, callback=None):
+        def __init__(self, owner, cnt, msg, timeout, callback=None, debug=True):
             self.owner = owner
             self.cnt = cnt
             self.msg = msg
+            self.debug = debug
             self.ret = Queue()
             self.timeout = timeout if isinstance(timeout, (int, float)) else self.owner.cmd_timeout
             self.callback = callback
@@ -295,7 +310,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.start_time = time.time()
 
         def timeout_cb(self):
-            logger.warn('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
+            if self.debug:
+                logger.warn('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
             # self.finish('timeout,{}'.format(self.cnt))
             self.finish(protocol.TIMEOUT)
 
@@ -328,7 +344,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             return self.ret.get()
 
     @catch_exception
-    def send_cmd_async(self, msg=None, timeout=None, callback=None):
+    def send_cmd_async(self, msg=None, timeout=None, callback=None, debug=True):
         if not isinstance(msg, str) or not msg:
             return
         if msg.startswith('_T'):
@@ -340,7 +356,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             with self.cmd_pend_c:
                 while len(self.cmd_pend) >= self.cmd_pend_size:
                     self.cmd_pend_c.wait()
-            cmd = self.Cmd(self, self._cnt, msg, timeout, callback)
+            cmd = self.Cmd(self, self._cnt, msg, timeout, callback, debug=debug)
             self.cmd_pend[self._cnt] = cmd
             self.serial.write({
                 'cmd': cmd,
@@ -353,11 +369,32 @@ class Swift(Pump, Keys, Gripper, Grove):
         return cmd
 
     @catch_exception
-    def send_cmd_sync(self, msg=None, timeout=None):
+    def send_cmd_sync(self, msg=None, timeout=None, debug=True):
         if not isinstance(msg, str) or not msg:
             return protocol.OK
-        cmd = self.send_cmd_async(msg, timeout)
+        cmd = self.send_cmd_async(msg=msg, timeout=timeout, debug=debug)
         return cmd.get_ret()
+
+    @catch_exception
+    def get_power_status(self, wait=True, timeout=None, callback=None, debug=True):
+        def _handle(_ret, _key=None, _callback=None):
+            if _ret[0] == protocol.OK:
+                value = _ret[1]
+                if value.startswith(('v', 'V')):
+                    value = bool(int(value[1:]))
+                setattr(self, _key, value)
+            if callable(_callback):
+                _callback(self.power_status)
+            else:
+                return self.power_status
+
+        cmd = protocol.GET_POWER_STATUS
+        if wait:
+            self.send_cmd_sync(cmd, debug=debug)
+            return self.power_status
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, debug=debug,
+                                callback=functools.partial(_handle, _key='power_status', _callback=callback))
 
     @catch_exception
     def get_device_info(self, timeout=None):
@@ -579,96 +616,136 @@ class Swift(Pump, Keys, Gripper, Grove):
 
     @catch_exception
     def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
-        lock = threading.Lock()
-        if servo_id is None:
-            if self.device_type is None:
-                ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
-                if ret[0] == protocol.OK:
-                    value = ret[1]
-                    if value.startswith(('v', 'V')):
-                        value = value[1:]
-                    setattr(self, 'device_type', value)
-            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
-                cmds = [protocol.SET_ATTACH_ALL_SERVO]
-            else:
-                cmds = [
-                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_BOTTOM),
-                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_LEFT),
-                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_RIGHT),
-                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_HAND),
-                ]
-        else:
-            cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
-        rets = []
-
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
-            with lock:
-                rets.append(_ret)
-            if len(rets) == len(cmds):
-                if callable(_callback):
-                    _callback(_ret)
-                else:
-                    return _ret
-        if wait:
-            for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
-            while len(rets) < len(cmds):
-                time.sleep(0.01)
-            for ret in rets:
-                if ret != protocol.OK:
-                    return ret
-            return protocol.OK
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        if servo_id is None:
+            cmd = protocol.SET_ATTACH_ALL_SERVO
         else:
-            for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+            cmd = protocol.SET_ATTACH_SERVO.format(servo_id)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
-        lock = threading.Lock()
-        if servo_id is None:
-            if self.device_type is None:
-                ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
-                if ret[0] == protocol.OK:
-                    value = ret[1]
-                    if value.startswith(('v', 'V')):
-                        value = value[1:]
-                    setattr(self, 'device_type', value)
-            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
-                cmds = [protocol.SET_DETACH_ALL_SERVO]
-            else:
-                cmds = [
-                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_BOTTOM),
-                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_LEFT),
-                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_RIGHT),
-                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_HAND),
-                ]
-        else:
-            cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
-        rets = []
-
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
-            with lock:
-                rets.append(_ret)
-            if len(rets) == len(cmds):
-                if callable(_callback):
-                    _callback(_ret)
-                else:
-                    return _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        if servo_id is None:
+            cmd = protocol.SET_DETACH_ALL_SERVO
+        else:
+            cmd = protocol.SET_DETACH_SERVO.format(servo_id)
 
         if wait:
-            for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
-            while len(rets) < len(cmds):
-                time.sleep(0.01)
-            for ret in rets:
-                if ret != protocol.OK:
-                    return ret
-            return protocol.OK
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
         else:
-            for cmd in cmds:
-                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    # @catch_exception
+    # def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
+    #     lock = threading.Lock()
+    #     if servo_id is None:
+    #         if self.device_type is None:
+    #             ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
+    #             if ret[0] == protocol.OK:
+    #                 value = ret[1]
+    #                 if value.startswith(('v', 'V')):
+    #                     value = value[1:]
+    #                 setattr(self, 'device_type', value)
+    #         if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
+    #             cmds = [protocol.SET_ATTACH_ALL_SERVO]
+    #         else:
+    #             cmds = [
+    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_BOTTOM),
+    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_LEFT),
+    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_RIGHT),
+    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_HAND),
+    #             ]
+    #     else:
+    #         cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
+    #     rets = []
+    #
+    #     def _handle(_ret, _callback=None):
+    #         _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+    #         with lock:
+    #             rets.append(_ret)
+    #         if len(rets) == len(cmds):
+    #             if callable(_callback):
+    #                 _callback(_ret)
+    #             else:
+    #                 return _ret
+    #     if wait:
+    #         for cmd in cmds:
+    #             self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
+    #         while len(rets) < len(cmds):
+    #             time.sleep(0.01)
+    #         for ret in rets:
+    #             if ret != protocol.OK:
+    #                 return ret
+    #         return protocol.OK
+    #     else:
+    #         for cmd in cmds:
+    #             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+    #
+    # @catch_exception
+    # def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
+    #     lock = threading.Lock()
+    #     if servo_id is None:
+    #         # cmds = [protocol.SET_DETACH_ALL_SERVO]
+    #         if self.device_type is None:
+    #             ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
+    #             if ret[0] == protocol.OK:
+    #                 value = ret[1]
+    #                 if value.startswith(('v', 'V')):
+    #                     value = value[1:]
+    #                 setattr(self, 'device_type', value)
+    #         if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
+    #             cmds = [protocol.SET_DETACH_ALL_SERVO]
+    #         else:
+    #             cmds = [
+    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_BOTTOM),
+    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_LEFT),
+    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_RIGHT),
+    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_HAND),
+    #             ]
+    #     else:
+    #         cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
+    #     rets = []
+    #
+    #     def _handle(_ret, _callback=None):
+    #         _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+    #         with lock:
+    #             rets.append(_ret)
+    #         if len(rets) == len(cmds):
+    #             if callable(_callback):
+    #                 _callback(_ret)
+    #             else:
+    #                 return _ret
+    #
+    #     if wait:
+    #         for cmd in cmds:
+    #             self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
+    #         while len(rets) < len(cmds):
+    #             time.sleep(0.01)
+    #         for ret in rets:
+    #             if ret != protocol.OK:
+    #                 return ret
+    #         return protocol.OK
+    #     else:
+    #         for cmd in cmds:
+    #             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_buzzer(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
@@ -803,6 +880,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             else:
                 return _ret
         if on:
+            if self.mode != 2:
+                self.set_mode(mode=2)
             cmd = protocol.OPEN_FAN
         else:
             cmd = protocol.CLOSE_FAN
@@ -813,7 +892,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def set_temperature(self, temperature=0, wait=True, timeout=None, callback=None):
+    def set_temperature(self, temperature=0, block=False, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -822,17 +901,99 @@ class Swift(Pump, Keys, Gripper, Grove):
                 return _ret
         assert isinstance(temperature, (int, float)) and temperature >= 0
         self._target_temperature = temperature
-        cmd = protocol.SET_TEMPERATURE.format(temperature)
-        if wait:
+        if self.mode != 2:
+            self.set_mode(mode=2)
+        if block:
+            cmd = protocol.SET_TEMPERATURE_BLOCK.format(temperature)
+        else:
+            cmd = protocol.SET_TEMPERATURE_UNBLOCK.format(temperature)
+        self._blocked = block
+        if wait and not block:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback), debug=False)
 
     def get_temperature(self):
+        if not self._blocked:
+            self.send_cmd_async('M105', debug=False)
         return {
             'current_temperature': self._current_temperature,
             'target_temperature': self._target_temperature
         }
 
+    @catch_exception
+    def set_3d_feeding(self, distance=0, speed=None, relative=True, x=None, y=None, z=None, wait=True, timeout=30, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        self.get_temperature()
+        if self._current_temperature < 170:
+            logger.error('The Temperature must over 170 °C, current temperature is {}'.format(self._current_temperature))
+            return
+        assert isinstance(distance, (int, float))
+        cmd = 'G1'
+        if isinstance(x, (int, float)):
+            cmd += ' X{}'.format(x)
+        if isinstance(y, (int, float)):
+            cmd += ' y{}'.format(y)
+        if isinstance(z, (int, float)):
+            cmd += ' Z{}'.format(z)
+        if isinstance(speed, (int, float)):
+            speed = 100
+        cmd += ' F{}'.format(speed)
+        cmd += ' E{}'.format(distance)
+
+        if relative:
+            self.send_cmd_async('G92 E0', debug=False)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout, debug=False)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback), debug=False)
+
+    def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
+                         min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
+                         max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+        cmd = "M204"
+        flag = False
+        if printing_moves:
+            cmd += " P{}".format(printing_moves)
+            flag = True
+        if retract_moves:
+            cmd += " R{}".format(retract_moves)
+            flag = True
+        if travel_moves:
+            cmd += " T{}".format(travel_moves)
+            flag = True
+        if flag:
+            self.send_cmd_async(cmd)
+
+        flag = False
+        cmd = "M205"
+        if min_feedrate:
+            cmd += " S{}".format(min_feedrate)
+            flag = True
+        if min_travel_feedrate:
+            cmd += " T{}".format(min_travel_feedrate)
+            flag = True
+        if min_segment_time:
+            cmd += " B{}".format(min_segment_time)
+            flag = True
+        if max_xy_jerk:
+            cmd += " X{}".format(max_xy_jerk)
+            flag = True
+        if max_z_jerk:
+            cmd += " Z{}".format(max_z_jerk)
+            flag = True
+        if max_e_jerk:
+            cmd += " E{}".format(max_e_jerk)
+            flag = True
+        if flag:
+            self.send_cmd_async(cmd)
+        return protocol.OK
 

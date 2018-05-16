@@ -41,14 +41,17 @@ class SwiftAPI(object):
     def disconnect(self, is_clean=True):
         self._arm.disconnect(is_clean)
 
-    def waiting_ready(self, timeout=3):
+    def waiting_ready(self, timeout=5):
         return self._arm.waiting_ready(timeout=timeout)
 
-    def send_cmd_sync(self, msg=None, timeout=None):
-        return self._arm.send_cmd_sync(msg=msg, timeout=timeout)
+    def send_cmd_sync(self, msg=None, timeout=None, debug=True):
+        return self._arm.send_cmd_sync(msg=msg, timeout=timeout, debug=debug)
 
-    def send_cmd_async(self, msg=None, timeout=None, callback=None):
-        return self._arm.send_cmd_async(msg=msg, timeout=timeout, callback=callback)
+    def send_cmd_async(self, msg=None, timeout=None, callback=None, debug=True):
+        return self._arm.send_cmd_async(msg=msg, timeout=timeout, callback=callback, debug=debug)
+
+    def get_power_status(self, wait=True, timeout=None, callback=None):
+        return self._arm.get_power_status(wait=wait, timeout=timeout, callback=callback)
 
     def get_device_info(self, timeout=None):
         return self._arm.get_device_info(timeout=timeout)
@@ -162,10 +165,21 @@ class SwiftAPI(object):
     def set_fans(self, on=False, wait=True, timeout=None, callback=None):
         return self._arm.set_fans(on=on, wait=wait, timeout=timeout, callback=callback)
 
-    def set_temperature(self, temperature=0, wait=True, timeout=None, callback=None):
-        return self._arm.set_temperature(temperature=temperature, wait=wait, timeout=timeout, callback=callback)
+    def set_temperature(self, temperature=0, block=False, wait=True, timeout=None, callback=None):
+        return self._arm.set_temperature(temperature=temperature, wait=wait, timeout=timeout, callback=callback, block=block)
 
     def get_temperature(self):
         return self._arm.get_temperature()
 
+    def set_3d_feeding(self, distance=0, speed=None, relative=True, x=None, y=None, z=None, wait=True, timeout=30, callback=None):
+        return self._arm.set_3d_feeding(distance=distance, speed=speed, relative=relative,
+                                        x=x, y=y, z=z, wait=wait, timeout=timeout, callback=callback)
+
+    def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
+                         min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
+                         max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+        return self._arm.set_acceleration(printing_moves=printing_moves, retract_moves=retract_moves,
+                                          travel_moves=travel_moves, min_feedrate=min_feedrate,
+                                          min_travel_feedrate=min_travel_feedrate, min_segment_time=min_segment_time,
+                                          max_xy_jerk=max_xy_jerk, max_z_jerk=max_z_jerk, max_e_jerk=max_e_jerk)
 
