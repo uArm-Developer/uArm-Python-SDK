@@ -126,29 +126,26 @@ class Serial(object):
                 msg = data
             self.protocol.write_line(msg)
 
-    def read(self, timeout=1):
-        if self._rx_que.empty():
-            return None
-        try:
-            return self._rx_que.get(timeout)
-        except:
-            return None
+    def read(self):
+        if not self._rx_que.empty():
+            try:
+                return self._rx_que.get_nowait()
+            except:
+                pass
 
     def loop_write(self):
         logger.debug('serial write thread start ...')
         while self.connected and self.protocol:
-            if self._tx_que.empty():
-                time.sleep(0.001)
-                continue
             try:
-                data = self._tx_que.get(timeout=0.2)
-                if isinstance(data, dict):
-                    cmd = data.get('cmd')
-                    msg = data.get('msg')
-                    cmd.start()
-                else:
-                    msg = data
-                self.protocol.write_line(msg)
+                if not self._tx_que.empty():
+                    data = self._tx_que.get_nowait()
+                    if isinstance(data, dict):
+                        cmd = data.get('cmd')
+                        msg = data.get('msg')
+                        cmd.start()
+                    else:
+                        msg = data
+                    self.protocol.write_line(msg)
             except:
                 pass
             time.sleep(0.001)

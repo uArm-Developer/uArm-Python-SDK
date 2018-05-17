@@ -6,6 +6,7 @@
 #
 # Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
 
+import functools
 from . import protocol
 from .utils import catch_exception
 from .utils import REPORT_KEY0_ID, REPORT_KEY1_ID
@@ -22,9 +23,21 @@ class Keys(object):
         return self._register_report_callback(REPORT_KEY1_ID, callback)
 
     @catch_exception
-    def set_report_keys(self, on=True, is_on=None):
+    def set_report_keys(self, on=True, wait=True, timeout=None, callback=None, **kwargs):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        is_on = kwargs.get('is_on', None)
         on = is_on if is_on is not None else on
         assert isinstance(on, bool) or (isinstance(on, int) and on >= 0)
         cmd = protocol.SET_REPORT_KEYS.format(int(not on))
-        return self.send_cmd_sync(cmd)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 

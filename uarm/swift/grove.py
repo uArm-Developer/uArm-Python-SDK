@@ -57,10 +57,23 @@ class Grove(object):
         return self._register_report_callback(REPORT_GROVE + '_{}_{}'.format(grove_type, pin), callback)
 
     @catch_exception
-    def set_report_grove(self, pin=None, interval=0.5):
+    def set_report_grove(self, pin=None, interval=0, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
         assert isinstance(interval, (int, float)) and interval >= 0
         cmd = protocol.SET_GROVE_REPORT.format(pin, interval)
-        return self.send_cmd_sync(cmd)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+
 
 
 

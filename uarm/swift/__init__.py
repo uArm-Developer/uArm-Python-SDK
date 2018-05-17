@@ -38,13 +38,13 @@ class HandleQueue(Queue):
 
 
 class Swift(Pump, Keys, Gripper, Grove):
-    def __init__(self, port=None, baudrate=115200, filters=None, cmd_pend_size=5, callback_thread_pool_size=0,
+    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=5, callback_thread_pool_size=0,
                  do_not_open=False, **kwargs):
         super(Swift, self).__init__()
         self.cmd_pend = {}
         self.cmd_pend_size = cmd_pend_size
         self.cmd_pend_c = threading.Condition()
-        self.cmd_timeout = 5
+        self.cmd_timeout = 2
         self._cnt_lock = threading.Lock()
         self._cnt = 1
 
@@ -67,6 +67,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.key0_status = False
         self.key1_status = False
         self.report_position = []
+        self.is_moving = False
 
         self._x = 150
         self._y = 0
@@ -80,51 +81,61 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._current_temperature = 0.0
         self._target_temperature = 0.0
 
-        self.rx_que = HandleQueue(handle=self.handle_line)
+        # self.rx_que = HandleQueue(handle=self.handle_line)
+        self.rx_que = Queue(100)
 
         port = kwargs.get('dev_port', None) if kwargs.get('dev_port', None) is not None else port
         baudrate = kwargs.get('baud', None) if kwargs.get('baud', None) is not None else baudrate
 
-        self.serial = Serial(port=port, baudrate=baudrate, filters=filters, rx_que=self.rx_que)
+        self.serial = Serial(port=port, baudrate=baudrate, timeout=timeout, filters=filters, rx_que=self.rx_que)
 
-        self.report_que = Queue(100)
+        self.report_que = Queue()
         self.handle_report_thread = None
 
         self.thread_pool_size = int(callback_thread_pool_size)
         self.pool = None
 
+        self.handle_thread = None
+
         if not do_not_open:
             self.connect()
 
-    #     self.handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
-    #     self.handle_thread.start()
-    #
-    # def _loop_handle(self):
-    #     logger.debug('serial result handle thread start ...')
-    #     while self.connected:
-    #         line = self.serial.read()
-    #         if not line or len(line) < 2:
-    #             time.sleep(0.001)
-    #             continue
-    #         self._handle_line(line.strip())
-    #     logger.debug('serial result handle thread exit ...')
-
-    def _loop_handle_report(self):
+    def _loop_handle(self):
+        logger.debug('serial result handle thread start ...')
         while self.connected:
             try:
-                if self.report_que.empty():
+                line = self.serial.read()
+                if not line or len(line) < 2:
                     time.sleep(0.001)
                     continue
-                item = self.report_que.get(timeout=0.2)
-                try:
-                    if self.pool is not None:
-                        self.pool.apply_async(self._handle_report, args=(item,))
-                    else:
-                        self._handle_report(item)
-                except Exception as e:
-                    logger.error(e)
-            except Exception as e:
+                self._handle_line(line.strip())
+            except:
                 pass
+        self.power_status = False
+        if REPORT_POWER_ID in self._report_callbacks.keys():
+            for callback in self._report_callbacks[REPORT_POWER_ID]:
+                callback(self.power_status)
+        logger.debug('serial result handle thread exit ...')
+        self.handle_thread = None
+
+    def _loop_handle_report(self):
+        logger.debug('serial report handle thread start ...')
+        while self.connected:
+            if not self.report_que.empty():
+                try:
+                    item = self.report_que.get_nowait()
+                    try:
+                        if self.pool is not None:
+                            self.pool.apply_async(self._handle_report, args=(item,))
+                        else:
+                            self._handle_report(item)
+                    except Exception as e:
+                        logger.error(e)
+                except:
+                    time.sleep(0.001)
+            else:
+                time.sleep(0.001)
+        logger.debug('serial report handle thread exit ...')
         self.handle_report_thread = None
 
     @property
@@ -166,6 +177,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.pool = ThreadPool(self.thread_pool_size)
         self.handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
         self.handle_report_thread.start()
+        self.handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
+        self.handle_thread.start()
 
     @catch_exception
     def disconnect(self, is_clean=True):
@@ -187,6 +200,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.key0_status = False
         self.key1_status = False
         self.report_position = []
+        self.is_moving = False
 
         self._x = 150
         self._y = 0
@@ -214,6 +228,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._handle_line(line)
 
     def _handle_line(self, line):
+        # print(self.port, line, time.time())
         if line.startswith('$'):
             ret = line[1:].split(' ')
             try:
@@ -254,6 +269,12 @@ class Swift(Pump, Keys, Gripper, Grove):
             if REPORT_POWER_ID in self._report_callbacks.keys():
                 for callback in self._report_callbacks[REPORT_POWER_ID]:
                     callback(self.power_status)
+        elif ret[0] == protocol.REPORT_STOP_MOVE_PREFIX:
+            ret[1] = ret[1].upper()
+            if ret[1] == 'V1':
+                self.is_moving = True
+            elif ret[1] == 'V0':
+                self.is_moving = False
         elif ret[0] == protocol.REPORT_POSITION_PREFIX:
             self.report_position = [
                 float(ret[1][1:]), float(ret[2][1:]),
@@ -303,6 +324,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.callback = callback
             self.timer = None
             self.start_time = time.time()
+            self.count = 1
 
         def start(self):
             self.timer = threading.Timer(self.timeout, self.timeout_cb)
@@ -310,22 +332,30 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.start_time = time.time()
 
         def timeout_cb(self):
+            self.delete()
             if self.debug:
-                logger.warn('cmd "#{} {}" timeout'.format(self.cnt, self.msg))
-            # self.finish('timeout,{}'.format(self.cnt))
-            self.finish(protocol.TIMEOUT)
+                logger.warn('{} cmd "#{} {}" timeout'.format(self.owner.port, self.cnt, self.msg))
+            # # self.finish('timeout,{}'.format(self.cnt))
+            # self.finish(protocol.TIMEOUT)
+            self.ret.put(protocol.TIMEOUT)
+
+        def delete(self):
+            del self.owner.cmd_pend[self.cnt]
+            with self.owner.cmd_pend_c:
+                self.owner.cmd_pend_c.notifyAll()
 
         def finish(self, msg):
             self.timer.cancel()
-            try:
-                self.timer.join(0.2)
-            except:
-                pass
-            cmd = self.owner.cmd_pend.pop(self.cnt, None)
-            if cmd:
-                del cmd
-            with self.owner.cmd_pend_c:
-                self.owner.cmd_pend_c.notifyAll()
+            self.delete()
+            # # try:
+            # #     self.timer.join(0.2)
+            # # except:
+            # #     pass
+            # cmd = self.owner.cmd_pend.pop(self.cnt, None)
+            # if cmd:
+            #     del cmd
+            # with self.owner.cmd_pend_c:
+            #     self.owner.cmd_pend_c.notifyAll()
             if callable(self.callback):
                 try:
                     if self.owner.pool is not None:
@@ -337,21 +367,21 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.ret.put(msg)
 
         def get_ret(self):
-            while time.time() - self.start_time < self.timeout * 1.2:
-                if not self.ret.empty():
-                    break
-                time.sleep(0.001)
+            # while time.time() - self.start_time < self.timeout * 1.2:
+            #     if not self.ret.empty():
+            #         break
+            #     time.sleep(0.001)
             return self.ret.get()
 
     @catch_exception
     def send_cmd_async(self, msg=None, timeout=None, callback=None, debug=True):
         if not isinstance(msg, str) or not msg:
             return
-        if msg.startswith('_T'):
-            tmps = msg[2:].split(' ', 1)
-            if timeout is None:
+        if timeout is None:
+            if msg.startswith('_T'):
+                tmps = msg[2:].split(' ', 1)
                 timeout = int(tmps[0])
-            msg = tmps[1]
+                msg = tmps[1]
         with self._cnt_lock:
             with self.cmd_pend_c:
                 while len(self.cmd_pend) >= self.cmd_pend_size:
@@ -362,6 +392,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 'cmd': cmd,
                 'msg': '#{cnt} {msg}'.format(cnt=self._cnt, msg=msg)
             })
+            # cmd.start()
             # self.serial.write('#{cnt} {msg}'.format(cnt=self._cnt, msg=msg))
             self._cnt += 1
             if self._cnt == 10000:
@@ -615,7 +646,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
+    def set_servo_attach(self, servo_id=None, wait=True, timeout=2, callback=None):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -634,7 +665,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
+    def set_servo_detach(self, servo_id=None, wait=True, timeout=2, callback=None):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -760,8 +791,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         cmd = protocol.SET_BUZZER.format(frequency, duration * 1000)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
-            time.sleep(duration)
-            return _handle(ret)
+            ret = _handle(ret)
+            if ret == protocol.OK:
+                time.sleep(duration)
+            return ret
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
@@ -836,21 +869,31 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def set_report_position(self, interval=1):
+    def set_report_position(self, interval=0, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
         assert isinstance(interval, (int, float)) and interval >= 0
         cmd = protocol.SET_REPORT_POSITION.format(interval)
-        return self.send_cmd_sync(cmd)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     def _register_report_callback(self, report_id, callback):
         if report_id not in self._report_callbacks.keys():
             self._report_callbacks[report_id] = []
         if callable(callback) and callback not in self._report_callbacks[report_id]:
             self._report_callbacks[report_id].append(callback)
-            return True, 'register success'
+            return True
         elif not callable(callback):
-            return False, 'callback is not callable'
+            return False
         else:
-            return True, 'callback is exist'
+            return True
 
     def register_power_callback(self, callback=None):
         return self._register_report_callback(REPORT_POWER_ID, callback)
@@ -858,18 +901,50 @@ class Swift(Pump, Keys, Gripper, Grove):
     def register_report_position_callback(self, callback=None):
         return self._register_report_callback(REPORT_POSITION_ID, callback)
 
+    def get_is_moving(self, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _key=None, _callback=None):
+            if _ret[0] == protocol.OK:
+                value = _ret[1]
+                if value.startswith(('v', 'V')):
+                    value = bool(int(value[1:]))
+                setattr(self, _key, value)
+            if callable(_callback):
+                _callback(self.is_moving)
+            else:
+                return self.is_moving
+        cmd = protocol.GET_IS_MOVE
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret, _key='is_moving')
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='is_moving', _callback=callback))
+
     def flush_cmd(self, timeout=None):
+        # time.sleep(0.1)
         if isinstance(timeout, (int, float)):
             start_time = time.time()
-            while time.time() - start_time < timeout:
-                if len(self.cmd_pend) == 0:
-                    return protocol.OK
-                time.sleep(0.001)
-            return protocol.TIMEOUT
+            with self.cmd_pend_c:
+                while (len(self.cmd_pend) != 0 or self._cnt_lock.locked()) and time.time() - start_time < timeout:
+                    try:
+                        self.cmd_pend_c.wait(timeout=0.1)
+                    except:
+                        time.sleep(0.001)
+                    if not self.connected:
+                        break
+            if not self.connected or len(self.cmd_pend) == 0:
+                return protocol.OK
+            else:
+                return protocol.TIMEOUT
         else:
-            while True:
-                if len(self.cmd_pend) == 0:
-                    return protocol.OK
+            with self.cmd_pend_c:
+                while len(self.cmd_pend) != 0 or self._cnt_lock.locked():
+                    try:
+                        self.cmd_pend_c.wait(timeout=0.1)
+                    except:
+                        time.sleep(0.001)
+                    if not self.connected:
+                        break
+            return protocol.OK
 
     @catch_exception
     def set_fans(self, on=False, wait=True, timeout=None, callback=None):
@@ -943,9 +1018,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             cmd += ' y{}'.format(y)
         if isinstance(z, (int, float)):
             cmd += ' Z{}'.format(z)
-        if isinstance(speed, (int, float)):
-            speed = 100
-        cmd += ' F{}'.format(speed)
+        self._speed = speed if isinstance(speed, (int, float)) else self._speed
+        cmd += ' F{}'.format(self._speed)
         cmd += ' E{}'.format(distance)
 
         if relative:

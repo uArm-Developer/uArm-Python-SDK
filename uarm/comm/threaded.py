@@ -65,8 +65,8 @@ class ReaderThread(threading.Thread):
         while self.alive and self.serial.is_open:
             try:
                 # read all that is there or wait for one byte (blocking)
-                data = self.serial.read(self.serial.in_waiting or 1)
-                # data = self.serial.readline()
+                # data = self.serial.read(self.serial.in_waiting or 1)
+                data = self.serial.readline()
             except serial.SerialException as e:
                 # probably some I/O problem such as disconnected USB serial
                 # adapters -> exit
@@ -79,9 +79,9 @@ class ReaderThread(threading.Thread):
                 if data:
                     # make a separated try-except for called used code
                     try:
-                        self.protocol.data_received(data)
-                        # line = ''.join(map(chr, data)).rstrip()
-                        # self.protocol.handle_line(line)
+                        # self.protocol.data_received(data)
+                        line = ''.join(map(chr, data)).rstrip()
+                        self.protocol.handle_line(line)
                     except Exception as e:
                         error = e
                         break
@@ -95,8 +95,10 @@ class ReaderThread(threading.Thread):
         """Thread safe writing (uses lock)"""
         with self._lock:
             try:
-                logger.verbose('send: {}'.format(data))
+                logger.verbose('send: {}, {}'.format(self.serial.port, data))
+                # print('send: {}, {}'.format(self.serial.port, data))
                 self.serial.write(data)
+                self.serial.flush()
             except serial.SerialException as e:
                 self.alive = False
             except:

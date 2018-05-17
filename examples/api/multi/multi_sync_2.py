@@ -8,6 +8,7 @@
 
 import os
 import sys
+import time
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 from uarm.tools.list_ports import get_ports
@@ -35,13 +36,31 @@ def multi_swift_cmd(cmd, *args, **kwargs):
     if wait:
         for swift in swift_list:
             swift.flush_cmd(timeout)
+    time.sleep(0.001)
+
+speed = 1000000
+timeout = 30
+
+multi_swift_cmd('reset', speed=speed)
+time.sleep(2)
 
 
 while True:
-    multi_swift_cmd('set_position', x=200, y=0, z=100, speed=10000, wait=True, timeout=30)
-    multi_swift_cmd('set_position', x=200, y=100, z=100, speed=10000, wait=True, timeout=30)
-    multi_swift_cmd('set_position', x=200, y=-100, z=100, speed=10000, wait=True, timeout=30)
-    multi_swift_cmd('set_position', x=200, y=0, z=150, speed=10000, wait=True, timeout=30)
+    multi_swift_cmd('set_position', x=300, y=0, z=150, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=50, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=150, speed=speed, wait=True, timeout=timeout)
+
+    multi_swift_cmd('set_position', x=200, y=100, z=100, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=50, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=150, speed=speed, wait=True, timeout=timeout)
+
+    multi_swift_cmd('set_position', x=200, y=-100, z=100, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=50, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=150, speed=speed, wait=True, timeout=timeout)
+
+    multi_swift_cmd('set_position', x=200, y=0, z=150, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=50, speed=speed, wait=True, timeout=timeout)
+    multi_swift_cmd('set_position', z=150, speed=speed, wait=True, timeout=timeout)
 
 
 
