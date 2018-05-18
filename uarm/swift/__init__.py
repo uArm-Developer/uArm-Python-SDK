@@ -38,7 +38,7 @@ class HandleQueue(Queue):
 
 
 class Swift(Pump, Keys, Gripper, Grove):
-    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=5, callback_thread_pool_size=0,
+    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0,
                  do_not_open=False, **kwargs):
         super(Swift, self).__init__()
         self.cmd_pend = {}
@@ -161,15 +161,19 @@ class Swift(Pump, Keys, Gripper, Grove):
     @catch_exception
     def waiting_ready(self, timeout=5):
         start_time = time.time()
-        while time.time() - start_time < 2:
-            if self.power_status:
-                break
-            time.sleep(0.05)
         while time.time() - start_time < timeout:
             if self.power_status:
                 break
-            self.get_power_status(wait=False, debug=False)
-            time.sleep(0.1)
+            time.sleep(0.05)
+        # while time.time() - start_time < 2:
+        #     if self.power_status:
+        #         break
+        #     time.sleep(0.05)
+        # while time.time() - start_time < timeout:
+        #     if self.power_status:
+        #         break
+        #     self.get_power_status(wait=False, debug=False)
+        #     time.sleep(0.1)
 
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
@@ -228,7 +232,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._handle_line(line)
 
     def _handle_line(self, line):
-        # print(self.port, line, time.time())
+        # if not line.startswith('echo'):
+        #     print(self.port, line, time.time())
         if line.startswith('$'):
             # print(self.port, line)
             ret = line[1:].split(' ')
@@ -949,7 +954,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         return self._register_report_callback(REPORT_POSITION_ID, callback)
 
     @catch_exception
-    def get_is_moving(self, wait=True, timeout=2, callback=None):
+    def get_is_moving(self, wait=True, timeout=None, callback=None, debug=True):
         def _handle(_ret, _key=None, _callback=None):
             if _ret[0] == protocol.OK:
                 if len(_ret) > 1:
@@ -963,10 +968,10 @@ class Swift(Pump, Keys, Gripper, Grove):
                 return self.is_moving
         cmd = protocol.GET_IS_MOVE
         if wait:
-            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            ret = self.send_cmd_sync(cmd, timeout=timeout, debug=debug)
             return _handle(ret, _key='is_moving')
         else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='is_moving', _callback=callback))
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='is_moving', _callback=callback), debug=debug)
 
     def flush_cmd(self, timeout=None, wait_stop=False):
         # time.sleep(0.1)
@@ -984,9 +989,9 @@ class Swift(Pump, Keys, Gripper, Grove):
                 if not wait_stop:
                     return protocol.OK
                 else:
-                    self.get_is_moving(timeout=1)
+                    self.get_is_moving(timeout=1, debug=False)
                     while self.connected and self.is_moving and time.time() - start_time < timeout:
-                        self.get_is_moving(timeout=1)
+                        self.get_is_moving(timeout=1, debug=False)
                     if not self.is_moving:
                         return protocol.OK
                     else:
@@ -1004,9 +1009,9 @@ class Swift(Pump, Keys, Gripper, Grove):
                     if not self.connected:
                         return protocol.OK
             if wait_stop:
-                self.get_is_moving(timeout=1)
+                self.get_is_moving(timeout=1, debug=False)
                 while self.connected and self.is_moving:
-                    self.get_is_moving(timeout=1)
+                    self.get_is_moving(timeout=1, debug=False)
                 self.is_moving = False
             return protocol.OK
 
@@ -1019,8 +1024,11 @@ class Swift(Pump, Keys, Gripper, Grove):
             else:
                 return _ret
         if on:
-            if self.mode != 2:
+            if self.mode is None or self.mode != 2:
                 self.set_mode(mode=2)
+            if self.mode is None or self.mode != 2:
+                logger.error('This API only support SwiftPro and set mode to 3D printing mode (2)')
+                return
             cmd = protocol.OPEN_FAN
         else:
             cmd = protocol.CLOSE_FAN
@@ -1040,8 +1048,11 @@ class Swift(Pump, Keys, Gripper, Grove):
                 return _ret
         assert isinstance(temperature, (int, float)) and temperature >= 0
         self._target_temperature = temperature
-        if self.mode != 2:
+        if self.mode is None or self.mode != 2:
             self.set_mode(mode=2)
+        if self.mode is None or self.mode != 2:
+            logger.error('This API only support SwiftPro and set mode to 3D printing mode (2)')
+            return
         if block:
             cmd = protocol.SET_TEMPERATURE_BLOCK.format(temperature)
         else:

@@ -19,7 +19,7 @@ def hh(i=0):
 # for t in threads:
 #     t.join()
 # print(time.time() - start_time)
-del None
+
 start_time = time.time()
 pool = ThreadPool(15)
 pool.map(lambda x: x, range(15))

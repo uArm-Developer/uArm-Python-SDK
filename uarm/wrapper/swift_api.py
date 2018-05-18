@@ -10,7 +10,7 @@ from ..swift import Swift
 
 
 class SwiftAPI(object):
-    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=5, callback_thread_pool_size=0,
+    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0,
                  do_not_open=False, **kwargs):
         """
         The API wrapper of Swift and SwiftPro
@@ -18,10 +18,11 @@ class SwiftAPI(object):
         :param baudrate: default is 115200
         :param timeout: tiemout of serial read, default is None
         :param filters: like {'hwid': 'USB VID:PID=2341:0042'}
-        :param cmd_pend_size: cmd cache size, default is 5
+        :param cmd_pend_size: cmd cache size, default is 2
         :param callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
         :param do_not_open: default is False
         :param kwargs: compatible the pyuf params, example: dev_port='COM3'
+        default cmd timeout is 2s
         """
         self._arm = Swift(port=port,
                           baudrate=baudrate,
@@ -74,7 +75,7 @@ class SwiftAPI(object):
         """
         Send cmd sync
         :param msg: cmd, example: G0 X150 F1000
-        :param timeout: timeout of waiting, default is 2s
+        :param timeout: timeout of waiting, default is use the default cmd timeout
         :return: result
         """
         return self._arm.send_cmd_sync(msg=msg, timeout=timeout)
@@ -83,7 +84,7 @@ class SwiftAPI(object):
         """
         Send cmd async
         :param msg: cmd
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         """
         self._arm.send_cmd_async(msg=msg, timeout=timeout, callback=callback)
@@ -92,7 +93,7 @@ class SwiftAPI(object):
         """
         Get the power status
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: power status if wait is True else None
         """
@@ -125,7 +126,7 @@ class SwiftAPI(object):
         """
         Get the mode, only support SwiftPro
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: mode if wait is True else None
         """
@@ -136,7 +137,7 @@ class SwiftAPI(object):
         Set the mode, only support SwiftPro
         :param mode: mode, 0: general mode, 1: laser mode, 2: 3D Print mode, 3: pen/gripper mode
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: mode if wait is True else None
         """
@@ -146,7 +147,7 @@ class SwiftAPI(object):
         """
         Get the position
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: [x, y, z] or 'TIMEOUT' if wait is True else None
         """
@@ -171,7 +172,7 @@ class SwiftAPI(object):
         """
         Get the polar coordinate
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: [stretch, rotation, height] or 'TIMEOUT' if wait is True else None
         """
@@ -199,7 +200,7 @@ class SwiftAPI(object):
         Get the servo angle
         :param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT, 3: HAND
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
         :return: angle or angle list if wait is True else None
         """
@@ -235,7 +236,7 @@ class SwiftAPI(object):
         Get servo attach status
         :param servo_id: servo id, default is 0
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: True/False or 'TIMEOUT' if wait is True else None
         """
@@ -246,7 +247,7 @@ class SwiftAPI(object):
         Set servo attach
         :param servo_id: servo id, default is None, attach all the servo
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -257,7 +258,7 @@ class SwiftAPI(object):
         Set servo detach
         :param servo_id: servo id, default is None, detach all the servo
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -269,7 +270,7 @@ class SwiftAPI(object):
         :param frequency: frequency, default is 1000
         :param duration: duration, default is 2s
         :param wait: True/False, deault is False
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :param kwargs: compatible the pyuf params
         :return: 'OK' or 'TIMEOUT' if wait is True else None
@@ -281,7 +282,7 @@ class SwiftAPI(object):
         Control the pump
         :param on: True/False, default is False (Off)
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -292,7 +293,7 @@ class SwiftAPI(object):
         Control the gripper
         :param catch: True/False, default is False (Open)
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -303,7 +304,7 @@ class SwiftAPI(object):
         Get the analog value from specific pin
         :param pin: pin, default is 0
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: analog value or 'TIMEOUT' if wait is True else None
         """
@@ -314,7 +315,7 @@ class SwiftAPI(object):
         Get the digital value from specific pin
         :param pin: pin, default is 0
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: digital value (0 or 1) or 'TIMEOUT' if wait is True else None
         """
@@ -326,7 +327,7 @@ class SwiftAPI(object):
         :param address: 0 - 64K byte
         :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: int or float value or 'TIMEOUT' if wait is True
         Notes:
@@ -353,7 +354,7 @@ class SwiftAPI(object):
         :param data: data
         :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -363,7 +364,7 @@ class SwiftAPI(object):
         """
         Get the status of the limit switch
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: True/False or 'TIMEOUT' if wait is True else None
         """
@@ -373,7 +374,7 @@ class SwiftAPI(object):
         """
         Get the status of the gripper
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None 
         """
@@ -383,7 +384,7 @@ class SwiftAPI(object):
         """
         Get the status of the pump
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: int value (0: stop, 1: working, 2: pump thing) or 'TIMEOUT' if wait is True else None
         """
@@ -396,7 +397,7 @@ class SwiftAPI(object):
         :param grove_type: 
         :param value: 
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -408,7 +409,7 @@ class SwiftAPI(object):
         :param pin: pin/port, default is None, you must set the pin
         :param value: 
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None 
         """
@@ -419,7 +420,7 @@ class SwiftAPI(object):
         Report position in (interval) seconds
         :param interval: seconds, default is 0, disable report if interval is 0
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None 
         """
@@ -430,7 +431,7 @@ class SwiftAPI(object):
         Report the buttons event
         :param on: True/False, default is True (report)
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :param kwargs: compatible the pyuf params
         :return: 'OK' or 'TIMEOUT' if wait is True else None 
@@ -443,7 +444,7 @@ class SwiftAPI(object):
         :param pin: pin/port, default is None, you must set the pin
         :param interval: seconds, deault is 0, disable report if interval is 0
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: 'OK' or 'TIMEOUT' if wait is True else None 
         """
@@ -499,11 +500,11 @@ class SwiftAPI(object):
         """
         return self._arm.register_grove_callback(pin=pin, grove_type=grove_type, callback=callback)
 
-    def get_is_moving(self, wait=True, timeout=2, callback=None):
+    def get_is_moving(self, wait=True, timeout=None, callback=None):
         """
         Check uArm is moving or not
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
         :return: True/False if wait is True else None 
         """
@@ -523,7 +524,7 @@ class SwiftAPI(object):
         Control the fan, only support SwiftPro, will auto set the mode to 3D printing mode (2)
         :param on: True/False, default is False(close the fan)
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
          :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -535,7 +536,7 @@ class SwiftAPI(object):
         :param temperature: temperature, default is 0
         :param block: True/False, default is False, if block is True, the uArm system will block until the temperature over you set
         :param wait: True/False, deault is True
-        :param timeout: timeout, default is 2s
+        :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
          :return: 'OK' or 'TIMEOUT' if wait is True else None
         """

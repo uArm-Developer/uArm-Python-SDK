@@ -40,6 +40,7 @@ class ListenPort(threading.Thread):
                     if port['device'] not in swifts.keys():
                         new_swift = SwiftAPI(port=port['device'])
                         new_swift.waiting_ready()
+                        print(new_swift.port, new_swift.get_device_info())
                         new_swift.set_mode(mode=0)
                         with lock:
                             pos = [150, 0, 150]

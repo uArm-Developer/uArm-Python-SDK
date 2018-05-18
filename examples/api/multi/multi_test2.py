@@ -40,6 +40,7 @@ class ListenPort(threading.Thread):
                     if port['device'] not in swifts.keys():
                         new_swift = SwiftAPI(port=port['device'])
                         new_swift.waiting_ready()
+                        print(new_swift.port, new_swift.get_device_info())
                         new_swift.set_mode(mode=0)
                         with lock:
                             swifts[port['device']] = new_swift
@@ -68,7 +69,10 @@ def multi_swift_cmd(cmd, *args, **kwargs):
         if wait:
             for swift in swifts.values():
                 if swift.connected:
-                    swift.flush_cmd(timeout, wait_stop=True)
+                    if len(swifts.values()) > 1:
+                        swift.flush_cmd(timeout, wait_stop=True)
+                    else:
+                        swift.flush_cmd(timeout)
     time.sleep(0.001)
 
 

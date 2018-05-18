@@ -15,7 +15,7 @@ Python Library Documentation: class SwiftAPI in module uarm.wrapper.swift_api
 
 ### methods
 ****************************************
-#### def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=5, callback_thread_pool_size=0, do_not_open=False, **kwargs):
+#### def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0, do_not_open=False, **kwargs):
 
 ```
 The API wrapper of Swift and SwiftPro
@@ -23,10 +23,11 @@ The API wrapper of Swift and SwiftPro
 :param baudrate: default is 115200
 :param timeout: tiemout of serial read, default is None
 :param filters: like {'hwid': 'USB VID:PID=2341:0042'}
-:param cmd_pend_size: cmd cache size, default is 5
+:param cmd_pend_size: cmd cache size, default is 2
 :param callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
 :param do_not_open: default is False
 :param kwargs: compatible the pyuf params, example: dev_port='COM3'
+default cmd timeout is 2s
 ```
 
 #### def connect(self, port=None, baudrate=None, timeout=None):
@@ -60,7 +61,7 @@ Wait until all async command return or timeout
 Get the analog value from specific pin
 :param pin: pin, default is 0
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: analog value or 'TIMEOUT' if wait is True else None
 ```
@@ -85,7 +86,7 @@ Get the uArm info
 Get the digital value from specific pin
 :param pin: pin, default is 0
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: digital value (0 or 1) or 'TIMEOUT' if wait is True else None
 ```
@@ -95,17 +96,17 @@ Get the digital value from specific pin
 ```
 Get the status of the gripper
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_is_moving(self, wait=True, timeout=2, callback=None):
+#### def get_is_moving(self, wait=True, timeout=None, callback=None):
 
 ```
 Check uArm is moving or not
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: True/False if wait is True else None
 ```
@@ -115,7 +116,7 @@ Check uArm is moving or not
 ```
 Get the status of the limit switch
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: True/False or 'TIMEOUT' if wait is True else None
 ```
@@ -125,7 +126,7 @@ Get the status of the limit switch
 ```
 Get the mode, only support SwiftPro
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: mode if wait is True else None
 ```
@@ -135,7 +136,7 @@ Get the mode, only support SwiftPro
 ```
 Get the polar coordinate
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: [stretch, rotation, height] or 'TIMEOUT' if wait is True else None
 ```
@@ -145,7 +146,7 @@ Get the polar coordinate
 ```
 Get the position
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: [x, y, z] or 'TIMEOUT' if wait is True else None
 ```
@@ -155,7 +156,7 @@ Get the position
 ```
 Get the power status
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: power status if wait is True else None
 ```
@@ -165,7 +166,7 @@ Get the power status
 ```
 Get the status of the pump
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: int value (0: stop, 1: working, 2: pump thing) or 'TIMEOUT' if wait is True else None
 ```
@@ -177,7 +178,7 @@ Get data from eeprom
 :param address: 0 - 64K byte
 :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: int or float value or 'TIMEOUT' if wait is True
 Notes:
@@ -202,7 +203,7 @@ Notes:
 Get the servo angle
 :param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT, 3: HAND
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
 :return: angle or angle list if wait is True else None
 ```
@@ -213,7 +214,7 @@ Get the servo angle
 Get servo attach status
 :param servo_id: servo id, default is 0
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: True/False or 'TIMEOUT' if wait is True else None
 ```
@@ -235,7 +236,7 @@ Grove control, cmd: M2307 P{pin} V{value}
 :param pin: pin/port, default is None, you must set the pin
 :param value: 
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -248,7 +249,7 @@ Grove init, cmd: M2305 P{pin} N{grove_type} V{value}
 :param grove_type: 
 :param value: 
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -317,7 +318,7 @@ Reset the uArm
 ```
 Send cmd async
 :param msg: cmd
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
 ```
 
@@ -326,7 +327,7 @@ Send cmd async
 ```
 Send cmd sync
 :param msg: cmd, example: G0 X150 F1000
-:param timeout: timeout of waiting, default is 2s
+:param timeout: timeout of waiting, default is use the default cmd timeout
 :return: result
 ```
 
@@ -369,7 +370,7 @@ Control the buzzer
 :param frequency: frequency, default is 1000
 :param duration: duration, default is 2s
 :param wait: True/False, deault is False
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :param kwargs: compatible the pyuf params
 :return: 'OK' or 'TIMEOUT' if wait is True else None
@@ -381,7 +382,7 @@ Control the buzzer
 Control the fan, only support SwiftPro, will auto set the mode to 3D printing mode (2)
 :param on: True/False, default is False(close the fan)
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
  :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -392,7 +393,7 @@ Control the fan, only support SwiftPro, will auto set the mode to 3D printing mo
 Control the gripper
 :param catch: True/False, default is False (Open)
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -403,7 +404,7 @@ Control the gripper
 Set the mode, only support SwiftPro
 :param mode: mode, 0: general mode, 1: laser mode, 2: 3D Print mode, 3: pen/gripper mode
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: mode if wait is True else None
 ```
@@ -445,7 +446,7 @@ Set the position
 Control the pump
 :param on: True/False, default is False (Off)
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -457,7 +458,7 @@ Report the grove from specific pin, cmd: M2306 P{pin} V{interval}
 :param pin: pin/port, default is None, you must set the pin
 :param interval: seconds, deault is 0, disable report if interval is 0
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -468,7 +469,7 @@ Report the grove from specific pin, cmd: M2306 P{pin} V{interval}
 Report the buttons event
 :param on: True/False, default is True (report)
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :param kwargs: compatible the pyuf params
 :return: 'OK' or 'TIMEOUT' if wait is True else None
@@ -480,7 +481,7 @@ Report the buttons event
 Report position in (interval) seconds
 :param interval: seconds, default is 0, disable report if interval is 0
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -493,7 +494,7 @@ Set data to eeprom
 :param data: data
 :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -517,7 +518,7 @@ Set the servo angle
 Set servo attach
 :param servo_id: servo id, default is None, attach all the servo
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -528,7 +529,7 @@ Set servo attach
 Set servo detach
 :param servo_id: servo id, default is None, detach all the servo
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None 
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
@@ -540,7 +541,7 @@ Set the temperature, only support SwiftPro, will auto set the mode to 3D printin
 :param temperature: temperature, default is 0
 :param block: True/False, default is False, if block is True, the uArm system will block until the temperature over you set
 :param wait: True/False, deault is True
-:param timeout: timeout, default is 2s
+:param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
  :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
