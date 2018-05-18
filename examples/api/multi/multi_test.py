@@ -39,6 +39,8 @@ class ListenPort(threading.Thread):
                 for port in ports:
                     if port['device'] not in swifts.keys():
                         new_swift = SwiftAPI(port=port['device'])
+                        new_swift.waiting_ready()
+                        new_swift.set_mode(mode=0)
                         with lock:
                             pos = [150, 0, 150]
                             for swift in swifts.values():
@@ -50,27 +52,22 @@ class ListenPort(threading.Thread):
                                 if isinstance(pos, list):
                                     # print('sync pos:', pos)
                                     break
-
-                            new_swift.waiting_ready()
-                            new_swift.set_mode(mode=0)
                             # new_swift.reset(speed=speed)
                             swifts[port['device']] = new_swift
 
                             for swift in swifts.values():
                                 swift.set_position(x=pos[0], y=pos[1], z=pos[2], speed=speed, wait=False)
                             for swift in swifts.values():
-                                swift.flush_cmd()
-                            # print('sync111', time.time())
-                            if len(swifts) > 1:
-                                time.sleep(3)
-                            # print('sync222', time.time())
+                                if swift.connected:
+                                    swift.flush_cmd(wait_stop=True)
+                            # if len(swifts) > 1:
+                            #     time.sleep(3)
                     else:
                         swift = swifts[port['device']]
                         if not swift.connected:
                             with lock:
                                 swifts.pop(port['device'])
             except Exception as e:
-                # print(e, swifts)
                 pass
             time.sleep(0.001)
 
@@ -84,10 +81,9 @@ def multi_swift_cmd(cmd, *args, **kwargs):
     timeout = kwargs.get('timeout', None)
     with lock:
         for swift in swifts.values():
-            if swift.connected:
+            if swift.connected and swift.power_status:
                 swift_cmd = getattr(swift, cmd)
-                if swift.power_status:
-                    swift_cmd(*args, wait=False, **kwargs)
+                swift_cmd(*args, wait=False, **kwargs)
         if wait:
             for swift in swifts.values():
                 if swift.connected:

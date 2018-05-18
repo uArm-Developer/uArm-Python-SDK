@@ -13,36 +13,35 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-三台机械臂的同步运动
+多台机械臂的同步运动
 """
 
 swift1 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 swift2 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
-swift3 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
+# swift3 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 
 swift1.waiting_ready()
 swift2.waiting_ready()
-swift3.waiting_ready()
+# swift3.waiting_ready()
 
-swift_list = [swift1, swift2, swift3]
+swift_list = [swift1, swift2]
 
 
 def multi_swift_cmd(cmd, *args, **kwargs):
     wait = kwargs.pop('wait', False)
     timeout = kwargs.get('timeout', None)
     for swift in swift_list:
-        swift_cmd = getattr(swift, cmd)
-        swift_cmd(*args, **kwargs, wait=False)
+        if swift.connected:
+            swift_cmd = getattr(swift, cmd)
+            swift_cmd(*args, **kwargs, wait=False)
     if wait:
         for swift in swift_list:
-            swift.flush_cmd(timeout)
+            if swift.connected:
+                swift.flush_cmd(timeout, wait_stop=True)
     time.sleep(0.001)
 
 speed = 1000000
-timeout = 30
-
-multi_swift_cmd('reset', speed=speed)
-time.sleep(2)
+timeout = None
 
 while True:
     multi_swift_cmd('set_position', x=300, y=0, z=150, speed=speed, wait=True, timeout=timeout)

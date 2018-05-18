@@ -45,11 +45,12 @@ Disconnect
 :param is_clean: clean the thread pool or not, default is True
 ```
 
-#### def flush_cmd(self, timeout=None):
+#### def flush_cmd(self, timeout=None, wait_stop=False):
 
 ```
 Wait until all async command return or timeout
 :param timeout: timeout, default is None(wait all async cmd return)
+:param wait_stop: True/False, default is False, if set True, will waiting the uArm not in moving or timeout
 :return: 'OK' or 'TIMEOUT'
 ```
 
@@ -97,6 +98,16 @@ Get the status of the gripper
 :param timeout: timeout, default is 2s
 :param callback: callback, deault is None 
 :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None
+```
+
+#### def get_is_moving(self, wait=True, timeout=2, callback=None):
+
+```
+Check uArm is moving or not
+:param wait: True/False, deault is True
+:param timeout: timeout, default is 2s
+:param callback: callback, deault is None 
+:return: True/False if wait is True else None
 ```
 
 #### def get_limit_switch(self, wait=True, timeout=None, callback=None):
@@ -322,7 +333,7 @@ Send cmd sync
 #### def set_3d_feeding(self, distance=0, speed=None, relative=True, x=None, y=None, z=None, wait=True, timeout=30, callback=None):
 
 ```
-Control the feeding, only support SwiftPro, you must set the mode to the 3D printing mode (2) and set temperature over 170 ¡ãC
+Control the feeding, only support SwiftPro, you must set the mode to the 3D printing mode (2) and set temperature over 170 Â°C
 :param distance: feeding distance, default is 0
 :param speed: feeding or move speed, default is the last speed in use or 1000
 :param relative: relative or not, default is True, if you set it to False, you must calc the distance of feeding
@@ -546,7 +557,7 @@ Set the wrist angle (SERVO HAND)
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def waiting_ready(self, timeout=5):
+#### def waiting_ready(self, timeout=5, **kwargs):
 
 ```
 Waiting the uArm ready

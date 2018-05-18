@@ -230,6 +230,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def _handle_line(self, line):
         # print(self.port, line, time.time())
         if line.startswith('$'):
+            # print(self.port, line)
             ret = line[1:].split(' ')
             try:
                 cnt = int(ret[0])
@@ -464,12 +465,19 @@ class Swift(Pump, Keys, Gripper, Grove):
 
     @catch_exception
     def reset(self, speed=None, wait=True, timeout=None):
-        self.set_servo_attach(wait=True, timeout=timeout)
-        time.sleep(0.1)
-        self.set_position(x=150, y=0, z=150, speed=speed, wait=wait, timeout=timeout)
-        self.set_pump(False, wait=wait, timeout=timeout)
-        self.set_gripper(False, wait=wait, timeout=timeout)
-        self.set_wrist(90, wait=wait, timeout=timeout)
+        if wait:
+            self.set_servo_attach(wait=True, timeout=timeout)
+            self.set_position(x=150, y=0, z=150, speed=speed, wait=True, timeout=timeout)
+            self.set_pump(False, wait=True, timeout=timeout)
+            self.set_gripper(False, wait=True, timeout=timeout)
+            self.set_wrist(90, wait=True, timeout=timeout)
+        else:
+            def _handle(_ret):
+                self.set_position(x=150, y=0, z=150, speed=speed, wait=wait, timeout=timeout)
+                self.set_pump(False, wait=False, timeout=timeout)
+                self.set_gripper(False, wait=False, timeout=timeout)
+                self.set_wrist(90, wait=False, timeout=timeout)
+            self.set_servo_attach(wait=False, timeout=timeout, callback=_handle)
 
     @catch_exception
     def get_mode(self, wait=True, timeout=None, callback=None):
@@ -533,10 +541,26 @@ class Swift(Pump, Keys, Gripper, Grove):
                 _callback(_ret)
             else:
                 return _ret
-        self._x = x if isinstance(x, (int, float)) else self._x
-        self._y = y if isinstance(y, (int, float)) else self._y
-        self._z = z if isinstance(z, (int, float)) else self._z
-        self._speed = speed if isinstance(speed, (int, float)) else self._speed
+        try:
+            self._x = float(x)
+        except:
+            pass
+        try:
+            self._y = float(y)
+        except:
+            pass
+        try:
+            self._z = float(z)
+        except:
+            pass
+        try:
+            self._speed = float(speed)
+        except:
+            pass
+        # self._x = x if isinstance(x, (int, float)) else self._x
+        # self._y = y if isinstance(y, (int, float)) else self._y
+        # self._z = z if isinstance(z, (int, float)) else self._z
+        # self._speed = speed if isinstance(speed, (int, float)) else self._speed
         if relative:
             cmd = protocol.SET_POSITION_RELATIVE.format(self._x, self._y, self._z, self._speed)
         else:
@@ -575,10 +599,28 @@ class Swift(Pump, Keys, Gripper, Grove):
         stretch = stretch if stretch is not None else kwargs.get('s', self._stretch)
         rotation = rotation if rotation is not None else kwargs.get('r', self._rotation)
         height = height if height is not None else kwargs.get('h', self._height)
-        self._stretch = stretch if isinstance(stretch, (int, float)) else self._stretch
-        self._rotation = rotation if isinstance(rotation, (int, float)) else self._rotation
-        self._height = height if isinstance(height, (int, float)) else self._height
-        self._speed = speed if isinstance(speed, (int, float)) else self._speed
+
+        try:
+            self._stretch = float(stretch)
+        except:
+            pass
+        try:
+            self._rotation = float(rotation)
+        except:
+            pass
+        try:
+            self._height = float(height)
+        except:
+            pass
+        try:
+            self._speed = float(speed)
+        except:
+            pass
+
+        # self._stretch = stretch if isinstance(stretch, (int, float)) else self._stretch
+        # self._rotation = rotation if isinstance(rotation, (int, float)) else self._rotation
+        # self._height = height if isinstance(height, (int, float)) else self._height
+        # self._speed = speed if isinstance(speed, (int, float)) else self._speed
 
         if relative:
             cmd = protocol.SET_POLAR_RELATIVE.format(self._stretch, self._rotation, self._height, self._speed)
@@ -617,7 +659,12 @@ class Swift(Pump, Keys, Gripper, Grove):
                 _callback(_ret)
             else:
                 return _ret
-        self._speed = speed if isinstance(speed, (int, float)) else self._speed
+
+        try:
+            self._speed = float(speed)
+        except:
+            pass
+        # self._speed = speed if isinstance(speed, (int, float)) else self._speed
         cmd = protocol.SET_SERVO_ANGLE.format(servo_id, angle, self._speed)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
@@ -901,13 +948,15 @@ class Swift(Pump, Keys, Gripper, Grove):
     def register_report_position_callback(self, callback=None):
         return self._register_report_callback(REPORT_POSITION_ID, callback)
 
-    def get_is_moving(self, wait=True, timeout=None, callback=None):
+    @catch_exception
+    def get_is_moving(self, wait=True, timeout=2, callback=None):
         def _handle(_ret, _key=None, _callback=None):
             if _ret[0] == protocol.OK:
-                value = _ret[1]
-                if value.startswith(('v', 'V')):
-                    value = bool(int(value[1:]))
-                setattr(self, _key, value)
+                if len(_ret) > 1:
+                    value = _ret[1]
+                    if value.startswith(('v', 'V')):
+                        value = bool(int(value[1]))
+                    setattr(self, _key, value)
             if callable(_callback):
                 _callback(self.is_moving)
             else:
@@ -919,7 +968,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _key='is_moving', _callback=callback))
 
-    def flush_cmd(self, timeout=None):
+    def flush_cmd(self, timeout=None, wait_stop=False):
         # time.sleep(0.1)
         if isinstance(timeout, (int, float)):
             start_time = time.time()
@@ -930,9 +979,19 @@ class Swift(Pump, Keys, Gripper, Grove):
                     except:
                         time.sleep(0.001)
                     if not self.connected:
-                        break
+                        return protocol.OK
             if not self.connected or len(self.cmd_pend) == 0:
-                return protocol.OK
+                if not wait_stop:
+                    return protocol.OK
+                else:
+                    self.get_is_moving(timeout=1)
+                    while self.connected and self.is_moving and time.time() - start_time < timeout:
+                        self.get_is_moving(timeout=1)
+                    if not self.is_moving:
+                        return protocol.OK
+                    else:
+                        self.is_moving = False
+                        return protocol.TIMEOUT
             else:
                 return protocol.TIMEOUT
         else:
@@ -943,7 +1002,12 @@ class Swift(Pump, Keys, Gripper, Grove):
                     except:
                         time.sleep(0.001)
                     if not self.connected:
-                        break
+                        return protocol.OK
+            if wait_stop:
+                self.get_is_moving(timeout=1)
+                while self.connected and self.is_moving:
+                    self.get_is_moving(timeout=1)
+                self.is_moving = False
             return protocol.OK
 
     @catch_exception
@@ -1010,15 +1074,29 @@ class Swift(Pump, Keys, Gripper, Grove):
         if self._current_temperature < 170:
             logger.error('The Temperature must over 170 °C, current temperature is {}'.format(self._current_temperature))
             return
-        assert isinstance(distance, (int, float))
+        distance = float(distance)
         cmd = 'G1'
-        if isinstance(x, (int, float)):
+
+        try:
+            x = float(x)
             cmd += ' X{}'.format(x)
-        if isinstance(y, (int, float)):
+        except:
+            pass
+        try:
+            y = float(y)
             cmd += ' y{}'.format(y)
-        if isinstance(z, (int, float)):
+        except:
+            pass
+        try:
+            z = float(z)
             cmd += ' Z{}'.format(z)
-        self._speed = speed if isinstance(speed, (int, float)) else self._speed
+        except:
+            pass
+        try:
+            self._speed = float(speed)
+        except:
+            pass
+        # self._speed = speed if isinstance(speed, (int, float)) else self._speed
         cmd += ' F{}'.format(self._speed)
         cmd += ' E{}'.format(distance)
 

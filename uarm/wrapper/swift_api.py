@@ -63,7 +63,7 @@ class SwiftAPI(object):
         """
         return self._arm.disconnect(is_clean)
 
-    def waiting_ready(self, timeout=5):
+    def waiting_ready(self, timeout=5, **kwargs):
         """
         Waiting the uArm ready
         :param timeout: waiting timeout, defualt is 5s
@@ -499,13 +499,24 @@ class SwiftAPI(object):
         """
         return self._arm.register_grove_callback(pin=pin, grove_type=grove_type, callback=callback)
 
-    def flush_cmd(self, timeout=None):
+    def get_is_moving(self, wait=True, timeout=2, callback=None):
+        """
+        Check uArm is moving or not
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is 2s
+        :param callback: callback, deault is None 
+        :return: True/False if wait is True else None 
+        """
+        return self._arm.get_is_moving(wait=wait, timeout=timeout, callback=callback)
+
+    def flush_cmd(self, timeout=None, wait_stop=False):
         """
         Wait until all async command return or timeout
         :param timeout: timeout, default is None(wait all async cmd return)
+        :param wait_stop: True/False, default is False, if set True, will waiting the uArm not in moving or timeout
         :return: 'OK' or 'TIMEOUT'
         """
-        return self._arm.flush_cmd(timeout=timeout)
+        return self._arm.flush_cmd(timeout=timeout, wait_stop=wait_stop)
 
     def set_fans(self, on=False, wait=True, timeout=None, callback=None):
         """
