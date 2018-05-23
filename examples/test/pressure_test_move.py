@@ -11,6 +11,11 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from uarm.wrapper import SwiftAPI
 
+"""
+压力测试：循环运动
+"""
+
+
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, cmd_pend_size=2)
 
 swift.waiting_ready()
@@ -45,4 +50,11 @@ while swift.connected:
     swift.set_polar(stretch=150, rotation=135, height=150, speed=speed)
     swift.set_polar(stretch=200, rotation=135, height=150, speed=speed)
 
-
+    swift.set_servo_angle(0, 45, speed=speed)
+    swift.set_servo_angle(0, 135, speed=speed)
+    swift.set_servo_angle(1, 45, speed=speed)
+    swift.set_servo_angle(1, 90)
+    swift.set_servo_angle(2, 45)
+    swift.set_servo_angle(2, 60)
+    swift.set_servo_angle(3, 45)
+    swift.set_servo_angle(3, 135)

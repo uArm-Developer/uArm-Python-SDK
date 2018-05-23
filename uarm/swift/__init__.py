@@ -135,6 +135,9 @@ class Swift(Pump, Keys, Gripper, Grove):
                     time.sleep(0.001)
             else:
                 time.sleep(0.001)
+        if REPORT_POWER_ID in self._report_callbacks.keys():
+            for callback in self._report_callbacks[REPORT_POWER_ID]:
+                callback(self.power_status)
         logger.debug('serial report handle thread exit ...')
         self.handle_report_thread = None
 
@@ -161,19 +164,19 @@ class Swift(Pump, Keys, Gripper, Grove):
     @catch_exception
     def waiting_ready(self, timeout=5):
         start_time = time.time()
-        while time.time() - start_time < timeout:
-            if self.power_status:
-                break
-            time.sleep(0.05)
-        # while time.time() - start_time < 2:
-        #     if self.power_status:
-        #         break
-        #     time.sleep(0.05)
         # while time.time() - start_time < timeout:
         #     if self.power_status:
         #         break
-        #     self.get_power_status(wait=False, debug=False)
-        #     time.sleep(0.1)
+        #     time.sleep(0.05)
+        while time.time() - start_time < 2:
+            if self.power_status:
+                break
+            time.sleep(0.05)
+        while time.time() - start_time < timeout:
+            if self.power_status:
+                break
+            self.get_power_status(wait=True, timeout=0.5, debug=False)
+            # time.sleep(0.1)
 
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
@@ -232,8 +235,6 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._handle_line(line)
 
     def _handle_line(self, line):
-        # if not line.startswith('echo'):
-        #     print(self.port, line, time.time())
         if line.startswith('$'):
             # print(self.port, line)
             ret = line[1:].split(' ')
@@ -391,7 +392,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         with self._cnt_lock:
             with self.cmd_pend_c:
                 while len(self.cmd_pend) >= self.cmd_pend_size:
-                    self.cmd_pend_c.wait()
+                    self.cmd_pend_c.wait(0.01)
             cmd = self.Cmd(self, self._cnt, msg, timeout, callback, debug=debug)
             self.cmd_pend[self._cnt] = cmd
             self.serial.write({
@@ -477,12 +478,15 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.set_gripper(False, wait=True, timeout=timeout)
             self.set_wrist(90, wait=True, timeout=timeout)
         else:
-            def _handle(_ret):
-                self.set_position(x=150, y=0, z=150, speed=speed, wait=wait, timeout=timeout)
-                self.set_pump(False, wait=False, timeout=timeout)
-                self.set_gripper(False, wait=False, timeout=timeout)
-                self.set_wrist(90, wait=False, timeout=timeout)
-            self.set_servo_attach(wait=False, timeout=timeout, callback=_handle)
+            def handle(_ret):
+                def _handle(_ret):
+                    def __handle(_ret):
+                        def ___handle(_ret):
+                            self.set_pump(False, wait=False, timeout=timeout)
+                        self.set_gripper(False, wait=False, timeout=timeout, callback=___handle)
+                    self.set_wrist(90, wait=False, timeout=timeout, callback=__handle)
+                self.set_position(x=150, y=0, z=150, speed=speed, wait=False, timeout=timeout, callback=_handle)
+            self.set_servo_attach(wait=False, timeout=timeout, callback=handle)
 
     @catch_exception
     def get_mode(self, wait=True, timeout=None, callback=None):
@@ -506,9 +510,11 @@ class Swift(Pump, Keys, Gripper, Grove):
     def set_mode(self, mode=0, wait=True, timeout=None, callback=None):
         def _handle(_ret, _key=None, _value=None, _callback=None):
             if _ret[0] == protocol.OK:
-                setattr(self, _key, _value)
+                self.get_mode(timeout=1)
+                # setattr(self, _key, _value)
             if callable(_callback):
-                _callback(int(_value))
+                _callback(self.mode)
+                # _callback(int(_value))
         cmd = protocol.SET_MODE.format(mode)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)

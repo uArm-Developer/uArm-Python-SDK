@@ -12,7 +12,7 @@ import os
 import functools
 from logging.handlers import RotatingFileHandler
 
-log_path = os.path.join(os.path.expanduser('~'), '.UFACTORY', 'log', 'uarm')
+log_path = os.path.join(os.path.expanduser('~'), '.UFACTORY', 'log', 'uarm', 'sdk')
 if not os.path.exists(log_path):
     os.makedirs(log_path)
 
@@ -35,7 +35,7 @@ class Logger(logging.Logger):
     rotating_file_handler.setFormatter(logging.Formatter(stream_handler_fmt, stream_handler_date_fmt))
 
     logger = logging.Logger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
     logger.addHandler(stream_handler)
     logger.addHandler(rotating_file_handler)
 
