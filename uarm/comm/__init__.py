@@ -46,7 +46,7 @@ class UArmReader(LineReader):
 
 
 class Serial(object):
-    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, rx_que=None):
+    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, rx_que=None, tx_que=None):
         super(Serial, self).__init__()
         self._port = port
         self._baudrate = baudrate
@@ -54,7 +54,7 @@ class Serial(object):
         self._filters = filters
         self.com = None
         self._rx_que = rx_que
-        self._tx_que = None
+        self._tx_que = tx_que
         self._read_thread = None
         self._write_thread = None
         self.transport = None
@@ -91,12 +91,12 @@ class Serial(object):
         logger.info('connect {} success'.format(self._port))
         if self._rx_que is None:
             self._rx_que = Queue()
-        self._tx_que = Queue()
         self._read_thread = ReaderThread(self.com, UArmReader, self._rx_que)
         self._read_thread.start()
         self.transport, self.protocol = self._read_thread.connect()
-        self._write_thread = threading.Thread(target=self.loop_write, daemon=True)
-        self._write_thread.start()
+        if self._tx_que is not None:
+            self._write_thread = threading.Thread(target=self.loop_write, daemon=True)
+            self._write_thread.start()
         return self
 
     def disconnect(self):

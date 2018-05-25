@@ -83,11 +83,14 @@ class Swift(Pump, Keys, Gripper, Grove):
 
         # self.rx_que = HandleQueue(handle=self.handle_line)
         self.rx_que = Queue(100)
+        # self.tx_que = None
+        self.tx_que = Queue()
 
         port = kwargs.get('dev_port', None) if kwargs.get('dev_port', None) is not None else port
         baudrate = kwargs.get('baud', None) if kwargs.get('baud', None) is not None else baudrate
 
-        self.serial = Serial(port=port, baudrate=baudrate, timeout=timeout, filters=filters, rx_que=self.rx_que)
+        self.serial = Serial(port=port, baudrate=baudrate, timeout=timeout, filters=filters,
+                             rx_que=self.rx_que, tx_que=self.tx_que)
 
         self.report_que = Queue()
         self.handle_report_thread = None
