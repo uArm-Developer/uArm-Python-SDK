@@ -38,11 +38,10 @@ class HandleQueue(Queue):
 
 
 class Swift(Pump, Keys, Gripper, Grove):
-    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0,
-                 do_not_open=False, **kwargs):
+    def __init__(self, port=None, baudrate=115200, timeout=None, **kwargs):
         super(Swift, self).__init__()
         self.cmd_pend = {}
-        self.cmd_pend_size = cmd_pend_size
+        self.cmd_pend_size = kwargs.get('cmd_pend_size', 2)
         self.cmd_pend_c = threading.Condition()
         self.cmd_timeout = 2
         self._cnt_lock = threading.Lock()
@@ -81,26 +80,33 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._current_temperature = 0.0
         self._target_temperature = 0.0
 
-        # self.rx_que = HandleQueue(handle=self.handle_line)
-        self.rx_que = Queue(100)
-        # self.tx_que = None
-        self.tx_que = Queue()
+        if kwargs.get('enable_handle_thread', True):
+            self.rx_que = Queue(100)
+        else:
+            self.rx_que = HandleQueue(handle=self._handle_line)
+        if kwargs.get('enable_write_thread', kwargs.get('enable_tx_thread', False)):
+            self.tx_que = Queue()
+        else:
+            self.tx_que = None
+        if kwargs.get('enable_handle_report_thread', kwargs.get('enable_report_thread', False)):
+            self.report_que = Queue()
+        else:
+            self.report_que = None
 
         port = kwargs.get('dev_port', None) if kwargs.get('dev_port', None) is not None else port
         baudrate = kwargs.get('baud', None) if kwargs.get('baud', None) is not None else baudrate
 
+        filters = kwargs.get('filters', None)
         self.serial = Serial(port=port, baudrate=baudrate, timeout=timeout, filters=filters,
                              rx_que=self.rx_que, tx_que=self.tx_que)
 
-        self.report_que = Queue()
+        self.handle_thread = None
         self.handle_report_thread = None
 
-        self.thread_pool_size = int(callback_thread_pool_size)
+        self.thread_pool_size = int(kwargs.get('callback_thread_pool_size', 0))
         self.pool = None
 
-        self.handle_thread = None
-
-        if not do_not_open:
+        if not kwargs.get('do_not_open', False):
             self.connect()
 
     def _loop_handle(self):
@@ -108,10 +114,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         while self.connected:
             try:
                 line = self.serial.read()
-                if not line or len(line) < 2:
+                if not line:
                     time.sleep(0.001)
                     continue
-                self._handle_line(line.strip())
+                self._handle_line(line)
             except:
                 pass
         self.power_status = False
@@ -144,100 +150,9 @@ class Swift(Pump, Keys, Gripper, Grove):
         logger.debug('serial report handle thread exit ...')
         self.handle_report_thread = None
 
-    @property
-    def connected(self):
-        return self.serial and self.serial.connected
-
-    @property
-    def connected(self):
-        return self.serial.connected
-
-    @property
-    def port(self):
-        return self.serial.port
-
-    @property
-    def baudrate(self):
-        return self.serial.baudrate
-
-    @property
-    def blocked(self):
-        return self._blocked
-
-    @catch_exception
-    def waiting_ready(self, timeout=5):
-        start_time = time.time()
-        # while time.time() - start_time < timeout:
-        #     if self.power_status:
-        #         break
-        #     time.sleep(0.05)
-        while time.time() - start_time < 2:
-            if self.power_status:
-                break
-            time.sleep(0.05)
-        while time.time() - start_time < timeout:
-            if self.power_status:
-                break
-            self.get_power_status(wait=True, timeout=0.5, debug=False)
-            # time.sleep(0.1)
-
-    def connect(self, port=None, baudrate=None, timeout=None):
-        self.serial.connect(port, baudrate, timeout)
-        if self.thread_pool_size > 1 and ThreadPool is not None:
-            self.pool = ThreadPool(self.thread_pool_size)
-        self.handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
-        self.handle_report_thread.start()
-        self.handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
-        self.handle_thread.start()
-
-    @catch_exception
-    def disconnect(self, is_clean=True):
-        self.serial.disconnect()
-        if self.handle_report_thread:
-            try:
-                self.handle_report_thread.join(1)
-            except:
-                pass
-        if is_clean:
-            self.clean()
-        self.device_type = None
-        self.hardware_version = None
-        self.firmware_version = None
-        self.api_version = None
-        self.device_unique = None
-        self.power_status = False
-        self.limit_switch_status = False
-        self.key0_status = False
-        self.key1_status = False
-        self.report_position = []
-        self.is_moving = False
-
-        self._x = 150
-        self._y = 0
-        self._z = 150
-        self._speed = 1000
-        self._stretch = 150
-        self._rotation = 90
-        self._height = 150
-
-        self._blocked = False
-        self._current_temperature = 0.0
-        self._target_temperature = 0.0
-
-    def clean(self):
-        if self.pool:
-            try:
-                self.pool.close()
-                self.pool.join()
-            except:
-                pass
-
-    def handle_line(self, line):
+    def _handle_line(self, line):
         if len(line) < 2:
             return
-        self._handle_line(line)
-
-    def _handle_line(self, line):
         if line.startswith('$'):
             # print(self.port, line)
             ret = line[1:].split(' ')
@@ -249,10 +164,12 @@ class Swift(Pump, Keys, Gripper, Grove):
             except:
                 pass
         elif line.startswith('@'):
-            if self.report_que.full():
-                self.report_que.get()
-            self.report_que.put(line)
-            # self._handle_report(line)
+            if self.handle_report_thread:
+                if self.report_que.full():
+                    self.report_que.get()
+                self.report_que.put(line)
+            else:
+                self._handle_report(line)
         else:
             if 'T:' in line:
                 r = re.search(r"T:(\d+\S\d+\s/\d+\S\d+)?", line)
@@ -269,6 +186,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 logger.error(line)
 
     def _handle_report(self, line):
+        # print('report:', line)
         ret = line.split(' ')
         if ret[0] == protocol.REPORT_POWER_PREFIX:
             ret[1] = ret[1].upper()
@@ -322,6 +240,96 @@ class Swift(Pump, Keys, Gripper, Grove):
             if report_grove_id in self._report_callbacks.keys():
                 for callback in self._report_callbacks[report_grove_id]:
                     callback(ret[2:])
+
+    @property
+    def connected(self):
+        return self.serial and self.serial.connected
+
+    @property
+    def connected(self):
+        return self.serial.connected
+
+    @property
+    def port(self):
+        return self.serial.port
+
+    @property
+    def baudrate(self):
+        return self.serial.baudrate
+
+    @property
+    def blocked(self):
+        return self._blocked
+
+    @catch_exception
+    def waiting_ready(self, timeout=5):
+        start_time = time.time()
+        # while time.time() - start_time < timeout:
+        #     if self.power_status:
+        #         break
+        #     time.sleep(0.05)
+        while time.time() - start_time < 2:
+            if self.power_status:
+                break
+            time.sleep(0.05)
+        while time.time() - start_time < timeout:
+            if self.power_status:
+                break
+            self.get_power_status(wait=True, timeout=0.5, debug=False)
+            # time.sleep(0.1)
+
+    def connect(self, port=None, baudrate=None, timeout=None):
+        self.serial.connect(port, baudrate, timeout)
+        if self.thread_pool_size > 1 and ThreadPool is not None:
+            self.pool = ThreadPool(self.thread_pool_size)
+        if self.report_que is not None:
+            self.handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
+            self.handle_report_thread.start()
+        if not isinstance(self.rx_que, HandleQueue):
+            self.handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
+            self.handle_thread.start()
+
+    @catch_exception
+    def disconnect(self, is_clean=True):
+        self.serial.disconnect()
+        if self.handle_report_thread:
+            try:
+                self.handle_report_thread.join(1)
+            except:
+                pass
+        if is_clean:
+            self.clean()
+        self.device_type = None
+        self.hardware_version = None
+        self.firmware_version = None
+        self.api_version = None
+        self.device_unique = None
+        self.power_status = False
+        self.limit_switch_status = False
+        self.key0_status = False
+        self.key1_status = False
+        self.report_position = []
+        self.is_moving = False
+
+        self._x = 150
+        self._y = 0
+        self._z = 150
+        self._speed = 1000
+        self._stretch = 150
+        self._rotation = 90
+        self._height = 150
+
+        self._blocked = False
+        self._current_temperature = 0.0
+        self._target_temperature = 0.0
+
+    def clean(self):
+        if self.pool:
+            try:
+                self.pool.close()
+                self.pool.join()
+            except:
+                pass
 
     class Cmd:
         def __init__(self, owner, cnt, msg, timeout, callback=None, debug=True):

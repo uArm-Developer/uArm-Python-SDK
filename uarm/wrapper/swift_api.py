@@ -10,27 +10,30 @@ from ..swift import Swift
 
 
 class SwiftAPI(object):
-    def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0,
-                 do_not_open=False, **kwargs):
+    def __init__(self, port=None, baudrate=115200, timeout=None, **kwargs):
         """
         The API wrapper of Swift and SwiftPro
         :param port: default is select the first port
         :param baudrate: default is 115200
         :param timeout: tiemout of serial read, default is None
         :param filters: like {'hwid': 'USB VID:PID=2341:0042'}
-        :param cmd_pend_size: cmd cache size, default is 2
-        :param callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
         :param do_not_open: default is False
-        :param kwargs: compatible the pyuf params, example: dev_port='COM3'
+        :param kwargs:
+            dev_port: compatible the pyuf params, default is None
+            baud: compatible the pyuf params, default is None
+            filters: like {'hwid': 'USB VID:PID=2341:0042'}
+            do_not_open: default is False
+            cmd_pend_size: cmd cache size, default is 2
+            callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
+            enable_handle_thread: True/False, default is True
+            enable_write_thread: True/False, default is False
+            enable_handle_report_thread: True/False, default is False
         default cmd timeout is 2s
         """
         self._arm = Swift(port=port,
                           baudrate=baudrate,
                           timeout=timeout,
-                          filters=filters,
-                          cmd_pend_size=cmd_pend_size,
-                          callback_thread_pool_size=callback_thread_pool_size,
-                          do_not_open=do_not_open, **kwargs)
+                          **kwargs)
 
     @property
     def connected(self):

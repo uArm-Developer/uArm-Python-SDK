@@ -17,6 +17,7 @@ from .threaded import ReaderThread
 
 connect_ports = []
 
+
 class UArmReader(LineReader):
     TERMINATOR = b'\n'
 
