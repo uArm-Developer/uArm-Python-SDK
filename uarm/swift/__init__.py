@@ -204,10 +204,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             elif ret[1] == 'V0':
                 self.is_moving = False
         elif ret[0] == protocol.REPORT_POSITION_PREFIX:
-            self.report_position = [
-                float(ret[1][1:]), float(ret[2][1:]),
-                float(ret[3][1:]), float(ret[4][1:])
-            ]
+            self.report_position = list(map(lambda i: float(i[1:]), ret[1:]))
             if REPORT_POSITION_ID in self._report_callbacks.keys():
                 for callback in self._report_callbacks[REPORT_POSITION_ID]:
                     callback(self.report_position)
@@ -539,10 +536,11 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_position(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                x = float(_ret[1][1:])
-                y = float(_ret[2][1:])
-                z = float(_ret[3][1:])
-                _ret = [x, y, z]
+                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
+                # x = float(_ret[1][1:])
+                # y = float(_ret[2][1:])
+                # z = float(_ret[3][1:])
+                # _ret = [x, y, z]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -597,7 +595,8 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_polar(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                _ret = [float(i[1:]) for i in _ret[1:]]
+                # _ret = [float(i[1:]) for i in _ret[1:]]
+                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -658,7 +657,8 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                _ret = [float(i[1:]) for i in _ret[1:]]
+                # _ret = [float(i[1:]) for i in _ret[1:]]
+                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
                 if isinstance(servo_id, int) and 0 <= servo_id < len(_ret):
                     _ret = _ret[servo_id]
             if callable(_callback):
