@@ -529,7 +529,7 @@ class SwiftAPI(object):
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
-         :return: 'OK' or 'TIMEOUT' if wait is True else None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_fans(on=on, wait=wait, timeout=timeout, callback=callback)
 
@@ -541,7 +541,7 @@ class SwiftAPI(object):
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
-         :return: 'OK' or 'TIMEOUT' if wait is True else None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_temperature(temperature=temperature, wait=wait, timeout=timeout, callback=callback, block=block)
 
@@ -567,29 +567,40 @@ class SwiftAPI(object):
         :param wait: True/False, deault is True
         :param timeout: timeout, default is 30s
         :param callback: callback, deault is None
-         :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :return: 'OK' or 'TIMEOUT' if wait is True else None 
         """
         return self._arm.set_3d_feeding(distance=distance, speed=speed, relative=relative,
                                         x=x, y=y, z=z, wait=wait, timeout=timeout, callback=callback)
 
-    def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
-                         min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
-                         max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+    def set_acceleration(self, acc=None, wait=True, timeout=None, callback=None):
         """
         Set the acceleration
-        :param printing_moves: Printing moves, default is None (not set it)
-        :param retract_moves: Retract only (no X, Y, Z) moves, default is None (not set it)
-        :param travel_moves: Travel (non printing) moves, default is None (not set it)
-        :param min_feedrate: Min Feed Rate (units/s), default is None (not set it)
-        :param min_travel_feedrate: Min Travel Feed Rate (units/s), default is None (not set it)
-        :param min_segment_time: Min Segment Time (us), default is None (not set it)
-        :param max_xy_jerk: Max XY Jerk (units/sec^2), default is None (not set it)
-        :param max_z_jerk: Max Z Jerk (units/sec^2), default is None (not set it)
-        :param max_e_jerk: Max E Jerk (unit/sec^2), default is None (not set it)
-        :return: 'OK'
+        :param acc: acc value
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
-        return self._arm.set_acceleration(printing_moves=printing_moves, retract_moves=retract_moves,
-                                          travel_moves=travel_moves, min_feedrate=min_feedrate,
-                                          min_travel_feedrate=min_travel_feedrate, min_segment_time=min_segment_time,
-                                          max_xy_jerk=max_xy_jerk, max_z_jerk=max_z_jerk, max_e_jerk=max_e_jerk)
+        return self._arm.set_acceleration(acc=acc, wait=wait, timeout=timeout, callback=callback)
+
+    # def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
+    #                      min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
+    #                      max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+    #     """
+    #     Set the acceleration
+    #     :param printing_moves: Printing moves, default is None (not set it)
+    #     :param retract_moves: Retract only (no X, Y, Z) moves, default is None (not set it)
+    #     :param travel_moves: Travel (non printing) moves, default is None (not set it)
+    #     :param min_feedrate: Min Feed Rate (units/s), default is None (not set it)
+    #     :param min_travel_feedrate: Min Travel Feed Rate (units/s), default is None (not set it)
+    #     :param min_segment_time: Min Segment Time (us), default is None (not set it)
+    #     :param max_xy_jerk: Max XY Jerk (units/sec^2), default is None (not set it)
+    #     :param max_z_jerk: Max Z Jerk (units/sec^2), default is None (not set it)
+    #     :param max_e_jerk: Max E Jerk (unit/sec^2), default is None (not set it)
+    #     :return: 'OK'
+    #     """
+    #     return self._arm.set_acceleration(printing_moves=printing_moves, retract_moves=retract_moves,
+    #                                       travel_moves=travel_moves, min_feedrate=min_feedrate,
+    #                                       min_travel_feedrate=min_travel_feedrate, min_segment_time=min_segment_time,
+    #                                       max_xy_jerk=max_xy_jerk, max_z_jerk=max_z_jerk, max_e_jerk=max_e_jerk)
 

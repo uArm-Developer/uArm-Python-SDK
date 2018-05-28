@@ -41,6 +41,7 @@ SET_TEMPERATURE_BLOCK = "M109 S{}"  # block but will auto report temperature
 SET_TEMPERATURE_UNBLOCK = "M104 S{}"  # unblock but not auto report temperature
 OPEN_FAN = "M106"
 CLOSE_FAN = "M107"
+SET_ACC = "M204 A{}"
 
 # Get Cmd
 GET_PUMP = "P2231"

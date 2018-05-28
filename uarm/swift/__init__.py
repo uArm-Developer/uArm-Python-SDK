@@ -1136,44 +1136,62 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback), debug=False)
 
-    def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
-                         min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
-                         max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
-        cmd = "M204"
-        flag = False
-        if printing_moves:
-            cmd += " P{}".format(printing_moves)
-            flag = True
-        if retract_moves:
-            cmd += " R{}".format(retract_moves)
-            flag = True
-        if travel_moves:
-            cmd += " T{}".format(travel_moves)
-            flag = True
-        if flag:
-            self.send_cmd_async(cmd)
+    def set_acceleration(self, acc=None, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
 
-        flag = False
-        cmd = "M205"
-        if min_feedrate:
-            cmd += " S{}".format(min_feedrate)
-            flag = True
-        if min_travel_feedrate:
-            cmd += " T{}".format(min_travel_feedrate)
-            flag = True
-        if min_segment_time:
-            cmd += " B{}".format(min_segment_time)
-            flag = True
-        if max_xy_jerk:
-            cmd += " X{}".format(max_xy_jerk)
-            flag = True
-        if max_z_jerk:
-            cmd += " Z{}".format(max_z_jerk)
-            flag = True
-        if max_e_jerk:
-            cmd += " E{}".format(max_e_jerk)
-            flag = True
-        if flag:
-            self.send_cmd_async(cmd)
-        return protocol.OK
+        if acc is None:
+            acc = 1.3
+        cmd = protocol.SET_ACC.format(acc)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+
+    # def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
+    #                      min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
+    #                      max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+    #     cmd = "M204"
+    #     flag = False
+    #     if printing_moves:
+    #         cmd += " P{}".format(printing_moves)
+    #         flag = True
+    #     if retract_moves:
+    #         cmd += " R{}".format(retract_moves)
+    #         flag = True
+    #     if travel_moves:
+    #         cmd += " T{}".format(travel_moves)
+    #         flag = True
+    #     if flag:
+    #         self.send_cmd_async(cmd)
+    #
+    #     flag = False
+    #     cmd = "M205"
+    #     if min_feedrate:
+    #         cmd += " S{}".format(min_feedrate)
+    #         flag = True
+    #     if min_travel_feedrate:
+    #         cmd += " T{}".format(min_travel_feedrate)
+    #         flag = True
+    #     if min_segment_time:
+    #         cmd += " B{}".format(min_segment_time)
+    #         flag = True
+    #     if max_xy_jerk:
+    #         cmd += " X{}".format(max_xy_jerk)
+    #         flag = True
+    #     if max_z_jerk:
+    #         cmd += " Z{}".format(max_z_jerk)
+    #         flag = True
+    #     if max_e_jerk:
+    #         cmd += " E{}".format(max_e_jerk)
+    #         flag = True
+    #     if flag:
+    #         self.send_cmd_async(cmd)
+    #     return protocol.OK
 
