@@ -10,21 +10,14 @@ import time
 import functools
 from . import protocol
 from .utils import catch_exception
-from .utils import REPORT_LIMIT_SWITCH_ID
 
 
-class Pump(object):
+class Gripper(object):
     def __init__(self):
         pass
 
-    def register_limit_switch_callback(self, callback=None):
-        return self._register_report_callback(REPORT_LIMIT_SWITCH_ID, callback)
-
-    def release_limit_switch_callback(self, callback=None):
-        return self._release_report_callback(REPORT_LIMIT_SWITCH_ID, callback)
-
     @catch_exception
-    def set_pump(self, on=False, timeout=None, wait=True, callback=None):
+    def set_gripper(self, catch=False, timeout=None, wait=True, callback=None):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -32,8 +25,8 @@ class Pump(object):
             else:
                 return _ret
 
-        assert isinstance(on, bool) or (isinstance(on, int) and on >= 0)
-        cmd = protocol.SET_PUMP.format(1 if on else 0)
+        assert isinstance(catch, bool) or (isinstance(catch, int) and catch >= 0)
+        cmd = protocol.SET_GRIPPER.format(1 if catch else 0)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             start = time.time()
@@ -44,30 +37,11 @@ class Pump(object):
                     break
                 time.sleep(0.3)
             return _handle(ret)
-            # ret = self.send_cmd_sync(cmd, timeout=timeout)
-            # return _handle(ret)
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def get_limit_switch(self, wait=True, timeout=None, callback=None):
-        def _handle(_ret, _callback=None):
-            if _ret[0] == protocol.OK:
-                _ret = bool(int(_ret[1][1]))
-            if callable(_callback):
-                _callback(_ret)
-            else:
-                return _ret
-
-        cmd = protocol.GET_LIMIT_SWITCH
-        if wait:
-            ret = self.send_cmd_sync(cmd, timeout=timeout)
-            return _handle(ret)
-        else:
-            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
-
-    @catch_exception
-    def get_pump_status(self, wait=True, timeout=None, callback=None):
+    def get_gripper_catch(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = int(_ret[1][1])
@@ -76,7 +50,7 @@ class Pump(object):
             else:
                 return _ret
 
-        cmd = protocol.GET_PUMP
+        cmd = protocol.GET_GRIPPER
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
