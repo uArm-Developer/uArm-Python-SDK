@@ -277,19 +277,19 @@ class Swift(Pump, Keys, Gripper, Grove):
     @catch_exception
     def waiting_ready(self, timeout=5):
         start_time = time.time()
-        # while time.time() - start_time < timeout:
-        #     if self.power_status:
-        #         break
-        #     time.sleep(0.05)
-        while time.time() - start_time < 2:
-            if self.power_status:
-                break
-            time.sleep(0.05)
         while time.time() - start_time < timeout:
             if self.power_status:
                 break
             self.get_power_status(wait=True, timeout=0.5, debug=False)
-            # time.sleep(0.1)
+        # while time.time() - start_time < 2:
+        #     if self.power_status:
+        #         break
+        #     time.sleep(0.05)
+        # while time.time() - start_time < timeout:
+        #     if self.power_status:
+        #         break
+        #     self.get_power_status(wait=True, timeout=0.5, debug=False)
+        #     # time.sleep(0.1)
 
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
@@ -447,7 +447,8 @@ class Swift(Pump, Keys, Gripper, Grove):
 
         cmd = protocol.GET_POWER_STATUS
         if wait:
-            self.send_cmd_sync(cmd, debug=debug)
+            ret = self.send_cmd_sync(cmd, debug=debug)
+            _handle(ret, _key='power_status')
             return self.power_status
         else:
             self.send_cmd_async(cmd, timeout=timeout, debug=debug,
