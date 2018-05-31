@@ -2,6 +2,6 @@ files__pycache__/
 .idea
 *.py[cod]
 *$py.class
-build/
-dist/
-*.egg-info/
+/build/
+/dist/
+/*.egg-info/
