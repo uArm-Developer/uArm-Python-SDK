@@ -82,7 +82,7 @@ def multi_swift_cmd(cmd, *args, **kwargs):
     timeout = kwargs.get('timeout', None)
     with lock:
         for swift in swifts.values():
-            if swift.connected and swift.power_status:
+            if swift.connected:
                 swift_cmd = getattr(swift, cmd)
                 swift_cmd(*args, wait=False, **kwargs)
         if wait:

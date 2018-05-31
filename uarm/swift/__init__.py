@@ -40,6 +40,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         super(Swift, self).__init__()
         self.cmd_pend = {}
         self.cmd_pend_size = kwargs.get('cmd_pend_size', 2)
+        if not isinstance(self.cmd_pend_size, int) or self.cmd_pend_size < 2:
+            self.cmd_pend_size = 2
         self.cmd_pend_c = threading.Condition()
         self.cmd_timeout = kwargs.get('cmd_timeout', 2)
         self._cnt_lock = threading.Lock()
@@ -60,40 +62,45 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.device_unique = None
         self.mode = None
         self.power_status = False
-        self.limit_switch_status = False
-        self.key0_status = False
-        self.key1_status = False
+        self._limit_switch_status = False
+        self._key0_status = False
+        self._key1_status = False
         self.report_position = []
         self.is_moving = False
 
         self._position = [150, 0, 150, 5000]  # [x, y, z, speed]
-        self._polar = [150, 90, 150, 5000]  # [stretch, rotation, height, speed]
+        self._polar = [200, 90, 150, 5000]  # [stretch, rotation, height, speed]
         self._angle_speed = 2000
         self._feed_speed = 2000
 
         self._blocked = False
         self._current_temperature = 0.0
         self._target_temperature = 0.0
+        self._speed_factor = 1
 
         if kwargs.get('enable_handle_thread', True):
-            self.rx_que = Queue(100)
+            self._rx_que = Queue()
+            self._rx_con_c = threading.Condition()
         else:
-            self.rx_que = HandleQueue(handle=self._handle_line)
+            self._rx_que = HandleQueue(handle=self._handle_line)
+            self._rx_con_c = None
         if kwargs.get('enable_write_thread', kwargs.get('enable_tx_thread', False)):
-            self.tx_que = Queue()
+            self._tx_que = Queue()
         else:
-            self.tx_que = None
+            self._tx_que = None
         if kwargs.get('enable_handle_report_thread', kwargs.get('enable_report_thread', False)):
-            self.report_que = Queue()
+            self._report_que = Queue()
+            self._report_con_c = threading.Condition()
         else:
-            self.report_que = None
+            self._report_que = None
+            self._report_con_c = None
 
         port = kwargs.get('dev_port', None) if kwargs.get('dev_port', None) is not None else port
         baudrate = kwargs.get('baud', None) if kwargs.get('baud', None) is not None else baudrate
 
         filters = kwargs.get('filters', None)
         self.serial = Serial(port=port, baudrate=baudrate, timeout=timeout, filters=filters,
-                             rx_que=self.rx_que, tx_que=self.tx_que)
+                             rx_que=self._rx_que, tx_que=self._tx_que, rx_con_c=self._rx_con_c)
 
         self.handle_thread = None
         self.handle_report_thread = None
@@ -108,13 +115,17 @@ class Swift(Pump, Keys, Gripper, Grove):
         logger.debug('serial result handle thread start ...')
         while self.connected:
             try:
-                line = self.serial.read()
-                if not line:
-                    time.sleep(0.001)
-                    continue
-                self._handle_line(line)
+                with self._rx_con_c:
+                    if self._rx_que.empty():
+                        self._rx_con_c.wait(0.01)
+                    else:
+                        line = self._rx_que.get_nowait()
+                        self._handle_line(line)
             except:
                 pass
+        if self._report_con_c:
+            with self._report_con_c:
+                self._report_con_c.notifyAll()
         self.power_status = False
         try:
             if REPORT_POWER_ID in self._report_callbacks.keys():
@@ -128,20 +139,21 @@ class Swift(Pump, Keys, Gripper, Grove):
     def _loop_handle_report(self):
         logger.debug('serial report handle thread start ...')
         while self.connected:
-            if not self.report_que.empty():
-                try:
-                    item = self.report_que.get_nowait()
-                    try:
-                        if self.pool is not None:
-                            self.pool.apply_async(self._handle_report, args=(item,))
-                        else:
-                            self._handle_report(item)
-                    except Exception as e:
-                        logger.error(e)
-                except:
-                    time.sleep(0.001)
-            else:
-                time.sleep(0.001)
+            try:
+                with self._report_con_c:
+                    if self._report_que.empty():
+                        self._report_con_c.wait(0.01)
+                    else:
+                        item = self._report_que.get_nowait()
+                        try:
+                            if self.pool is not None:
+                                self.pool.apply_async(self._handle_report, args=(item,))
+                            else:
+                                self._handle_report(item)
+                        except Exception as e:
+                            logger.error(e)
+            except:
+                pass
         try:
             if REPORT_POWER_ID in self._report_callbacks.keys():
                 for callback in self._report_callbacks[REPORT_POWER_ID]:
@@ -166,9 +178,11 @@ class Swift(Pump, Keys, Gripper, Grove):
                 pass
         elif line.startswith('@'):
             if self.handle_report_thread:
-                if self.report_que.full():
-                    self.report_que.get()
-                self.report_que.put(line)
+                if self._report_que.full():
+                    self._report_que.get()
+                self._report_que.put(line)
+                with self._report_con_c:
+                    self._report_con_c.notifyAll()
             else:
                 self._handle_report(line)
         else:
@@ -213,24 +227,24 @@ class Swift(Pump, Keys, Gripper, Grove):
             # key_status == 1: short press
             # key_status == 2: long press
             if ret[1] == 'B0':
-                self.key0_status = ret[2][1:]
+                self._key0_status = ret[2][1:]
                 if REPORT_KEY0_ID in self._report_callbacks.keys():
                     for callback in self._report_callbacks[REPORT_KEY0_ID]:
-                        callback(self.key0_status)
+                        callback(self._key0_status)
             elif ret[1] == 'B1':
-                self.key1_status = ret[2][1:]
+                self._key1_status = ret[2][1:]
                 if REPORT_KEY1_ID in self._report_callbacks.keys():
                     for callback in self._report_callbacks[REPORT_KEY1_ID]:
-                        callback(self.key1_status)
+                        callback(self._key1_status)
         elif ret[0] == protocol.REPORT_LIMIT_SWITCH_PREFIX:
             ret[2] = ret[2].upper()
             if ret[2] == 'V1':
-                self.limit_switch_status = True
+                self._limit_switch_status = True
             elif ret[2] == 'V0':
-                self.limit_switch_status = False
+                self._limit_switch_status = False
             if REPORT_LIMIT_SWITCH_ID in self._report_callbacks.keys():
                 for callback in self._report_callbacks[REPORT_LIMIT_SWITCH_ID]:
-                    callback(self.limit_switch_status)
+                    callback(self._limit_switch_status)
         elif ret[0] == protocol.REPORT_GROVE_PREFIX:
             pin = ret[1][1:]
             # grove_type = ret[2][1:]
@@ -281,10 +295,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.serial.connect(port, baudrate, timeout)
         if self.thread_pool_size > 1 and ThreadPool is not None:
             self.pool = ThreadPool(self.thread_pool_size)
-        if self.report_que is not None:
+        if self._report_que is not None:
             self.handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
             self.handle_report_thread.start()
-        if not isinstance(self.rx_que, HandleQueue):
+        if not isinstance(self._rx_que, HandleQueue):
             self.handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
             self.handle_thread.start()
 
@@ -304,20 +318,22 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.api_version = None
         self.device_unique = None
         self.power_status = False
-        self.limit_switch_status = False
-        self.key0_status = False
-        self.key1_status = False
+        self._limit_switch_status = False
+        self._key0_status = False
+        self._key1_status = False
         self.report_position = []
         self.is_moving = False
+        self.cmd_pend = {}
 
         self._position = [150, 0, 150, 10000]
-        self._polar = [150, 90, 150, 10000]
+        self._polar = [200, 90, 150, 10000]
         self._angle_speed = 2000
         self._feed_speed = 200
 
         self._blocked = False
         self._current_temperature = 0.0
         self._target_temperature = 0.0
+        self._speed_factor = 1
 
     def clean(self):
         if self.pool:
@@ -350,8 +366,6 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.delete()
             if self.debug:
                 logger.warn('{} cmd "#{} {}" timeout'.format(self.owner.port, self.cnt, self.msg))
-            # # self.finish('timeout,{}'.format(self.cnt))
-            # self.finish(protocol.TIMEOUT)
             self.ret.put(protocol.TIMEOUT)
 
         def delete(self):
@@ -362,15 +376,6 @@ class Swift(Pump, Keys, Gripper, Grove):
         def finish(self, msg):
             self.timer.cancel()
             self.delete()
-            # # try:
-            # #     self.timer.join(0.2)
-            # # except:
-            # #     pass
-            # cmd = self.owner.cmd_pend.pop(self.cnt, None)
-            # if cmd:
-            #     del cmd
-            # with self.owner.cmd_pend_c:
-            #     self.owner.cmd_pend_c.notifyAll()
             if callable(self.callback):
                 try:
                     if self.owner.pool is not None and self.enable_callback_thread:
@@ -397,6 +402,12 @@ class Swift(Pump, Keys, Gripper, Grove):
                 tmps = msg[2:].split(' ', 1)
                 timeout = int(tmps[0])
                 msg = tmps[1]
+        if self._speed_factor != 1:
+            relink2 = 'F\-?\d+\.?\d*'
+            data = re.findall(relink2, msg)
+            if len(data):
+                speed = float(data[0][1:])
+                msg = msg.replace(data[0], 'F{}'.format(speed * self._speed_factor))
         with self._cnt_lock:
             with self.cmd_pend_c:
                 while len(self.cmd_pend) >= self.cmd_pend_size:
@@ -441,6 +452,9 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, debug=debug,
                                 callback=functools.partial(_handle, _key='power_status', _callback=callback))
+
+    def set_speed_factor(self, factor=1):
+        self._speed_factor = factor
 
     @catch_exception
     def get_device_info(self, timeout=None):
@@ -499,7 +513,6 @@ class Swift(Pump, Keys, Gripper, Grove):
     @catch_exception
     def get_mode(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _key=None, _value=None, _callback=None):
-            print('get mode:', _ret)
             if _ret[0] == protocol.OK:
                 _value = int(_ret[1][1:])
                 setattr(self, _key, _value)
@@ -520,10 +533,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _key=None, _value=None, _callback=None):
             if _ret[0] == protocol.OK:
                 self.get_mode(timeout=1)
-                # setattr(self, _key, _value)
             if callable(_callback):
                 _callback(self.mode)
-                # _callback(int(_value))
         cmd = protocol.SET_MODE.format(mode)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
@@ -537,7 +548,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_position(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
+                _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -551,7 +562,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
-    def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None):
+    def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None, cmd='G0'):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -593,7 +604,7 @@ class Swift(Pump, Keys, Gripper, Grove):
                 self._position[3] = float(speed)
             except:
                 pass
-            cmd = protocol.SET_POSITION.format(*self._position)
+            cmd = protocol.SET_POSITION.format(cmd, *self._position)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
@@ -604,8 +615,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_polar(self, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                # _ret = [float(i[1:]) for i in _ret[1:]]
-                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
+                _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -683,8 +693,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
-                # _ret = [float(i[1:]) for i in _ret[1:]]
-                _ret = list(map(lambda i: float(i[1:]), ret[1:]))
+                _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
                 if isinstance(servo_id, int) and 0 <= servo_id < len(_ret):
                     _ret = _ret[servo_id]
             if callable(_callback):

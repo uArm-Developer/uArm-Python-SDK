@@ -18,7 +18,7 @@ GET_DEVICE_UNIQUE = "P2205"
 GET_EEPROM = "M2211 N0 A{} T{}"
 
 # Set Cmd
-SET_POSITION = "G0 X{} Y{} Z{} F{}"
+SET_POSITION = "{} X{} Y{} Z{} F{}"
 SET_POSITION_RELATIVE = "G2204 X{} Y{} Z{} F{}"
 SET_SERVO_ANGLE = "G2202 N{} V{} F{}"
 SET_POLAR = "G2201 S{} R{} H{} F{}"

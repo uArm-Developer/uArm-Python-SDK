@@ -36,4 +36,3 @@ import threading
 while True:
     print('thread count:', len(threading.enumerate()))
     time.sleep(1)
-

@@ -1,21 +1,27 @@
 Python Library Documentation: class SwiftAPI in module uarm.wrapper.swift_api
 
-## class SwiftAPI
+## class __SwiftAPI__
 ****************************************
 
-### descriptors
+### __descriptors__
 ****************************************
-#### baudrate
+#### __baudrate__
 
-#### connected
+#### __connected__
 
-#### port
+#### __device_type__
 
-#### power_status
+#### __firmware_version__
 
-### methods
+#### __hardware_version__
+
+#### __port__
+
+#### __power_status__
+
+### __methods__
 ****************************************
-#### def __init__(self, port=None, baudrate=115200, timeout=None, filters=None, cmd_pend_size=2, callback_thread_pool_size=0, do_not_open=False, **kwargs):
+#### def __\__init__\__(self, port=None, baudrate=115200, timeout=None, **kwargs):
 
 ```
 The API wrapper of Swift and SwiftPro
@@ -23,14 +29,22 @@ The API wrapper of Swift and SwiftPro
 :param baudrate: default is 115200
 :param timeout: tiemout of serial read, default is None
 :param filters: like {'hwid': 'USB VID:PID=2341:0042'}
-:param cmd_pend_size: cmd cache size, default is 2
-:param callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
 :param do_not_open: default is False
-:param kwargs: compatible the pyuf params, example: dev_port='COM3'
+:param kwargs:
+    dev_port: compatible the pyuf params, default is None
+    baud: compatible the pyuf params, default is None
+    filters: like {'hwid': 'USB VID:PID=2341:0042'}
+    do_not_open: default is False
+    cmd_pend_size: cmd cache size, default is 2
+    cmd_timeout: cmd wait response timeout, default is 2
+    callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
+    enable_handle_thread: True/False, default is True
+    enable_write_thread: True/False, default is False
+    enable_handle_report_thread: True/False, default is False
 default cmd timeout is 2s
 ```
 
-#### def connect(self, port=None, baudrate=None, timeout=None):
+#### def __connect__(self, port=None, baudrate=None, timeout=None):
 
 ```
 Connect
@@ -39,14 +53,14 @@ Connect
 :param timeout: default is use the timeout in initialization
 ```
 
-#### def disconnect(self, is_clean=True):
+#### def __disconnect__(self, is_clean=True):
 
 ```
 Disconnect
 :param is_clean: clean the thread pool or not, default is True
 ```
 
-#### def flush_cmd(self, timeout=None, wait_stop=False):
+#### def __flush_cmd__(self, timeout=None, wait_stop=False):
 
 ```
 Wait until all async command return or timeout
@@ -55,7 +69,7 @@ Wait until all async command return or timeout
 :return: 'OK' or 'TIMEOUT'
 ```
 
-#### def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
+#### def __get_analog__(self, pin=0, wait=True, timeout=None, callback=None):
 
 ```
 Get the analog value from specific pin
@@ -66,7 +80,7 @@ Get the analog value from specific pin
 :return: analog value or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_device_info(self, timeout=None):
+#### def __get_device_info__(self, timeout=None):
 
 ```
 Get the uArm info
@@ -80,7 +94,7 @@ Get the uArm info
 }
 ```
 
-#### def get_digital(self, pin=0, wait=True, timeout=None, callback=None):
+#### def __get_digital__(self, pin=0, wait=True, timeout=None, callback=None):
 
 ```
 Get the digital value from specific pin
@@ -91,7 +105,7 @@ Get the digital value from specific pin
 :return: digital value (0 or 1) or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_gripper_catch(self, wait=True, timeout=None, callback=None):
+#### def __get_gripper_catch__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the status of the gripper
@@ -101,7 +115,7 @@ Get the status of the gripper
 :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_is_moving(self, wait=True, timeout=None, callback=None):
+#### def __get_is_moving__(self, wait=True, timeout=None, callback=None):
 
 ```
 Check uArm is moving or not
@@ -111,7 +125,7 @@ Check uArm is moving or not
 :return: True/False if wait is True else None
 ```
 
-#### def get_limit_switch(self, wait=True, timeout=None, callback=None):
+#### def __get_limit_switch__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the status of the limit switch
@@ -121,7 +135,7 @@ Get the status of the limit switch
 :return: True/False or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_mode(self, wait=True, timeout=None, callback=None):
+#### def __get_mode__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the mode, only support SwiftPro
@@ -131,7 +145,7 @@ Get the mode, only support SwiftPro
 :return: mode if wait is True else None
 ```
 
-#### def get_polar(self, wait=True, timeout=None, callback=None):
+#### def __get_polar__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the polar coordinate
@@ -141,7 +155,7 @@ Get the polar coordinate
 :return: [stretch, rotation, height] or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_position(self, wait=True, timeout=None, callback=None):
+#### def __get_position__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the position
@@ -151,7 +165,7 @@ Get the position
 :return: [x, y, z] or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_power_status(self, wait=True, timeout=None, callback=None):
+#### def __get_power_status__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the power status
@@ -161,7 +175,7 @@ Get the power status
 :return: power status if wait is True else None
 ```
 
-#### def get_pump_status(self, wait=True, timeout=None, callback=None):
+#### def __get_pump_status__(self, wait=True, timeout=None, callback=None):
 
 ```
 Get the status of the pump
@@ -171,7 +185,7 @@ Get the status of the pump
 :return: int value (0: stop, 1: working, 2: pump thing) or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_rom_data(self, address, data_type=None, wait=True, timeout=None, callback=None):
+#### def __get_rom_data__(self, address, data_type=None, wait=True, timeout=None, callback=None):
 
 ```
 Get data from eeprom
@@ -197,18 +211,18 @@ Notes:
     p_end indicate the end of records, filled by 0xffff
 ```
 
-#### def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
+#### def __get_servo_angle__(self, servo_id=None, wait=True, timeout=None, callback=None):
 
 ```
 Get the servo angle
-:param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT, 3: HAND
+:param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT
 :param wait: True/False, deault is True
 :param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
 :return: angle or angle list if wait is True else None
 ```
 
-#### def get_servo_attach(self, servo_id=0, wait=True, timeout=None, callback=None):
+#### def __get_servo_attach__(self, servo_id=0, wait=True, timeout=None, callback=None):
 
 ```
 Get servo attach status
@@ -219,7 +233,7 @@ Get servo attach status
 :return: True/False or 'TIMEOUT' if wait is True else None
 ```
 
-#### def get_temperature(self):
+#### def __get_temperature__(self):
 
 ```
 Get the temperature
@@ -229,7 +243,7 @@ Get the temperature
 }
 ```
 
-#### def grove_control(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+#### def __grove_control__(self, pin=None, value=None, wait=True, timeout=None, callback=None):
 
 ```
 Grove control, cmd: M2307 P{pin} V{value}
@@ -241,7 +255,7 @@ Grove control, cmd: M2307 P{pin} V{value}
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def grove_init(self, pin=None, grove_type=None, value=None, wait=True, timeout=None, callback=None):
+#### def __grove_init__(self, pin=None, grove_type=None, value=None, wait=True, timeout=None, callback=None):
 
 ```
 Grove init, cmd: M2305 P{pin} N{grove_type} V{value}
@@ -254,17 +268,16 @@ Grove init, cmd: M2305 P{pin} N{grove_type} V{value}
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def register_grove_callback(self, pin=None, grove_type=None, callback=None):
+#### def __register_grove_callback__(self, pin=None, callback=None):
 
 ```
 Set the callback to handle grove report
 :param pin: pin/port, defualt is None, you must set it
-:param grove_type: 
 :param callback: callback, deault is None
 :return: True/False
 ```
 
-#### def register_key0_callback(self, callback=None):
+#### def __register_key0_callback__(self, callback=None):
 
 ```
 Set the callback to handle key0 (BUTTON MENU) event
@@ -272,7 +285,7 @@ Set the callback to handle key0 (BUTTON MENU) event
 :return: True/False
 ```
 
-#### def register_key1_callback(self, callback=None):
+#### def __register_key1_callback__(self, callback=None):
 
 ```
 Set the callback to handle key1 (BUTTON PLAY) event
@@ -280,7 +293,7 @@ Set the callback to handle key1 (BUTTON PLAY) event
 :return: True/False
 ```
 
-#### def register_limit_switch_callback(self, callback=None):
+#### def __register_limit_switch_callback__(self, callback=None):
 
 ```
 Set the callback to handle limit switch status change
@@ -288,7 +301,7 @@ Set the callback to handle limit switch status change
 :return: True/False
 ```
 
-#### def register_power_callback(self, callback=None):
+#### def __register_power_callback__(self, callback=None):
 
 ```
 Set the callback to handle power status change
@@ -296,7 +309,7 @@ Set the callback to handle power status change
 :return: True/False
 ```
 
-#### def register_report_position_callback(self, callback=None):
+#### def __register_report_position_callback__(self, callback=None):
 
 ```
 Set the callback to handle postiton report
@@ -304,7 +317,56 @@ Set the callback to handle postiton report
 :return: True/False
 ```
 
-#### def reset(self, speed=None, wait=True, timeout=None):
+#### def __release_grove_callback__(self, pin=None, callback=None):
+
+```
+Release the register callback
+:param pin: pin/port, defualt is None, you must set it
+:param callback: callback, default is None, will release all callback by pin
+:return:
+```
+
+#### def __release_key0_callback__(self, callback=None):
+
+```
+Release the register callback
+:param callback: callback, default is None, will release all key0 callback
+:return:
+```
+
+#### def __release_key1_callback__(self, callback=None):
+
+```
+Release the register callback
+:param callback: callback, default is None, will release all key1 callback
+:return:
+```
+
+#### def __release_limit_switch_callback__(self, callback=None):
+
+```
+Release the register callback
+:param callback: callback, default is None, will release all limit switch callback
+:return:
+```
+
+#### def __release_power_callback__(self, callback=None):
+
+```
+Release the register callback
+:param callback: callback, default is None, will release all power callback
+:return:
+```
+
+#### def __release_report_position_callback__(self, callback=None):
+
+```
+Release the register callback
+:param callback: callback, default is None, will release all report position callback
+:return:
+```
+
+#### def __reset__(self, speed=None, wait=True, timeout=None):
 
 ```
 Reset the uArm
@@ -313,7 +375,7 @@ Reset the uArm
 :param timeout: timeout, default is 10s
 ```
 
-#### def send_cmd_async(self, msg=None, timeout=None, callback=None):
+#### def __send_cmd_async__(self, msg=None, timeout=None, callback=None):
 
 ```
 Send cmd async
@@ -322,7 +384,7 @@ Send cmd async
 :param callback: callback, deault is None
 ```
 
-#### def send_cmd_sync(self, msg=None, timeout=None):
+#### def __send_cmd_sync__(self, msg=None, timeout=None):
 
 ```
 Send cmd sync
@@ -331,7 +393,7 @@ Send cmd sync
 :return: result
 ```
 
-#### def set_3d_feeding(self, distance=0, speed=None, relative=True, x=None, y=None, z=None, wait=True, timeout=30, callback=None):
+#### def __set_3d_feeding__(self, distance=0, speed=None, relative=True, x=None, y=None, z=None, wait=True, timeout=30, callback=None):
 
 ```
 Control the feeding, only support SwiftPro, you must set the mode to the 3D printing mode (2) and set temperature over 170 °C
@@ -344,26 +406,21 @@ Control the feeding, only support SwiftPro, you must set the mode to the 3D prin
 :param wait: True/False, deault is True
 :param timeout: timeout, default is 30s
 :param callback: callback, deault is None
- :return: 'OK' or 'TIMEOUT' if wait is True else None
+:return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None, min_feedrate=None, min_travel_feedrate=None, min_segment_time=None, max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+#### def __set_acceleration__(self, acc=None, wait=True, timeout=None, callback=None):
 
 ```
 Set the acceleration
-:param printing_moves: Printing moves, default is None (not set it)
-:param retract_moves: Retract only (no X, Y, Z) moves, default is None (not set it)
-:param travel_moves: Travel (non printing) moves, default is None (not set it)
-:param min_feedrate: Min Feed Rate (units/s), default is None (not set it)
-:param min_travel_feedrate: Min Travel Feed Rate (units/s), default is None (not set it)
-:param min_segment_time: Min Segment Time (us), default is None (not set it)
-:param max_xy_jerk: Max XY Jerk (units/sec^2), default is None (not set it)
-:param max_z_jerk: Max Z Jerk (units/sec^2), default is None (not set it)
-:param max_e_jerk: Max E Jerk (unit/sec^2), default is None (not set it)
-:return: 'OK'
+:param acc: acc value
+:param wait: True/False, deault is True
+:param timeout: timeout, default is use the default cmd timeout
+:param callback: callback, deault is None
+:return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_buzzer(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
+#### def __set_buzzer__(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
 
 ```
 Control the buzzer
@@ -376,7 +433,7 @@ Control the buzzer
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_fans(self, on=False, wait=True, timeout=None, callback=None):
+#### def __set_fans__(self, on=False, wait=True, timeout=None, callback=None):
 
 ```
 Control the fan, only support SwiftPro, will auto set the mode to 3D printing mode (2)
@@ -384,10 +441,10 @@ Control the fan, only support SwiftPro, will auto set the mode to 3D printing mo
 :param wait: True/False, deault is True
 :param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
- :return: 'OK' or 'TIMEOUT' if wait is True else None
+:return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_gripper(self, catch=False, timeout=None, wait=True, callback=None):
+#### def __set_gripper__(self, catch=False, timeout=None, wait=True, callback=None):
 
 ```
 Control the gripper
@@ -398,7 +455,7 @@ Control the gripper
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_mode(self, mode=0, wait=True, timeout=None, callback=None):
+#### def __set_mode__(self, mode=0, wait=True, timeout=None, callback=None):
 
 ```
 Set the mode, only support SwiftPro
@@ -409,7 +466,7 @@ Set the mode, only support SwiftPro
 :return: mode if wait is True else None
 ```
 
-#### def set_polar(self, stretch=None, rotation=None, height=None, speed=None, relative=False, wait=False, timeout=10, callback=None, **kwargs):
+#### def __set_polar__(self, stretch=None, rotation=None, height=None, speed=None, relative=False, wait=False, timeout=10, callback=None, **kwargs):
 
 ```
 Set the polar coordinate
@@ -425,7 +482,7 @@ Set the polar coordinate
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None):
+#### def __set_position__(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None, cmd='G0'):
 
 ```
 Set the position
@@ -437,10 +494,11 @@ Set the position
 :param wait: True/False, deault is False
 :param timeout: timeout, default is 10s
 :param callback: callback, deault is None 
+:param cmd: 'GO' or 'G1', default is 'G0'
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_pump(self, on=False, timeout=None, wait=True, callback=None):
+#### def __set_pump__(self, on=False, timeout=None, wait=True, callback=None):
 
 ```
 Control the pump
@@ -451,7 +509,7 @@ Control the pump
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_report_grove(self, pin=None, interval=0, wait=True, timeout=None, callback=None):
+#### def __set_report_grove__(self, pin=None, interval=0, wait=True, timeout=None, callback=None):
 
 ```
 Report the grove from specific pin, cmd: M2306 P{pin} V{interval}
@@ -463,7 +521,7 @@ Report the grove from specific pin, cmd: M2306 P{pin} V{interval}
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_report_keys(self, on=True, wait=True, timeout=None, callback=None, **kwargs):
+#### def __set_report_keys__(self, on=True, wait=True, timeout=None, callback=None, **kwargs):
 
 ```
 Report the buttons event
@@ -475,7 +533,7 @@ Report the buttons event
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_report_position(self, interval=0, wait=True, timeout=None, callback=None):
+#### def __set_report_position__(self, interval=0, wait=True, timeout=None, callback=None):
 
 ```
 Report position in (interval) seconds
@@ -486,7 +544,7 @@ Report position in (interval) seconds
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_rom_data(self, address, data, data_type=None, wait=True, timeout=None, callback=None):
+#### def __set_rom_data__(self, address, data, data_type=None, wait=True, timeout=None, callback=None):
 
 ```
 Set data to eeprom
@@ -499,7 +557,7 @@ Set data to eeprom
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_servo_angle(self, servo_id=0, angle=90, wait=False, timeout=10, speed=None, callback=None):
+#### def __set_servo_angle__(self, servo_id=0, angle=90, wait=False, timeout=10, speed=None, callback=None):
 
 ```
 Set the servo angle
@@ -512,7 +570,7 @@ Set the servo angle
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_servo_attach(self, servo_id=None, wait=True, timeout=2, callback=None):
+#### def __set_servo_attach__(self, servo_id=None, wait=True, timeout=2, callback=None):
 
 ```
 Set servo attach
@@ -523,7 +581,7 @@ Set servo attach
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_servo_detach(self, servo_id=None, wait=True, timeout=2, callback=None):
+#### def __set_servo_detach__(self, servo_id=None, wait=True, timeout=2, callback=None):
 
 ```
 Set servo detach
@@ -534,7 +592,15 @@ Set servo detach
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_temperature(self, temperature=0, block=False, wait=True, timeout=None, callback=None):
+#### def __set_speed_factor__(self, factor=1):
+
+```
+Set the speed factor, the speed will multiply factor
+:param factor: factor
+:return:
+```
+
+#### def __set_temperature__(self, temperature=0, block=False, wait=True, timeout=None, callback=None):
 
 ```
 Set the temperature, only support SwiftPro, will auto set the mode to 3D printing mode (2)
@@ -543,10 +609,10 @@ Set the temperature, only support SwiftPro, will auto set the mode to 3D printin
 :param wait: True/False, deault is True
 :param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None
- :return: 'OK' or 'TIMEOUT' if wait is True else None
+:return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def set_wrist(self, angle=90, wait=False, timeout=10, speed=None, callback=None):
+#### def __set_wrist__(self, angle=90, wait=False, timeout=10, speed=None, callback=None):
 
 ```
 Set the wrist angle (SERVO HAND)
@@ -558,7 +624,7 @@ Set the wrist angle (SERVO HAND)
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def waiting_ready(self, timeout=5, **kwargs):
+#### def __waiting_ready__(self, timeout=5, **kwargs):
 
 ```
 Waiting the uArm ready

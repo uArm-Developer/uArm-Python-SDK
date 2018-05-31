@@ -41,11 +41,6 @@ class Keys(object):
         on = is_on if is_on is not None else on
         assert isinstance(on, bool) or (isinstance(on, int) and on >= 0)
         cmd = protocol.SET_REPORT_KEYS.format(int(not on))
-        # if not on:
-        #     self._report_callbacks[REPORT_KEY0_ID] = []
-        #     self._report_callbacks[REPORT_KEY1_ID] = []
-        # print('key0:', self._report_callbacks[REPORT_KEY0_ID])
-        # print('key1:', self._report_callbacks[REPORT_KEY1_ID])
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)

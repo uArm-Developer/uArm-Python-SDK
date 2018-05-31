@@ -52,7 +52,7 @@ class Grove(object):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
-    def register_grove_callback(self, pin=None, grove_type=None, callback=None):
+    def register_grove_callback(self, pin=None, callback=None):
         # assert pin is not None and grove_type is not None
         # return self._register_report_callback(REPORT_GROVE + '_{}_{}'.format(grove_type, pin), callback)
         assert pin is not None

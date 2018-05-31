@@ -39,8 +39,8 @@ class Pump(object):
             start = time.time()
             timeout = timeout if isinstance(timeout, (int, float)) and timeout > 0 else self.cmd_timeout
             while time.time() - start < timeout:
-                catch = self.get_gripper_catch()
-                if isinstance(catch, int) and (catch == 2 or catch == 0):
+                grabbed = self.get_pump_status()
+                if isinstance(grabbed, int) and (grabbed == 2 or grabbed == 0):
                     break
                 time.sleep(0.3)
             return _handle(ret)

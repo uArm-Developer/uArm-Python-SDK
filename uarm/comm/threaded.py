@@ -20,7 +20,7 @@ class ReaderThread(threading.Thread):
     stop() this thread and continue the serial port instance otherwise.
     """
 
-    def __init__(self, serial_instance, protocol_factory, rx_que):
+    def __init__(self, serial, protocol_factory):
         """\
         Initialize thread.
 
@@ -29,9 +29,10 @@ class ReaderThread(threading.Thread):
         """
         super(ReaderThread, self).__init__()
         self.daemon = True
-        self.serial = serial_instance
+        self.stream = serial
+        self.serial = serial.com
         self.protocol_factory = protocol_factory
-        self.rx_que = rx_que
+        self.rx_que = serial.rx_que
         self.alive = True
         self._lock = threading.Lock()
         self._connection_made = threading.Event()
@@ -51,7 +52,7 @@ class ReaderThread(threading.Thread):
         """Reader loop"""
         if not hasattr(self.serial, 'cancel_read'):
             self.serial.timeout = 1
-        self.protocol = self.protocol_factory(self.rx_que)
+        self.protocol = self.protocol_factory(self.rx_que, self.stream.rx_con_c)
         try:
             self.protocol.connection_made(self)
         except Exception as e:
@@ -88,6 +89,7 @@ class ReaderThread(threading.Thread):
         self.alive = False
         self.protocol.connection_lost(error)
         self.protocol = None
+        self.stream.notify_all()
         self.close()
         logger.debug('serial read thread exit ...')
 

@@ -115,6 +115,14 @@ class SwiftAPI(object):
         """
         return self._arm.get_power_status(wait=wait, timeout=timeout, callback=callback)
 
+    def set_speed_factor(self, factor=1):
+        """
+        Set the speed factor, the speed will multiply factor
+        :param factor: factor
+        :return: 
+        """
+        return self._arm.set_speed_factor(factor=factor)
+
     def get_device_info(self, timeout=None):
         """
         Get the uArm info
@@ -169,7 +177,7 @@ class SwiftAPI(object):
         """
         return self._arm.get_position(wait=wait, timeout=timeout, callback=callback)
 
-    def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None):
+    def set_position(self, x=None, y=None, z=None, speed=None, relative=False, wait=False, timeout=10, callback=None, cmd='G0'):
         """
         Set the position
         :param x: (mm) location X, default is the last x in use or 150
@@ -180,9 +188,11 @@ class SwiftAPI(object):
         :param wait: True/False, deault is False
         :param timeout: timeout, default is 10s
         :param callback: callback, deault is None 
+        :param cmd: 'GO' or 'G1', default is 'G0'
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
-        return self._arm.set_position(x=x, y=y, z=z, speed=speed, relative=relative, wait=wait, timeout=timeout, callback=callback)
+        return self._arm.set_position(x=x, y=y, z=z, speed=speed, relative=relative, wait=wait, timeout=timeout,
+                                      callback=callback, cmd=cmd)
 
     def get_polar(self, wait=True, timeout=None, callback=None):
         """
@@ -214,7 +224,7 @@ class SwiftAPI(object):
     def get_servo_angle(self, servo_id=None, wait=True, timeout=None, callback=None):
         """
         Get the servo angle
-        :param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT, 3: HAND
+        :param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
@@ -546,15 +556,14 @@ class SwiftAPI(object):
         """
         return self._arm.release_limit_switch_callback(callback=callback)
 
-    def register_grove_callback(self, pin=None, grove_type=None, callback=None):
+    def register_grove_callback(self, pin=None, callback=None):
         """
         Set the callback to handle grove report
         :param pin: pin/port, defualt is None, you must set it
-        :param grove_type: 
         :param callback: callback, deault is None
         :return: True/False
         """
-        return self._arm.register_grove_callback(pin=pin, grove_type=grove_type, callback=callback)
+        return self._arm.register_grove_callback(pin=pin, callback=callback)
 
     def release_grove_callback(self, pin=None, callback=None):
         """
