@@ -14,7 +14,7 @@ from uarm.wrapper import SwiftAPI
 from uarm.swift.protocol import SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
 
 """
-测试锁住和解锁接口
+api test: attach and detach
 """
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})

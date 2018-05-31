@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-测试有关上报的接口
+api test: report callback
 """
 
 

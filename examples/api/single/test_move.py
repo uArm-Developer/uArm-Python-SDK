@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-测试有关移动的接口
+api test: move
 """
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})

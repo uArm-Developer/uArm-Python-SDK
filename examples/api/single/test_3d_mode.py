@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-only support firmware version less than 4.0 temporarily
+api test: only support firmware version less than 4.0 temporarily
 """
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})

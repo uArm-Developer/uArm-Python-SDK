@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-压力测试：循环运动
+pressure test: move
 """
 
 

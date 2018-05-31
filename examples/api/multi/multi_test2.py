@@ -16,8 +16,8 @@ from uarm.tools.list_ports import get_ports
 
 
 """
-开启监听串口线程，自动连接所有过滤到的串口，并同步运动
-运行中途可以断开或新连接机械臂
+1. listen and auto connect all filter uArm
+2. auto enforce sync move
 """
 
 swifts = {}

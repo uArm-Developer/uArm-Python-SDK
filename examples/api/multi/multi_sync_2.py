@@ -15,7 +15,7 @@ from uarm.tools.list_ports import get_ports
 
 
 """
-连接所有过滤到的串口，并同步运动
+connnect all filter uArm, and enforce sync move
 """
 
 swift_list = []

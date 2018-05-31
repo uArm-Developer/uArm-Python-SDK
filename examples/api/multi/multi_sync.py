@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
 
 """
-多台机械臂的同步运动
+multi sync move
 """
 
 swift1 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})

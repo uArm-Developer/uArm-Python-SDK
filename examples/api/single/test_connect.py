@@ -15,7 +15,7 @@ from uarm.wrapper import SwiftAPI
 from uarm.utils.log import logger
 
 """
-测试连接和断开的接口
+api test: connect and disconnect
 """
 
 # logger.setLevel(logger.INFO)
