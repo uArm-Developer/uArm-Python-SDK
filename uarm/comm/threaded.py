@@ -20,7 +20,7 @@ class ReaderThread(threading.Thread):
     stop() this thread and continue the serial port instance otherwise.
     """
 
-    def __init__(self, serial, protocol_factory):
+    def __init__(self, stream, protocol_factory):
         """\
         Initialize thread.
 
@@ -29,10 +29,10 @@ class ReaderThread(threading.Thread):
         """
         super(ReaderThread, self).__init__()
         self.daemon = True
-        self.stream = serial
-        self.serial = serial.com
+        self.stream = stream
+        self.serial = stream.com
         self.protocol_factory = protocol_factory
-        self.rx_que = serial.rx_que
+        self.rx_que = stream.rx_que
         self.alive = True
         self._lock = threading.Lock()
         self._connection_made = threading.Event()
