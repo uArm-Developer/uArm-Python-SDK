@@ -12,6 +12,9 @@ import time
 import functools
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from uarm.wrapper import SwiftAPI
+from uarm.utils.log import logger
+
+logger.setLevel(logger.DEBUG)
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 # swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, enable_handle_thread=False)
@@ -19,7 +22,10 @@ swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 # swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, enable_report_thread=True)
 # swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, enable_handle_thread=True, enable_write_thread=True, enable_report_thread=True)
 
+start = time.time()
 swift.waiting_ready()
+print(time.time()-start)
+
 
 # print(swift.get_device_info())
 
