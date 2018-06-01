@@ -6,15 +6,16 @@
 #
 # Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
 
+import os
+from distutils.util import convert_path
 
 try:
     from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
+
     def find_packages():
         return ['uarm', 'uarm.comm', 'uarm.utils', 'uarm.tools', 'uarm.wrapper']
-import os
-from distutils.util import convert_path
 
 main_ns = {}
 ver_path = convert_path('uarm/version.py')
@@ -40,6 +41,6 @@ setup(
     keywords="uarm4py uarmForPython uarm ufactory uarmForPython swift swiftpro swiftForPython swift4py",
     install_requires=requirements,
     long_description=long_description,
-    license='MIT',
+    license='BSD',
     zip_safe=False
 )
