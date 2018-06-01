@@ -8,6 +8,7 @@
 
 import time
 import re
+import os
 import threading
 try:
     from multiprocessing.pool import ThreadPool
@@ -25,6 +26,7 @@ from .pump import Pump
 from .gripper import Gripper
 from .grove import Grove
 from .utils import *
+from ..tools.threads import ThreadManage
 
 
 class HandleQueue(Queue):
@@ -82,6 +84,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._target_temperature = 0.0
         self._speed_factor = 1
 
+        self._other_que = Queue()
+
         if kwargs.get('enable_handle_thread', True):
             self._rx_que = Queue()
             self._rx_con_c = threading.Condition()
@@ -111,9 +115,11 @@ class Swift(Pump, Keys, Gripper, Grove):
 
         self.thread_pool_size = int(kwargs.get('callback_thread_pool_size', 0))
         self._asyncio_loop = None
-        self._aynico_con_c = None
+        self._asyncio_loop_alive = False
         self._asyncio_loop_thread = None
         self.pool = None
+
+        self._thread_manage = ThreadManage()
 
         if not kwargs.get('do_not_open', False):
             self.connect()
@@ -121,23 +127,25 @@ class Swift(Pump, Keys, Gripper, Grove):
     def _run_asyncio_loop(self):
         async def _asyncio_loop():
             logger.debug('asyncio thread start ...')
-            with self._aynico_con_c:
-                while self.connected:
-                    self._aynico_con_c.wait()
+            while self.connected:
+                await asyncio.sleep(0.01)
             logger.debug('asyncio thread exit ...')
 
         try:
-            self._asyncio_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._asyncio_loop)
+            self._asyncio_loop_alive = True
             self._asyncio_loop.run_until_complete(_asyncio_loop())
         except Exception as e:
             pass
-        self._asyncio_loop = None
+        self._asyncio_loop_alive = False
 
     def run_callback(self, callback, msg, enable_callback_thread=True):
-        if self._asyncio_loop:
-            coroutine = self._async_run_callback(callback, msg)
-            asyncio.run_coroutine_threadsafe(coroutine, self._asyncio_loop)
+        if self._asyncio_loop_alive and enable_callback_thread:
+            try:
+                coroutine = self._async_run_callback(callback, msg)
+                asyncio.run_coroutine_threadsafe(coroutine, self._asyncio_loop)
+            except Exception as e:
+                pass
         elif self.pool is not None and enable_callback_thread:
             self.pool.apply_async(callback, args=(msg,))
         else:
@@ -154,7 +162,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             try:
                 with self._rx_con_c:
                     if self._rx_que.empty():
-                        self._rx_con_c.wait()
+                        self._rx_con_c.wait(0.01)
                     else:
                         line = self._rx_que.get_nowait()
                         self._handle_line(line)
@@ -163,9 +171,6 @@ class Swift(Pump, Keys, Gripper, Grove):
         if self._report_con_c:
             with self._report_con_c:
                 self._report_con_c.notifyAll()
-        if self._aynico_con_c:
-            with self._aynico_con_c:
-                self._aynico_con_c.notifyAll()
 
         self.power_status = False
         try:
@@ -183,7 +188,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             try:
                 with self._report_con_c:
                     if self._report_que.empty():
-                        self._report_con_c.wait()
+                        self._report_con_c.wait(0.5)
                     else:
                         item = self._report_que.get_nowait()
                         try:
@@ -227,6 +232,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             else:
                 self._handle_report(line)
         else:
+            self._other_que.queue.clear()
+            self._other_que.put(line)
             if 'T:' in line:
                 r = re.search(r"T:(\d+\S\d+\s/\d+\S\d+)?", line)
                 if r:
@@ -322,50 +329,27 @@ class Swift(Pump, Keys, Gripper, Grove):
             if self.power_status:
                 break
             self.get_power_status(wait=True, timeout=0.5, debug=False)
-        # while time.time() - start_time < 2:
-        #     if self.power_status:
-        #         break
-        #     time.sleep(0.05)
-        # while time.time() - start_time < timeout:
-        #     if self.power_status:
-        #         break
-        #     self.get_power_status(wait=True, timeout=0.5, debug=False)
-        #     # time.sleep(0.1)
 
     def connect(self, port=None, baudrate=None, timeout=None):
         self.serial.connect(port, baudrate, timeout)
-        print('000', len(threading.enumerate()))
         if self.thread_pool_size == 1 and asyncio is not None:
+            self._asyncio_loop = asyncio.new_event_loop()
             self._asyncio_loop_thread = threading.Thread(target=self._run_asyncio_loop, daemon=True)
-            self._aynico_con_c = threading.Condition()
+            self._thread_manage.append(self._asyncio_loop_thread)
             self._asyncio_loop_thread.start()
-            print('111', len(threading.enumerate()))
         elif self.thread_pool_size > 1 and ThreadPool is not None:
             self.pool = ThreadPool(self.thread_pool_size)
-            print('222', len(threading.enumerate()))
         if self._report_que is not None:
             self._handle_report_thread = threading.Thread(target=self._loop_handle_report, daemon=True)
             self._handle_report_thread.start()
-            print('333', len(threading.enumerate()))
         if not isinstance(self._rx_que, HandleQueue):
             self._handle_thread = threading.Thread(target=self._loop_handle, daemon=True)
+            self._thread_manage.append(self._handle_thread)
             self._handle_thread.start()
-            print('444', len(threading.enumerate()))
 
-    # @catch_exception
+    @catch_exception
     def disconnect(self, is_clean=True):
         self.serial.disconnect()
-        if self._handle_report_thread:
-            try:
-                self._handle_report_thread.join(1)
-            except:
-                pass
-        if self._asyncio_loop_thread:
-            try:
-                self._asyncio_loop.close()
-                self._asyncio_loop_thread.join(1)
-            except:
-                pass
         if is_clean:
             self.clean()
         self.device_type = None
@@ -392,6 +376,7 @@ class Swift(Pump, Keys, Gripper, Grove):
         self._speed_factor = 1
 
     def clean(self):
+        self._thread_manage.join(1)
         if self.pool:
             try:
                 self.pool.close()
@@ -437,20 +422,9 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.delete()
             if callable(self.callback):
                 self.owner.run_callback(self.callback, msg, enable_callback_thread=self.enable_callback_thread)
-                # try:
-                #     if self.owner.pool is not None and self.enable_callback_thread:
-                #         self.owner.pool.apply_async(self.callback, args=(msg,))
-                #     else:
-                #         self.callback(msg)
-                # except Exception as e:
-                #     logger.error(e)
             self.ret.put(msg)
 
         def get_ret(self):
-            # while time.time() - self.start_time < self.timeout * 1.2:
-            #     if not self.ret.empty():
-            #         break
-            #     time.sleep(0.001)
             return self.ret.get()
 
     @catch_exception
@@ -486,11 +460,17 @@ class Swift(Pump, Keys, Gripper, Grove):
         return cmd
 
     @catch_exception
-    def send_cmd_sync(self, msg=None, timeout=None, debug=True):
+    def send_cmd_sync(self, msg=None, timeout=None, no_cnt=False, debug=True):
         if not isinstance(msg, str) or not msg:
             return protocol.OK
-        cmd = self.send_cmd_async(msg=msg, timeout=timeout, debug=debug)
-        return cmd.get_ret()
+        if no_cnt:
+            timeout = timeout if isinstance(timeout, (int, float)) else self.cmd_timeout
+            self._other_que.queue.clear()
+            self.serial.write(msg)
+            return self._other_que.get(timeout)
+        else:
+            cmd = self.send_cmd_async(msg=msg, timeout=timeout, debug=debug)
+            return cmd.get_ret()
 
     @catch_exception
     def get_power_status(self, wait=True, timeout=None, callback=None, debug=True):
@@ -610,6 +590,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -677,6 +659,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -757,6 +741,8 @@ class Swift(Pump, Keys, Gripper, Grove):
                 _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
                 if isinstance(servo_id, int) and 0 <= servo_id < len(_ret):
                     _ret = _ret[servo_id]
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -798,6 +784,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = bool(int(_ret[1][1]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -968,6 +956,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = int(_ret[1][1:])
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -985,6 +975,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = int(_ret[1][1])
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
@@ -1001,6 +993,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = int(_ret[1][1:]) if data_type != protocol.EEPROM_DATA_TYPE_FLOAT else float(_ret[1][1:])
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:

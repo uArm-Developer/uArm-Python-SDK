@@ -40,7 +40,11 @@ class ListenPort(threading.Thread):
                     if port['device'] not in swifts.keys():
                         new_swift = SwiftAPI(port=port['device'])
                         new_swift.waiting_ready()
-                        print(new_swift.port, new_swift.get_device_info())
+                        device_info = new_swift.get_device_info()
+                        print(new_swift.port, device_info)
+                        firmware_version = device_info['firmware_version']
+                        if firmware_version and not firmware_version.startswith(('0.', '1.', '2.', '3.')):
+                            new_swift.set_speed_factor(0.00001)
                         new_swift.set_mode(mode=0)
                         with lock:
                             pos = [150, 0, 150]

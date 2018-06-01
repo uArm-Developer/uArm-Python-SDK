@@ -16,15 +16,19 @@ pressure test: move
 """
 
 
-swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, cmd_pend_size=2)
+swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, cmd_pend_size=2, callback_thread_pool_size=0)
 
 swift.waiting_ready()
 
-print(swift.get_device_info())
+device_info = swift.get_device_info()
+print(device_info)
+firmware_version = device_info['firmware_version']
+if firmware_version and not firmware_version.startswith(('0.', '1.', '2.', '3.')):
+    swift.set_speed_factor(0.00005)
 
 swift.set_mode(0)
 
-speed = 1000000
+speed = 100000
 
 # swift.reset(speed=speed)
 
@@ -39,16 +43,16 @@ while swift.connected:
     swift.set_position(z=50)
     swift.set_position(z=150)
 
-    swift.set_polar(stretch=150, rotation=90, height=150, speed=speed)
-    swift.set_polar(stretch=150, rotation=45, height=150, speed=speed)
-    swift.set_polar(stretch=150, rotation=135, height=150, speed=speed)
-
-    swift.set_polar(stretch=150, rotation=135, height=90, speed=speed)
-    swift.set_polar(stretch=150, rotation=135, height=200, speed=speed)
-    swift.set_polar(stretch=150, rotation=135, height=150, speed=speed)
-
-    swift.set_polar(stretch=150, rotation=135, height=150, speed=speed)
+    swift.set_polar(stretch=200, rotation=90, height=150, speed=speed)
+    swift.set_polar(stretch=200, rotation=45, height=150, speed=speed)
     swift.set_polar(stretch=200, rotation=135, height=150, speed=speed)
+
+    swift.set_polar(stretch=200, rotation=135, height=90, speed=speed)
+    swift.set_polar(stretch=200, rotation=135, height=200, speed=speed)
+    swift.set_polar(stretch=200, rotation=135, height=150, speed=speed)
+
+    swift.set_polar(stretch=200, rotation=135, height=150, speed=speed)
+    swift.set_polar(stretch=250, rotation=135, height=150, speed=speed)
 
     swift.set_servo_angle(0, 45, speed=speed)
     swift.set_servo_angle(0, 135, speed=speed)

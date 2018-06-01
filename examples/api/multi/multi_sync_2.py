@@ -25,6 +25,11 @@ for port in ports:
 
 for swift in swift_list:
     swift.waiting_ready()
+    device_info = swift.get_device_info()
+    print(swift.port, device_info)
+    firmware_version = device_info['firmware_version']
+    if firmware_version and not firmware_version.startswith(('0.', '1.', '2.', '3.')):
+        swift.set_speed_factor(0.00001)
 
 
 def multi_swift_cmd(cmd, *args, **kwargs):

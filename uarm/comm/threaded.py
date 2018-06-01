@@ -90,7 +90,10 @@ class ReaderThread(threading.Thread):
         self.protocol.connection_lost(error)
         self.protocol = None
         self.stream.notify_all()
-        self.close()
+        try:
+            self.close()
+        except:
+            pass
         logger.debug('serial read thread exit ...')
 
     def write(self, data):

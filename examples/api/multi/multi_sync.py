@@ -21,8 +21,18 @@ swift2 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 # swift3 = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'})
 
 swift1.waiting_ready()
+device_info = swift1.get_device_info()
+print(swift1.port, device_info)
+firmware_version = device_info['firmware_version']
+if firmware_version and not firmware_version.startswith(('0.', '1.', '2.', '3.')):
+    swift1.set_speed_factor(0.00001)
+
 swift2.waiting_ready()
-# swift3.waiting_ready()
+device_info = swift2.get_device_info()
+print(swift2.port, device_info)
+firmware_version = device_info['firmware_version']
+if firmware_version and not firmware_version.startswith(('0.', '1.', '2.', '3.')):
+    swift2.set_speed_factor(0.00001)
 
 swift_list = [swift1, swift2]
 

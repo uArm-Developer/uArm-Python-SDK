@@ -18,17 +18,12 @@ from uarm.utils.log import logger
 api test: connect and disconnect
 """
 
-# logger.setLevel(logger.INFO)
-
 # swift = SwiftAPI('COM9')
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, callback_thread_pool_size=0, do_not_open=True)
 
 while True:
     try:
         swift.connect()
-        # swift.waiting_ready()
-        # swift.reset(wait=True)
-        # swift.set_position(x=250, wait=True)
         swift.disconnect()
         print('thread count:', len(threading.enumerate()), time.time())
     except Exception as e:

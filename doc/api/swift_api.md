@@ -37,7 +37,10 @@ The API wrapper of Swift and SwiftPro
     do_not_open: default is False
     cmd_pend_size: cmd cache size, default is 2
     cmd_timeout: cmd wait response timeout, default is 2
-    callback_thread_pool_size: callback thread poll size, default is 0 (no use thread)
+    callback_thread_pool_size: callback thread poll size, default is 0 (not use thread)
+        ==0: not use thread
+        ==1: use asyncio if asyncio exist else not use thread
+        >2: use thread pool
     enable_handle_thread: True/False, default is True
     enable_write_thread: True/False, default is False
     enable_handle_report_thread: True/False, default is False
@@ -384,12 +387,13 @@ Send cmd async
 :param callback: callback, deault is None
 ```
 
-#### def __send_cmd_sync__(self, msg=None, timeout=None):
+#### def __send_cmd_sync__(self, msg=None, timeout=None, no_cnt=False):
 
 ```
 Send cmd sync
 :param msg: cmd, example: G0 X150 F1000
 :param timeout: timeout of waiting, default is use the default cmd timeout
+:param no_cnt: don not add cnt prefix or not, default is False
 :return: result
 ```
 

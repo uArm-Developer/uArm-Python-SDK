@@ -120,7 +120,10 @@ class Serial(object):
 
     def disconnect(self):
         if self.com and self.com.isOpen():
-            self.com.close()
+            try:
+                self.com.close()
+            except:
+                pass
         self.notify_all()
         if self._write_thread:
             try:

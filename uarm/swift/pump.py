@@ -54,6 +54,8 @@ class Pump(object):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:
                 _ret = bool(int(_ret[1][1]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
             if callable(_callback):
                 _callback(_ret)
             else:
