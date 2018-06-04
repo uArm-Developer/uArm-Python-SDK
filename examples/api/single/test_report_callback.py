@@ -43,7 +43,7 @@ swift.register_limit_switch_callback(callback=limit_switch_callback)
 swift.connect()
 swift.waiting_ready()
 
-swift.set_report_position(interval=1)
+swift.set_report_position(interval=0.1)
 swift.set_report_keys(on=True)
 swift.set_servo_detach()
 

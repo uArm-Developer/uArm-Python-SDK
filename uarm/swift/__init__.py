@@ -137,6 +137,13 @@ class Swift(Pump, Keys, Gripper, Grove):
             self._asyncio_loop.run_until_complete(_asyncio_loop())
         except Exception as e:
             pass
+
+        # try:
+        #     asyncio.set_event_loop(self._asyncio_loop)
+        #     self._asyncio_loop_alive = True
+        #     self._asyncio_loop.run_forever()
+        # except:
+        #     pass
         self._asyncio_loop_alive = False
 
     def run_callback(self, callback, msg, enable_callback_thread=True):
@@ -154,7 +161,7 @@ class Swift(Pump, Keys, Gripper, Grove):
     if asyncio:
         @staticmethod
         async def _async_run_callback(callback, msg):
-            callback(msg)
+            await callback(msg)
 
     def _loop_handle(self):
         logger.debug('serial result handle thread start ...')
@@ -168,6 +175,8 @@ class Swift(Pump, Keys, Gripper, Grove):
                         self._handle_line(line)
             except:
                 pass
+        if self._asyncio_loop:
+            self._asyncio_loop.stop()
         if self._report_con_c:
             with self._report_con_c:
                 self._report_con_c.notifyAll()
@@ -191,13 +200,24 @@ class Swift(Pump, Keys, Gripper, Grove):
                         self._report_con_c.wait(0.5)
                     else:
                         item = self._report_que.get_nowait()
-                        try:
-                            if self.pool is not None:
-                                self.pool.apply_async(self._handle_report, args=(item,))
-                            else:
-                                self._handle_report(item)
-                        except Exception as e:
-                            logger.error(e)
+                        if self._asyncio_loop and self._asyncio_loop_alive:
+                            try:
+                                coroutine = self._async_run_callback(self._handle_report, item)
+                                asyncio.run_coroutine_threadsafe(coroutine, self._asyncio_loop)
+                            except Exception as e:
+                                pass
+                        elif self.pool is not None:
+                            self.pool.apply_async(self._handle_report, args=(item,))
+                        else:
+                            self._handle_report(item)
+
+                        # try:
+                        #     if self.pool is not None:
+                        #         self.pool.apply_async(self._handle_report, args=(item,))
+                        #     else:
+                        #         self._handle_report(item)
+                        # except Exception as e:
+                        #     logger.error(e)
             except:
                 pass
         try:
@@ -1258,45 +1278,44 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
+    def set_acceleration2(self, printing_moves=None, retract_moves=None, travel_moves=None,
+                         min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
+                         max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
+        cmd = "M204"
+        flag = False
+        if printing_moves:
+            cmd += " P{}".format(printing_moves)
+            flag = True
+        if retract_moves:
+            cmd += " R{}".format(retract_moves)
+            flag = True
+        if travel_moves:
+            cmd += " T{}".format(travel_moves)
+            flag = True
+        if flag:
+            self.send_cmd_async(cmd)
 
-    # def set_acceleration(self, printing_moves=None, retract_moves=None, travel_moves=None,
-    #                      min_feedrate=None, min_travel_feedrate=None, min_segment_time=None,
-    #                      max_xy_jerk=None, max_z_jerk=None, max_e_jerk=None):
-    #     cmd = "M204"
-    #     flag = False
-    #     if printing_moves:
-    #         cmd += " P{}".format(printing_moves)
-    #         flag = True
-    #     if retract_moves:
-    #         cmd += " R{}".format(retract_moves)
-    #         flag = True
-    #     if travel_moves:
-    #         cmd += " T{}".format(travel_moves)
-    #         flag = True
-    #     if flag:
-    #         self.send_cmd_async(cmd)
-    #
-    #     flag = False
-    #     cmd = "M205"
-    #     if min_feedrate:
-    #         cmd += " S{}".format(min_feedrate)
-    #         flag = True
-    #     if min_travel_feedrate:
-    #         cmd += " T{}".format(min_travel_feedrate)
-    #         flag = True
-    #     if min_segment_time:
-    #         cmd += " B{}".format(min_segment_time)
-    #         flag = True
-    #     if max_xy_jerk:
-    #         cmd += " X{}".format(max_xy_jerk)
-    #         flag = True
-    #     if max_z_jerk:
-    #         cmd += " Z{}".format(max_z_jerk)
-    #         flag = True
-    #     if max_e_jerk:
-    #         cmd += " E{}".format(max_e_jerk)
-    #         flag = True
-    #     if flag:
-    #         self.send_cmd_async(cmd)
-    #     return protocol.OK
+        flag = False
+        cmd = "M205"
+        if min_feedrate:
+            cmd += " S{}".format(min_feedrate)
+            flag = True
+        if min_travel_feedrate:
+            cmd += " T{}".format(min_travel_feedrate)
+            flag = True
+        if min_segment_time:
+            cmd += " B{}".format(min_segment_time)
+            flag = True
+        if max_xy_jerk:
+            cmd += " X{}".format(max_xy_jerk)
+            flag = True
+        if max_z_jerk:
+            cmd += " Z{}".format(max_z_jerk)
+            flag = True
+        if max_e_jerk:
+            cmd += " E{}".format(max_e_jerk)
+            flag = True
+        if flag:
+            self.send_cmd_async(cmd)
+        return protocol.OK
 
