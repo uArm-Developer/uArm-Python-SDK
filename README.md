@@ -23,7 +23,7 @@ The library only supports uArm Swift/SwiftPro. For Metal, please use [pyuarm](ht
 ## Caution
 - Temporarily only supports Swift / SwiftPro.
 - Temporarily only supports Python3 (development is python3.5).
-- if your uArm's firmware is 4.0 or later, please set the spped between 1 to 250, or with the api set_speed_fator to fix.
+- if your uArm's firmware is 4.0 or later, please set the speed between 1 to 250, or with the api set_speed_fator to fix.
 - Make sure you move the device head to a safe position and completely quit uArm Studio before running the tests.
 
 ## Doc
