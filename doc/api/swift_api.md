@@ -464,12 +464,13 @@ Control the fan, only support SwiftPro, will auto set the mode to 3D printing mo
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def __set_gripper__(self, catch=False, timeout=None, wait=True, callback=None):
+#### def __set_gripper__(self, catch=False, timeout=None, wait=True, check=False, callback=None):
 
 ```
 Control the gripper
 :param catch: True/False, default is False (Open)
 :param wait: True/False, deault is True
+:param check: True/False, default is False, check the catch status or not if wait is True
 :param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: 'OK' or 'TIMEOUT' if wait is True else None
@@ -518,12 +519,13 @@ Set the position
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
-#### def __set_pump__(self, on=False, timeout=None, wait=True, callback=None):
+#### def __set_pump__(self, on=False, timeout=None, wait=True, check=False, callback=None):
 
 ```
 Control the pump
 :param on: True/False, default is False (Off)
 :param wait: True/False, deault is True
+:param check: True/False, default is False, check the pump status or not if wait is True
 :param timeout: timeout, default is use the default cmd timeout
 :param callback: callback, deault is None  
 :return: 'OK' or 'TIMEOUT' if wait is True else None

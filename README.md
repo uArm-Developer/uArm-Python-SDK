@@ -83,7 +83,7 @@ The library only supports uArm Swift/SwiftPro. For Metal, please use [pyuarm](ht
 	`swift.set_polar(stretch=200, rotation=90, height=150)`  
 	`swift.set_servo_angle(sewrvo_id=0, angle=90)`  
 	  
-	**Event Register/Release**  
+	**Event register/release**  
 	`swift.register_report_position_callback(callback)`  
 	`swift.release_report_position_callback(callback)`  
 	`swift.set_report_position(0.5)`  

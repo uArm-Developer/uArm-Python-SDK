@@ -24,7 +24,7 @@ class Pump(object):
         return self._release_report_callback(REPORT_LIMIT_SWITCH_ID, callback)
 
     @catch_exception
-    def set_pump(self, on=False, timeout=None, wait=True, callback=None):
+    def set_pump(self, on=False, timeout=None, wait=True, check=False, callback=None):
         def _handle(_ret, _callback=None):
             _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
             if callable(_callback):
@@ -36,13 +36,14 @@ class Pump(object):
         cmd = protocol.SET_PUMP.format(1 if on else 0)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
-            start = time.time()
-            timeout = timeout if isinstance(timeout, (int, float)) and timeout > 0 else self.cmd_timeout
-            while time.time() - start < timeout:
-                grabbed = self.get_pump_status()
-                if isinstance(grabbed, int) and (grabbed == 2 or grabbed == 0):
-                    break
-                time.sleep(0.3)
+            if check:
+                start = time.time()
+                timeout = timeout if isinstance(timeout, (int, float)) and timeout > 0 else self.cmd_timeout
+                while time.time() - start < timeout:
+                    grabbed = self.get_pump_status()
+                    if isinstance(grabbed, int) and (grabbed == 2 or grabbed == 0):
+                        break
+                    time.sleep(0.3)
             return _handle(ret)
             # ret = self.send_cmd_sync(cmd, timeout=timeout)
             # return _handle(ret)

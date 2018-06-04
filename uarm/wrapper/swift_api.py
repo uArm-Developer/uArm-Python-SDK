@@ -307,27 +307,29 @@ class SwiftAPI(object):
         """
         return self._arm.set_buzzer(frequency=frequency, duration=duration, wait=wait, timeout=timeout, callback=callback, **kwargs)
 
-    def set_pump(self, on=False, timeout=None, wait=True, callback=None):
+    def set_pump(self, on=False, timeout=None, wait=True, check=False, callback=None):
         """
         Control the pump
         :param on: True/False, default is False (Off)
         :param wait: True/False, deault is True
+        :param check: True/False, default is False, check the pump status or not if wait is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
-        return self._arm.set_pump(on=on, wait=wait, timeout=timeout, callback=callback)
+        return self._arm.set_pump(on=on, wait=wait, check=check, timeout=timeout, callback=callback)
 
-    def set_gripper(self, catch=False, timeout=None, wait=True, callback=None):
+    def set_gripper(self, catch=False, timeout=None, wait=True, check=False, callback=None):
         """
         Control the gripper
         :param catch: True/False, default is False (Open)
         :param wait: True/False, deault is True
+        :param check: True/False, default is False, check the catch status or not if wait is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None  
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
-        return self._arm.set_gripper(catch=catch, wait=wait, timeout=timeout, callback=callback)
+        return self._arm.set_gripper(catch=catch, wait=wait, timeout=timeout, check=check, callback=callback)
 
     def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
         """
