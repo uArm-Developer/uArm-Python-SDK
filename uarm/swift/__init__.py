@@ -857,99 +857,99 @@ class Swift(Pump, Keys, Gripper, Grove):
         else:
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
-    # @catch_exception
-    # def set_servo_attach(self, servo_id=None, wait=True, timeout=None, callback=None):
-    #     lock = threading.Lock()
-    #     if servo_id is None:
-    #         if self.device_type is None:
-    #             ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
-    #             if ret[0] == protocol.OK:
-    #                 value = ret[1]
-    #                 if value.startswith(('v', 'V')):
-    #                     value = value[1:]
-    #                 setattr(self, 'device_type', value)
-    #         if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
-    #             cmds = [protocol.SET_ATTACH_ALL_SERVO]
-    #         else:
-    #             cmds = [
-    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_BOTTOM),
-    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_LEFT),
-    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_RIGHT),
-    #                 protocol.SET_ATTACH_SERVO.format(protocol.SERVO_HAND),
-    #             ]
-    #     else:
-    #         cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
-    #     rets = []
-    #
-    #     def _handle(_ret, _callback=None):
-    #         _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
-    #         with lock:
-    #             rets.append(_ret)
-    #         if len(rets) == len(cmds):
-    #             if callable(_callback):
-    #                 _callback(_ret)
-    #             else:
-    #                 return _ret
-    #     if wait:
-    #         for cmd in cmds:
-    #             self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
-    #         while len(rets) < len(cmds):
-    #             time.sleep(0.01)
-    #         for ret in rets:
-    #             if ret != protocol.OK:
-    #                 return ret
-    #         return protocol.OK
-    #     else:
-    #         for cmd in cmds:
-    #             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
-    #
-    # @catch_exception
-    # def set_servo_detach(self, servo_id=None, wait=True, timeout=None, callback=None):
-    #     lock = threading.Lock()
-    #     if servo_id is None:
-    #         # cmds = [protocol.SET_DETACH_ALL_SERVO]
-    #         if self.device_type is None:
-    #             ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
-    #             if ret[0] == protocol.OK:
-    #                 value = ret[1]
-    #                 if value.startswith(('v', 'V')):
-    #                     value = value[1:]
-    #                 setattr(self, 'device_type', value)
-    #         if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
-    #             cmds = [protocol.SET_DETACH_ALL_SERVO]
-    #         else:
-    #             cmds = [
-    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_BOTTOM),
-    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_LEFT),
-    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_RIGHT),
-    #                 protocol.SET_DETACH_SERVO.format(protocol.SERVO_HAND),
-    #             ]
-    #     else:
-    #         cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
-    #     rets = []
-    #
-    #     def _handle(_ret, _callback=None):
-    #         _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
-    #         with lock:
-    #             rets.append(_ret)
-    #         if len(rets) == len(cmds):
-    #             if callable(_callback):
-    #                 _callback(_ret)
-    #             else:
-    #                 return _ret
-    #
-    #     if wait:
-    #         for cmd in cmds:
-    #             self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
-    #         while len(rets) < len(cmds):
-    #             time.sleep(0.01)
-    #         for ret in rets:
-    #             if ret != protocol.OK:
-    #                 return ret
-    #         return protocol.OK
-    #     else:
-    #         for cmd in cmds:
-    #             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+    @catch_exception
+    def set_servo_attach_2(self, servo_id=None, wait=True, timeout=None, callback=None):
+        lock = threading.Lock()
+        if servo_id is None:
+            # if self.device_type is None:
+            #     ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
+            #     if ret[0] == protocol.OK:
+            #         value = ret[1]
+            #         if value.startswith(('v', 'V')):
+            #             value = value[1:]
+            #         setattr(self, 'device_type', value)
+            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
+                cmds = [protocol.SET_ATTACH_ALL_SERVO]
+            else:
+                cmds = [
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_BOTTOM),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_LEFT),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_RIGHT),
+                    protocol.SET_ATTACH_SERVO.format(protocol.SERVO_HAND),
+                ]
+        else:
+            cmds = [protocol.SET_ATTACH_SERVO.format(servo_id)]
+        rets = []
+
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            with lock:
+                rets.append(_ret)
+            if len(rets) == len(cmds):
+                if callable(_callback):
+                    _callback(_ret)
+                else:
+                    return _ret
+        if wait:
+            for cmd in cmds:
+                self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
+            while len(rets) < len(cmds):
+                time.sleep(0.01)
+            for ret in rets:
+                if ret != protocol.OK:
+                    return ret
+            return protocol.OK
+        else:
+            for cmd in cmds:
+                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def set_servo_detach_2(self, servo_id=None, wait=True, timeout=None, callback=None):
+        lock = threading.Lock()
+        if servo_id is None:
+            # cmds = [protocol.SET_DETACH_ALL_SERVO]
+            # if self.device_type is None:
+            #     ret = self.send_cmd_sync(protocol.GET_DEVICE_TYPE)
+            #     if ret[0] == protocol.OK:
+            #         value = ret[1]
+            #         if value.startswith(('v', 'V')):
+            #             value = value[1:]
+            #         setattr(self, 'device_type', value)
+            if isinstance(self.device_type, str) and self.device_type.lower() == 'swiftpro':
+                cmds = [protocol.SET_DETACH_ALL_SERVO]
+            else:
+                cmds = [
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_BOTTOM),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_LEFT),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_RIGHT),
+                    protocol.SET_DETACH_SERVO.format(protocol.SERVO_HAND),
+                ]
+        else:
+            cmds = [protocol.SET_DETACH_SERVO.format(servo_id)]
+        rets = []
+
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            with lock:
+                rets.append(_ret)
+            if len(rets) == len(cmds):
+                if callable(_callback):
+                    _callback(_ret)
+                else:
+                    return _ret
+
+        if wait:
+            for cmd in cmds:
+                self.send_cmd_async(cmd, timeout=timeout, callback=_handle)
+            while len(rets) < len(cmds):
+                time.sleep(0.01)
+            for ret in rets:
+                if ret != protocol.OK:
+                    return ret
+            return protocol.OK
+        else:
+            for cmd in cmds:
+                self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
     def set_buzzer(self, frequency=None, duration=None, wait=False, timeout=None, callback=None, **kwargs):
