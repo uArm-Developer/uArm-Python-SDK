@@ -124,27 +124,35 @@ class Swift(Pump, Keys, Gripper, Grove):
         if not kwargs.get('do_not_open', False):
             self.connect()
 
-    def _run_asyncio_loop(self):
-        async def _asyncio_loop():
-            logger.debug('asyncio thread start ...')
-            while self.connected:
-                await asyncio.sleep(0.01)
-            logger.debug('asyncio thread exit ...')
+    if asyncio:
+        def _run_asyncio_loop(self):
+            # async def _asyncio_loop():
+            #     logger.debug('asyncio thread start ...')
+            #     while self.connected:
+            #         await asyncio.sleep(0.01)
+            #     logger.debug('asyncio thread exit ...')
 
-        try:
-            asyncio.set_event_loop(self._asyncio_loop)
-            self._asyncio_loop_alive = True
-            self._asyncio_loop.run_until_complete(_asyncio_loop())
-        except Exception as e:
-            pass
+            @asyncio.coroutine
+            def _asyncio_loop():
+                logger.debug('asyncio thread start ...')
+                while self.connected:
+                    yield from asyncio.sleep(0.01)
+                logger.debug('asyncio thread exit ...')
 
-        # try:
-        #     asyncio.set_event_loop(self._asyncio_loop)
-        #     self._asyncio_loop_alive = True
-        #     self._asyncio_loop.run_forever()
-        # except:
-        #     pass
-        self._asyncio_loop_alive = False
+            try:
+                asyncio.set_event_loop(self._asyncio_loop)
+                self._asyncio_loop_alive = True
+                self._asyncio_loop.run_until_complete(_asyncio_loop())
+            except Exception as e:
+                pass
+
+            # try:
+            #     asyncio.set_event_loop(self._asyncio_loop)
+            #     self._asyncio_loop_alive = True
+            #     self._asyncio_loop.run_forever()
+            # except:
+            #     pass
+            self._asyncio_loop_alive = False
 
     def run_callback(self, callback, msg, enable_callback_thread=True):
         if self._asyncio_loop_alive and enable_callback_thread:
@@ -160,8 +168,13 @@ class Swift(Pump, Keys, Gripper, Grove):
 
     if asyncio:
         @staticmethod
-        async def _async_run_callback(callback, msg):
-            await callback(msg)
+        @asyncio.coroutine
+        def _async_run_callback(callback, msg):
+            yield from callback(msg)
+
+        # @staticmethod
+        # async def _async_run_callback(callback, msg):
+        #     await callback(msg)
 
     def _loop_handle(self):
         logger.debug('serial result handle thread start ...')

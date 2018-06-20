@@ -16,7 +16,7 @@ pressure test: move
 """
 
 
-swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, cmd_pend_size=2, callback_thread_pool_size=0)
+swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, cmd_pend_size=2, callback_thread_pool_size=1)
 
 swift.waiting_ready()
 
