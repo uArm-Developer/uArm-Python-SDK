@@ -13,15 +13,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from uarm.wrapper import SwiftAPI
 
 
-#
-# swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, callback_thread_pool_size=1)
-# swift.waiting_ready()
-#
-#
-# device_info = swift.get_device_info()
-# print(device_info)
-#
-#
+
+swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, callback_thread_pool_size=1)
+swift.waiting_ready()
+
+
+device_info = swift.get_device_info()
+print(device_info)
+
+
 # # def test(ret):
 # #     print(ret)
 # #

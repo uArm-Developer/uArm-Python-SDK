@@ -146,12 +146,6 @@ class Swift(Pump, Keys, Gripper, Grove):
             except Exception as e:
                 pass
 
-            # try:
-            #     asyncio.set_event_loop(self._asyncio_loop)
-            #     self._asyncio_loop_alive = True
-            #     self._asyncio_loop.run_forever()
-            # except:
-            #     pass
             self._asyncio_loop_alive = False
 
     def run_callback(self, callback, msg, enable_callback_thread=True):
@@ -566,10 +560,10 @@ class Swift(Pump, Keys, Gripper, Grove):
         }
 
     @catch_exception
-    def reset(self, speed=None, wait=True, timeout=None):
+    def reset(self, speed=None, wait=True, timeout=None, x=200, y=0, z=150):
         if wait:
             self.set_servo_attach(wait=True, timeout=timeout)
-            self.set_position(x=200, y=0, z=150, speed=speed, wait=True, timeout=timeout)
+            self.set_position(x=x, y=y, z=z, speed=speed, wait=True, timeout=timeout)
             self.set_pump(False, wait=True, timeout=timeout)
             self.set_gripper(False, wait=True, timeout=timeout)
             self.set_wrist(90, wait=True, timeout=timeout)

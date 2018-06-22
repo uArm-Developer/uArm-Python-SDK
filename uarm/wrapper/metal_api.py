@@ -143,14 +143,17 @@ class MetalAPI(object):
         """
         return self._arm.get_device_info(timeout=timeout)
 
-    def reset(self, speed=None, wait=True, timeout=None):
+    def reset(self, speed=None, wait=True, timeout=None, x=200, y=0, z=150):
         """
         Reset the uArm
         :param speed: reset speed, default is the last speed in use or 1000
         :param wait: True/False, deault is True
         :param timeout: timeout, default is 10s
+        :param x: reset-position-x, default is 200
+        :param y: reset-position-y, default is 0
+        :param z: reset-position-z, default is 150
         """
-        return self._arm.reset(speed=speed, wait=wait, timeout=timeout)
+        return self._arm.reset(speed=speed, wait=wait, timeout=timeout, x=x, y=y, z=z)
 
     def get_position(self, wait=True, timeout=None, callback=None):
         """
