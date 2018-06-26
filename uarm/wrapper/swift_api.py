@@ -214,7 +214,7 @@ class SwiftAPI(object):
     def set_polar(self, stretch=None, rotation=None, height=None, speed=None, relative=False, wait=False, timeout=10, callback=None, **kwargs):
         """
         Set the polar coordinate
-        :param stretch: (mm), default is the last stretch in use or 150
+        :param stretch: (mm), default is the last stretch in use or 200
         :param rotation: (degree), default is the last rotation in use or 90
         :param height: (mm), default is the last height in use or 150
         :param speed: (mm/min) speed of move, default is the last speed in use or 1000

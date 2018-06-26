@@ -21,6 +21,10 @@ swift.waiting_ready()
 device_info = swift.get_device_info()
 print(device_info)
 
+swift.set_position(x=200, y=0, z=100)
+time.sleep(5)
+print(swift.get_polar())
+
 
 # # def test(ret):
 # #     print(ret)
