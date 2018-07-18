@@ -11,7 +11,9 @@ import sys
 import time
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from uarm.wrapper import SwiftAPI
+from uarm.utils.log import logger
 
+logger.setLevel(logger.VERBOSE)
 
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, callback_thread_pool_size=1)

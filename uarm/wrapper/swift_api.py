@@ -56,6 +56,18 @@ class SwiftAPI(object):
         return self._arm.power_status
 
     @property
+    def mode(self):
+        return self._arm.mode
+
+    @property
+    def error(self):
+        return self._arm.error
+
+    @error.setter
+    def error(self, error):
+        self._arm.error = error
+
+    @property
     def device_type(self):
         return self._arm.device_type
 

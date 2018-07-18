@@ -74,6 +74,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.report_position = []
         self.is_moving = False
 
+        self._error = None
+
         self._position = [200, 0, 150, 5000]  # [x, y, z, speed]
         self._polar = [200, 90, 150, 5000]  # [stretch, rotation, height, speed]
         self._angle_speed = 2000
@@ -271,8 +273,8 @@ class Swift(Pump, Keys, Gripper, Grove):
                         self._target_temperature = float(t2)
                         if self._current_temperature >= self._target_temperature:
                             self._blocked = False
-
             elif line.startswith('Error'):
+                self._error = line
                 logger.error(line)
 
     def _handle_report(self, line):
@@ -349,6 +351,14 @@ class Swift(Pump, Keys, Gripper, Grove):
     def blocked(self):
         return self._blocked
 
+    @property
+    def error(self):
+        return self._error
+
+    @error.setter
+    def error(self, error):
+        self._error = error
+
     @catch_exception
     def waiting_ready(self, timeout=5):
         start_time = time.time()
@@ -392,6 +402,8 @@ class Swift(Pump, Keys, Gripper, Grove):
         self.is_moving = False
         self.cmd_pend = {}
 
+        self._error = None
+
         self._position = [200, 0, 150, 10000]
         self._polar = [200, 90, 150, 10000]
         self._angle_speed = 2000
@@ -432,8 +444,8 @@ class Swift(Pump, Keys, Gripper, Grove):
 
         def timeout_cb(self):
             self.delete()
-            if self.debug:
-                logger.warn('{} cmd "#{} {}" timeout'.format(self.owner.port, self.cnt, self.msg))
+            # if self.debug:
+            #     logger.warn('{} cmd "#{} {}" timeout'.format(self.owner.port, self.cnt, self.msg))
             self.ret.put(protocol.TIMEOUT)
 
         def delete(self):
@@ -475,12 +487,12 @@ class Swift(Pump, Keys, Gripper, Grove):
                     self.cmd_pend_c.wait(0.01)
             cmd = self.Cmd(self, self._cnt, msg, timeout, callback, debug=debug, enable_callback_thread=enable_callback_thread)
             self.cmd_pend[self._cnt] = cmd
-            self.serial.write({
-                'cmd': cmd,
-                'msg': '#{cnt} {msg}'.format(cnt=self._cnt, msg=msg)
-            })
-            # cmd.start()
-            # self.serial.write('#{cnt} {msg}'.format(cnt=self._cnt, msg=msg))
+            # self.serial.write({
+            #     'cmd': cmd,
+            #     'msg': '#{cnt} {msg}'.format(cnt=self._cnt, msg=msg)
+            # })
+            cmd.start()
+            self.serial.write('#{cnt} {msg}'.format(cnt=self._cnt, msg=msg))
             self._cnt += 1
             if self._cnt == 10000:
                 self._cnt = 1
