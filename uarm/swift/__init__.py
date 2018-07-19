@@ -359,6 +359,13 @@ class Swift(Pump, Keys, Gripper, Grove):
     def error(self, error):
         self._error = error
 
+    def set_property(self, key, value):
+        if hasattr(self, key):
+            setattr(self, key, value)
+
+    def get_property(self, key):
+        return getattr(self, key, None)
+
     @catch_exception
     def waiting_ready(self, timeout=5):
         start_time = time.time()

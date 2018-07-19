@@ -190,9 +190,11 @@ class Teach(object):
                                 # firmware >= 4.0
                                 # self.arm.set_position(float(values[1]), float(values[2]), float(values[3]),
                                 #                       speed=30, wait=True, timeout=5)
-                                if count % 3 == 0:
-                                    self.arm.set_position(float(values[1]), float(values[2]), float(values[3]),
-                                                          speed=30, wait=False, timeout=1, cmd='G1')
+
+                                if self.arm.get_property('cmd_pend_size') != 20:
+                                    self.arm.set_property('cmd_pend_size', 20)
+                                self.arm.set_position(float(values[1]), float(values[2]), float(values[3]),
+                                                          speed=30, wait=False, timeout=2, cmd='G1')
                                 last_pos = [float(values[1]), float(values[2]), float(values[3])]
                             else:
                                 # firmware < 4.0
@@ -208,11 +210,13 @@ class Teach(object):
                 self.__progress_queue.put([t+1, progress])
             t += 1
 
+        self.arm.flush_cmd()
         self.arm.set_pump(False, wait=False)
         self.arm.set_gripper(False, wait=True)
         self.arm.set_position(self.__start_position[0], self.__start_position[1], self.__start_position[2], wait=False)
         # self.arm.flush_cmd()
         self.__is_playing = False
+        self.arm.set_property('cmd_pend_size', 5)
 
     def get_total_points(self):
         play_file = open(self.file_path, "r")

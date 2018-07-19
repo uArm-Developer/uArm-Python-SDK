@@ -79,6 +79,12 @@ class SwiftAPI(object):
     def firmware_version(self):
         return self._arm.firmware_version
 
+    def set_property(self, key, value):
+        self._arm.set_property(key, value)
+
+    def get_property(self, key):
+        return self._arm.get_property(key)
+
     def connect(self, port=None, baudrate=None, timeout=None):
         """
         Connect
