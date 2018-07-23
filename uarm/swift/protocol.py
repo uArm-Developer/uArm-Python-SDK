@@ -42,6 +42,8 @@ SET_TEMPERATURE_UNBLOCK = "M104 S{}"  # unblock but not auto report temperature
 OPEN_FAN = "M106"
 CLOSE_FAN = "M107"
 SET_ACC = "M204 A{}"
+SET_DIGITAL_OUTPUT = "M2240 N{} V{}"
+SET_DIGITAL_DIRECTION = "M2241 N{} V{}"
 
 # Get Cmd
 GET_PUMP = "P2231"

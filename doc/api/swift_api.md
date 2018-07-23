@@ -11,9 +11,13 @@ Python Library Documentation: class SwiftAPI in module uarm.wrapper.swift_api
 
 #### __device_type__
 
+#### __error__
+
 #### __firmware_version__
 
 #### __hardware_version__
+
+#### __mode__
 
 #### __port__
 
@@ -177,6 +181,9 @@ Get the power status
 :param callback: callback, deault is None 
 :return: power status if wait is True else None
 ```
+
+#### def __get_property__(self, key):
+
 
 #### def __get_pump_status__(self, wait=True, timeout=None, callback=None):
 
@@ -369,13 +376,16 @@ Release the register callback
 :return:
 ```
 
-#### def __reset__(self, speed=None, wait=True, timeout=None):
+#### def __reset__(self, speed=None, wait=True, timeout=None, x=200, y=0, z=150):
 
 ```
 Reset the uArm
 :param speed: reset speed, default is the last speed in use or 1000
 :param wait: True/False, deault is True
 :param timeout: timeout, default is 10s
+:param x: reset-position-x, default is 200
+:param y: reset-position-y, default is 0
+:param z: reset-position-z, default is 150
 ```
 
 #### def __send_cmd_async__(self, msg=None, timeout=None, callback=None):
@@ -453,6 +463,30 @@ Control the buzzer
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
 
+#### def __set_digital_direction__(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+
+```
+Set digital direction
+:param pin: pin
+:param value: 0: input, 1: output
+:param wait: True/False, deault is True
+:param timeout: timeout, default is use the default cmd timeout
+:param callback: callback, deault is None 
+:return: 'OK' or 'TIMEOUT' if wait is True else None
+```
+
+#### def __set_digital_output__(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+
+```
+Set digital output value
+:param pin: pin
+:param value: digital value
+:param wait: True/False, deault is True
+:param timeout: timeout, default is use the default cmd timeout
+:param callback: callback, deault is None 
+:return: 'OK'/'Ex' or 'TIMEOUT' if wait is True else None
+```
+
 #### def __set_fans__(self, on=False, wait=True, timeout=None, callback=None):
 
 ```
@@ -491,7 +525,7 @@ Set the mode, only support SwiftPro
 
 ```
 Set the polar coordinate
-:param stretch: (mm), default is the last stretch in use or 150
+:param stretch: (mm), default is the last stretch in use or 200
 :param rotation: (degree), default is the last rotation in use or 90
 :param height: (mm), default is the last height in use or 150
 :param speed: (mm/min) speed of move, default is the last speed in use or 1000
@@ -518,6 +552,9 @@ Set the position
 :param cmd: 'GO' or 'G1', default is 'G0'
 :return: 'OK' or 'TIMEOUT' if wait is True else None
 ```
+
+#### def __set_property__(self, key, value):
+
 
 #### def __set_pump__(self, on=False, timeout=None, wait=True, check=False, callback=None):
 

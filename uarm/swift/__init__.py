@@ -998,6 +998,42 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
 
     @catch_exception
+    def set_digital_output(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        assert pin is not None and value is not None
+
+        cmd = protocol.SET_DIGITAL_OUTPUT.format(pin, value)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def set_digital_direction(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        assert pin is not None and value is not None
+
+        cmd = protocol.SET_DIGITAL_DIRECTION.format(pin, value)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
     def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
         def _handle(_ret, _callback=None):
             if _ret[0] == protocol.OK:

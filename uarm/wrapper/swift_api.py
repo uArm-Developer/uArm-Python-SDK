@@ -352,6 +352,30 @@ class SwiftAPI(object):
         """
         return self._arm.set_gripper(catch=catch, wait=wait, timeout=timeout, check=check, callback=callback)
 
+    def set_digital_output(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+        """
+        Set digital output value
+        :param pin: pin
+        :param value: digital value
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None 
+        :return: 'OK'/'Ex' or 'TIMEOUT' if wait is True else None 
+        """
+        return self._arm.set_digital_output(pin=pin, value=value, wait=wait, timeout=timeout, callback=callback)
+
+    def set_digital_direction(self, pin=None, value=None, wait=True, timeout=None, callback=None):
+        """
+        Set digital direction
+        :param pin: pin
+        :param value: 0: input, 1: output
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None 
+        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        """
+        return self._arm.set_digital_direction(pin=pin, value=value, wait=wait, timeout=timeout, callback=callback)
+
     def get_analog(self, pin=0, wait=True, timeout=None, callback=None):
         """
         Get the analog value from specific pin
