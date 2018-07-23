@@ -1381,3 +1381,65 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.send_cmd_async(cmd)
         return protocol.OK
 
+    @catch_exception
+    def coordinate_to_angles(self, x=None, y=None, z=None, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        assert x is not None and y is not None and z is not None
+
+        cmd = protocol.COORDINATE_TO_ANGLES.format(x, y, z)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def angles_to_coordinate(self, angles=None, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = list(map(lambda i: float(i[1:]), _ret[1:]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        assert isinstance(angles, (list, tuple)) and len(angles) >= 3
+
+        cmd = protocol.ANGLES_TO_COORDINATE.format(*angles[:3])
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def check_pos_is_limit(self, pos=None, is_polar=False, wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            if _ret[0] == protocol.OK:
+                _ret = not bool(int(_ret[1][1]))
+            elif _ret != protocol.TIMEOUT:
+                _ret = _ret[0]
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        assert isinstance(pos, (list, tuple)) and len(pos) >= 3
+
+        cmd = protocol.CHECK_MOVE_LIMIT.format(*pos[:3], 1 if is_polar else 0)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))

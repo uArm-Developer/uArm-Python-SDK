@@ -696,7 +696,7 @@ class SwiftAPI(object):
 
     def set_acceleration(self, acc=None, wait=True, timeout=None, callback=None):
         """
-        Set the acceleration
+        Set the acceleration, only support firmware version > 4.0
         :param acc: acc value
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
@@ -726,3 +726,38 @@ class SwiftAPI(object):
                                           min_travel_feedrate=min_travel_feedrate, min_segment_time=min_segment_time,
                                           max_xy_jerk=max_xy_jerk, max_z_jerk=max_z_jerk, max_e_jerk=max_e_jerk)
 
+    def coordinate_to_angles(self, x=None, y=None, z=None, wait=True, timeout=None, callback=None):
+        """
+        Convert coordinate to angles
+        :param x: 
+        :param y: 
+        :param z: 
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None
+        :return: [bottom_angle, left_angle, right_angle] or 'TIMEOUT' if wait is True else None
+        """
+        return self._arm.coordinate_to_angles(x=x, y=y, z=z, wait=wait, timeout=timeout, callback=callback)
+
+    def angles_to_coordinate(self, angles=None, wait=True, timeout=None, callback=None):
+        """
+        Convert angles to coordinate
+        :param angles: [bottom_angle, left_angle, right_angle]
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None 
+        :return: [x, y, z] or 'TIMEOUT' if wait is True else None
+        """
+        return self._arm.angles_to_coordinate(angles=angles, wait=wait, timeout=timeout, callback=callback)
+
+    def check_pos_is_limit(self, pos=None, is_polar=False, wait=True, timeout=None, callback=None):
+        """
+        Check pos is in limit
+        :param pos: [x, y, z] if is_polar is False else [strech, rotation, height]
+        :param is_polar: pos is polar coordinate or not
+        :param wait: True/False, deault is True
+        :param timeout: timeout, default is use the default cmd timeout
+        :param callback: callback, deault is None 
+        :return: True/False or 'TIMEOUT' if wait is True else None
+        """
+        return self._arm.check_pos_is_limit(pos=pos, is_polar=is_polar, wait=wait, timeout=timeout, callback=callback)
