@@ -32,68 +32,82 @@ The library only supports uArm Swift/SwiftPro. For Metal, please use [pyuarm](ht
 
 ## Example:
 - [Swift/SwiftPro](examples/api/)
-	**Import**
-	`from uarm.wrapper import SwiftAPI`
-	`swift = SwiftAPI()`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042')`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', do_not_open=true)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', cmd_pend_size=2)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_write_thread=True)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_handle_report_thread=True)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_write_thread=True, enable_handle_report_thread=True)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=10)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=1)`
-	`swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=10)`
+  
+  **Import**
+  ```python
+  from uarm.wrapper import SwiftAPI
+  swift = SwiftAPI()
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042')
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', do_not_open=true)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', cmd_pend_size=2)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_write_thread=True)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_handle_report_thread=True)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', enable_write_thread=True, enable_handle_report_thread=True)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=10)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=1)
+  swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042', callback_thread_pool_size=10)
+  ```
 
-	**Wait**
-	`swift.waiting_ready()`
-	`swift.flush_cmd()`
+  **Wait**
+  ```python
+  swift.waiting_ready()
+  swift.flush_cmd()
+  ```
 
-	**Connect/Disconnect**
-	`swift.connect()`
-	`swift.disconnect()`
+  **Connect/Disconnect**
+  ```python
+  swift.connect()
+  swift.disconnect()
+  ```
 
-	**Get**
-	`swift.get_power_status()`
-	`swift.get_device_info()`
-	`swift.get_limit_switch()`
-	`swift.get_gripper_catch()`
-	`swift.get_pump_status()`
-	`swift.get_mode()`
-	`swift.get_servo_attach(servo_id=2)`
-	`swift.get_servo_angle()`
-	`swift.get_polar()`
-	`swift.get_position()`
-	`swift.get_analog(0)`
-	`swift.get_digital(0)`
+  **Get**
+  ```python    
+  swift.get_power_status()
+  swift.get_device_info()
+  swift.get_limit_switch()
+  swift.get_gripper_catch()
+  swift.get_pump_status()
+  swift.get_mode()
+  swift.get_servo_attach(servo_id=2)
+  swift.get_servo_angle()
+  swift.get_polar()
+  swift.get_position()
+  swift.get_analog(0)
+  swift.get_digital(0)
+  ```
 
-	**Set**
-	`swift.set_speed_factor(1)`
-	`swift.set_mode(mode=0)`
-	`swift.set_wrist(90)`
-	`swift.set_servo_attach()`
-	`swift.set_servo_detach()`
-	`swift.set_buzzer(frequency=1000, duration=2)`
-	`swift.set_pump(on=True)`
-	`swift_set_gripper(catch=True)`
+  **Set**
+  ```python 
+  swift.set_speed_factor(1)
+  swift.set_mode(mode=0)
+  swift.set_wrist(90)
+  swift.set_servo_attach()
+  swift.set_servo_detach()
+  swift.set_buzzer(frequency=1000, duration=2)
+  swift.set_pump(on=True)
+  swift_set_gripper(catch=True)
+  ```
 
-	**Move**
-	`swift.reset()`
-	`swift.set_position(x=200, y=0, z=100, speed=100000)`
-	`swift.set_polar(stretch=200, rotation=90, height=150)`
-	`swift.set_servo_angle(servo_id=0, angle=90)`
+  **Move**
+  ```python
+  swift.reset()`
+  swift.set_position(x=200, y=0, z=100, speed=100000)
+  swift.set_polar(stretch=200, rotation=90, height=150)
+  swift.set_servo_angle(servo_id=0, angle=90)
+  ```
 
-	**Event register/release**
-	`swift.register_report_position_callback(callback)`
-	`swift.release_report_position_callback(callback)`
-	`swift.set_report_position(0.5)`
+  **Event register/release**
+  ```python
+  swift.register_report_position_callback(callback)
+  swift.release_report_position_callback(callback)
+  swift.set_report_position(0.5)
+  ```
 
-	**API callback**
-	`swift.get_polar(wait=False, callback=lambda i: print('polar', i))`
-	`swift.get_position(wait=False, callback=lambda i: print('pos', i))`
-
-
-
+  **API callback**
+  ```python
+  swift.get_polar(wait=False, callback=lambda i: print('polar', i))
+  swift.get_position(wait=False, callback=lambda i: print('pos', i))
+  ```
 
 ## Installation
     python setup.py install
