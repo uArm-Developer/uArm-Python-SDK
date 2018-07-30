@@ -2,7 +2,7 @@
 ----------
 
 ## Overview
-This module encapsulates the operations for uArm. It provides baisc Movement on Python.
+This module encapsulates the operations for uArm. It provides basic movement on Python.
 The library only supports uArm Swift/SwiftPro. For Metal, please use [pyuarm](https://github.com/uArm-Developer/pyuarm) or [pyuf](https://github.com/uArm-Developer/uArm-Python-SDK/tree/1.0-pyuf) instead.
 
 ## Related
