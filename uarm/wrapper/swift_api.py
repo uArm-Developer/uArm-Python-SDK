@@ -68,6 +68,18 @@ class SwiftAPI(object):
         self._arm.error = error
 
     @property
+    def temperature(self):
+        return self._arm.temperature
+
+    @property
+    def blocked(self):
+        return self._arm.blocked
+
+    @blocked.setter
+    def blocked(self, value):
+        self._arm.blocked = value
+
+    @property
     def device_type(self):
         return self._arm.device_type
 
@@ -152,7 +164,7 @@ class SwiftAPI(object):
         :return: {
             "device_type": "SwiftPro",
             "hardware_version": "3.2.0",
-            "firmware_version": "3.3.0",
+            ", QU": "3.3.0",
             "api_version": "3.2.0",
             "device_unique": "D43639DB0CEE"
         }
@@ -735,7 +747,7 @@ class SwiftAPI(object):
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None
-        :return: [bottom_angle, left_angle, right_angle] or 'TIMEOUT' if wait is True else None
+        :return: [bottom_angle, left_angle, right_angle] or 'TIMEOUT' or 'Ex' if wait is True else None
         """
         return self._arm.coordinate_to_angles(x=x, y=y, z=z, wait=wait, timeout=timeout, callback=callback)
 
@@ -746,7 +758,7 @@ class SwiftAPI(object):
         :param wait: True/False, deault is True
         :param timeout: timeout, default is use the default cmd timeout
         :param callback: callback, deault is None 
-        :return: [x, y, z] or 'TIMEOUT' if wait is True else None
+        :return: [x, y, z] or 'TIMEOUT' or 'Ex' if wait is True else None
         """
         return self._arm.angles_to_coordinate(angles=angles, wait=wait, timeout=timeout, callback=callback)
 
@@ -761,3 +773,6 @@ class SwiftAPI(object):
         :return: True/False or 'TIMEOUT' if wait is True else None
         """
         return self._arm.check_pos_is_limit(pos=pos, is_polar=is_polar, wait=wait, timeout=timeout, callback=callback)
+
+    def set_height_offset(self, offset='', wait=True, timeout=None, callback=None):
+        return self._arm.set_height_offset(offset=offset, wait=wait, timeout=timeout, callback=callback)

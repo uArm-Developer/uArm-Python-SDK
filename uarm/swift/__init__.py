@@ -351,6 +351,17 @@ class Swift(Pump, Keys, Gripper, Grove):
     def blocked(self):
         return self._blocked
 
+    @blocked.setter
+    def blocked(self, value):
+        self._blocked = value
+
+    @property
+    def temperature(self):
+        return {
+            'current_temperature': self._current_temperature,
+            'target_temperature': self._target_temperature
+        }
+
     @property
     def error(self):
         return self._error
@@ -471,6 +482,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             self.ret.put(msg)
 
         def get_ret(self):
+            while self.ret.empty():
+                time.sleep(0.002)
             return self.ret.get()
 
     @catch_exception
@@ -672,7 +685,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             except:
                 z = 0
             try:
-                speed = float(speed)
+                speed = int(speed)
             except:
                 speed = self._position[3]
             cmd = protocol.SET_POSITION_RELATIVE.format(x, y, z, speed)
@@ -694,6 +707,8 @@ class Swift(Pump, Keys, Gripper, Grove):
             except:
                 pass
             cmd = protocol.SET_POSITION.format(cmd, *self._position)
+        if timeout is None:
+            timeout = 10
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
@@ -1438,6 +1453,26 @@ class Swift(Pump, Keys, Gripper, Grove):
         assert isinstance(pos, (list, tuple)) and len(pos) >= 3
 
         cmd = protocol.CHECK_MOVE_LIMIT.format(*pos[:3], 1 if is_polar else 0)
+        if wait:
+            ret = self.send_cmd_sync(cmd, timeout=timeout)
+            return _handle(ret)
+        else:
+            self.send_cmd_async(cmd, timeout=timeout, callback=functools.partial(_handle, _callback=callback))
+
+    @catch_exception
+    def set_height_offset(self, offset='', wait=True, timeout=None, callback=None):
+        def _handle(_ret, _callback=None):
+            _ret = _ret[0] if _ret != protocol.TIMEOUT else _ret
+            if callable(_callback):
+                _callback(_ret)
+            else:
+                return _ret
+
+        if offset == '':
+            cmd = protocol.SET_HEIGHT_OFFSET.format(offset).split(' ')[0]
+        else:
+            cmd = protocol.SET_HEIGHT_OFFSET.format(offset)
+
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
             return _handle(ret)
