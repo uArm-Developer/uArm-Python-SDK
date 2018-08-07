@@ -15,7 +15,7 @@ except ImportError:
     from distutils.core import setup
 
     def find_packages():
-        return ['uarm', 'uarm.comm', 'uarm.utils', 'uarm.tools', 'uarm.wrapper']
+        return ['uarm', 'uarm.comm', 'uarm.utils', 'uarm.tools', 'uarm.wrapper', 'uarm.swift', 'uarm.metal']
 
 main_ns = {}
 ver_path = convert_path('uarm/version.py')
