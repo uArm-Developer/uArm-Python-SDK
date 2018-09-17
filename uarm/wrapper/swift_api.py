@@ -696,7 +696,7 @@ class SwiftAPI(object):
         :param speed: feeding or move speed, default is the last speed in use or 1000
         :param relative: relative or not, default is True, if you set it to False, you must calc the distance of feeding
         :param x: move postition-X, default is None, not move it
-        :param y: move postition-Y, default is None, not move it
+        :param : move postition-Y, default is None, not move it
         :param z: move postition-Z, default is None, not move it
         :param wait: True/False, deault is True
         :param timeout: timeout, default is 30s
