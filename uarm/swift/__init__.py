@@ -1177,10 +1177,13 @@ class Swift(Pump, Keys, Gripper, Grove):
         def _handle(_ret, _key=None, _callback=None):
             if _ret[0] == protocol.OK:
                 if len(_ret) > 1:
-                    value = _ret[1]
-                    if value.startswith(('v', 'V')):
-                        value = bool(int(value[1]))
-                    setattr(self, _key, value)
+                    try:
+                        value = _ret[1]
+                        if value.startswith(('v', 'V')):
+                            value = bool(int(value[1]))
+                        setattr(self, _key, value)
+                    except:
+                        pass
             if callable(_callback):
                 _callback(self.is_moving)
             else:
