@@ -71,6 +71,7 @@ class Grove(object):
                 return _ret
 
         assert isinstance(interval, (int, float)) and interval >= 0
+        interval = str(round(interval * 1000, 2))
         cmd = protocol.SET_GROVE_REPORT.format(pin, interval)
         if wait:
             ret = self.send_cmd_sync(cmd, timeout=timeout)
