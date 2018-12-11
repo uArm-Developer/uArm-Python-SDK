@@ -329,6 +329,7 @@ class Swift(Pump, Keys, Gripper, Grove):
             report_grove_id = REPORT_GROVE + '_' + pin
             if report_grove_id in self._report_callbacks.keys():
                 for callback in self._report_callbacks[report_grove_id]:
+                    # print('grove report = {}'.format(ret))
                     callback(ret[2:])
 
     @property
