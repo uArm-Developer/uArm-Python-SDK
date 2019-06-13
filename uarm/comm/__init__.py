@@ -119,23 +119,16 @@ class Serial(object):
         self.tx_notify()
 
     def disconnect(self):
-        if self.com and self.com.isOpen():
-            try:
-                self.com.close()
-            except:
-                pass
-        self.notify_all()
+        if self._read_thread:
+            self._read_thread.close()
+            self._read_thread.join(2)
         if self._write_thread:
             try:
                 self._write_thread.join(1)
             except:
                 pass
+        self.notify_all()
 
-        if self._read_thread:
-            try:
-                self._read_thread.join(1)
-            except:
-                pass
         if self._tx_que is not None:
             self._tx_que.queue.clear()
 

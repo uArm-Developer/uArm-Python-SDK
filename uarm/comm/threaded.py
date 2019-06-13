@@ -44,7 +44,6 @@ class ReaderThread(threading.Thread):
         try:
             if hasattr(self.serial, 'cancel_read'):
                 self.serial.cancel_read()
-            self.join(2)
         except:
             pass
 

@@ -36,7 +36,7 @@ def limit_switch_callback(ret):
 
 swift = SwiftAPI(filters={'hwid': 'USB VID:PID=2341:0042'}, do_not_open=True)
 swift.register_power_callback(callback=power_callback)
-swift.register_report_position_callback(callback=pos_callback)
+# swift.register_report_position_callback(callback=pos_callback)
 swift.register_key0_callback(callback=functools.partial(key_callback, key='key0'))
 swift.register_key1_callback(callback=functools.partial(key_callback, key='key1'))
 swift.register_limit_switch_callback(callback=limit_switch_callback)

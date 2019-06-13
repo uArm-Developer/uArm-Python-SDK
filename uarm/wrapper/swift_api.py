@@ -13,7 +13,7 @@ class SwiftAPI(object):
     def __init__(self, port=None, baudrate=115200, timeout=None, **kwargs):
         """
         The API wrapper of Swift and SwiftPro
-        :param port: default is select the first port
+        :param port: default is to select the first port
         :param baudrate: default is 115200
         :param timeout: tiemout of serial read, default is None
         :param filters: like {'hwid': 'USB VID:PID=2341:0042'}

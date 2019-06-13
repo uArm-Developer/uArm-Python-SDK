@@ -1,2 +1,2 @@
-__version__ = '2.0.3'
-update_time = '2018-08-03 15:00'
+__version__ = '2.0.6'
+update_time = '2019-06-13 13:00'
