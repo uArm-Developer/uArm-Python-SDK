@@ -27,7 +27,7 @@ def Green_led(value):
     if value ==1:
         swift.set_digital_output(pin=3,value=0)
     else:
-        swift.set_digital_output(pin=2,value=1)
+        swift.set_digital_output(pin=3,value=1)
 def Red_led(value):
     if value ==1:
         swift.set_digital_output(pin=2,value=0)
