@@ -100,7 +100,7 @@ class SwiftAPI(object):
     def connect(self, port=None, baudrate=None, timeout=None):
         """
         Connect
-        :param port: default is use the port in initialization 
+        :param port: default is use the port in initialization
         :param baudrate: default is use the baudrate in initialization
         :param timeout: default is use the timeout in initialization
         """
@@ -116,7 +116,7 @@ class SwiftAPI(object):
     def waiting_ready(self, timeout=5, **kwargs):
         """
         Waiting the uArm ready
-        :param timeout: waiting timeout, defualt is 5s
+        :param timeout: waiting timeout, defauldefault is 5s
         """
         return self._arm.waiting_ready(timeout=timeout)
 
@@ -135,16 +135,16 @@ class SwiftAPI(object):
         Send cmd async
         :param msg: cmd
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         """
         self._arm.send_cmd_async(msg=msg, timeout=timeout, callback=callback)
 
     def get_power_status(self, wait=True, timeout=None, callback=None):
         """
         Get the power status
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: power status if wait is True else None
         """
         return self._arm.get_power_status(wait=wait, timeout=timeout, callback=callback)
@@ -153,7 +153,7 @@ class SwiftAPI(object):
         """
         Set the speed factor, the speed will multiply factor
         :param factor: factor
-        :return: 
+        :return:
         """
         return self._arm.set_speed_factor(factor=factor)
 
@@ -175,7 +175,7 @@ class SwiftAPI(object):
         """
         Reset the uArm
         :param speed: reset speed, default is the last speed in use or 1000
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is 10s
         :param x: reset-position-x, default is 200
         :param y: reset-position-y, default is 0
@@ -186,9 +186,9 @@ class SwiftAPI(object):
     def get_mode(self, wait=True, timeout=None, callback=None):
         """
         Get the mode, only support SwiftPro
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: mode if wait is True else None
         """
         return self._arm.get_mode(wait=wait, timeout=timeout, callback=callback)
@@ -197,9 +197,9 @@ class SwiftAPI(object):
         """
         Set the mode, only support SwiftPro
         :param mode: mode, 0: general mode, 1: laser mode, 2: 3D Print mode, 3: pen/gripper mode
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: mode if wait is True else None
         """
         return self._arm.set_mode(mode=mode, wait=wait, timeout=timeout, callback=callback)
@@ -207,9 +207,9 @@ class SwiftAPI(object):
     def get_position(self, wait=True, timeout=None, callback=None):
         """
         Get the position
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: [x, y, z] or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_position(wait=wait, timeout=timeout, callback=callback)
@@ -221,10 +221,10 @@ class SwiftAPI(object):
         :param y: (mm) location Y, default is the last y in use or 0
         :param z: (mm) location Z, default is the last z in use or 150
         :param speed: (mm/min) speed of move, default is the last speed in use or 1000
-        :param relative: True/False, dafaule is False
-        :param wait: True/False, deault is False
+        :param relative: True/False, default is False
+        :param wait: True/False, default is False
         :param timeout: timeout, default is 10s
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :param cmd: 'GO' or 'G1', default is 'G0'
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -234,9 +234,9 @@ class SwiftAPI(object):
     def get_polar(self, wait=True, timeout=None, callback=None):
         """
         Get the polar coordinate
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: [stretch, rotation, height] or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_polar(wait=wait, timeout=timeout, callback=callback)
@@ -248,10 +248,10 @@ class SwiftAPI(object):
         :param rotation: (degree), default is the last rotation in use or 90
         :param height: (mm), default is the last height in use or 150
         :param speed: (mm/min) speed of move, default is the last speed in use or 1000
-        :param relative: True/False, dafaule is False
-        :param wait: True/False, deault is False
+        :param relative: True/False, default is False
+        :param wait: True/False, default is False
         :param timeout: timeout, default is 10s
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :param kwargs: compatible the pyuf params
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -262,9 +262,9 @@ class SwiftAPI(object):
         """
         Get the servo angle
         :param servo_id: servo id, default is None(get the all servo angle), 0: BOTTOM, 1: LEFT, 2: RIGHT
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: angle or angle list if wait is True else None
         """
         return self._arm.get_servo_angle(servo_id=servo_id, wait=wait, timeout=timeout, callback=callback)
@@ -274,10 +274,10 @@ class SwiftAPI(object):
         Set the servo angle
         :param servo_id: servo id, default is 0 (set the servo bottom angle)
         :param angle: (degree, 0~180), default is 90
-        :param wait: True/False, deault is False
+        :param wait: True/False, default is False
         :param timeout: timeout, default is 10s
         :param speed: (degree/min) speed of move, default is the last speed in use or 1000
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_servo_angle(servo_id=servo_id, angle=angle, speed=speed, wait=wait, timeout=timeout, callback=callback)
@@ -286,10 +286,10 @@ class SwiftAPI(object):
         """
         Set the wrist angle (SERVO HAND)
         :param angle: (degree, 0~180), default is 90
-        :param wait: True/False, deault is False
+        :param wait: True/False, default is False
         :param timeout: timeout, default is 10s
         :param speed: (degree/min) speed of move, default is the last speed in use or 1000
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_wrist(angle=angle, speed=speed, wait=wait, timeout=timeout, callback=callback)
@@ -298,9 +298,9 @@ class SwiftAPI(object):
         """
         Get servo attach status
         :param servo_id: servo id, default is 0
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: True/False or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_servo_attach(servo_id=servo_id, wait=wait, timeout=timeout, callback=callback)
@@ -309,9 +309,9 @@ class SwiftAPI(object):
         """
         Set servo attach
         :param servo_id: servo id, default is None, attach all the servo
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_servo_attach(servo_id=servo_id, wait=wait, timeout=timeout, callback=callback)
@@ -320,9 +320,9 @@ class SwiftAPI(object):
         """
         Set servo detach
         :param servo_id: servo id, default is None, detach all the servo
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_servo_detach(servo_id=servo_id, wait=wait, timeout=timeout, callback=callback)
@@ -332,9 +332,9 @@ class SwiftAPI(object):
         Control the buzzer
         :param frequency: frequency, default is 1000
         :param duration: duration, default is 2s
-        :param wait: True/False, deault is False
+        :param wait: True/False, default is False
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :param kwargs: compatible the pyuf params
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
@@ -344,10 +344,10 @@ class SwiftAPI(object):
         """
         Control the pump
         :param on: True/False, default is False (Off)
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param check: True/False, default is False, check the pump status or not if wait is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None  
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_pump(on=on, wait=wait, check=check, timeout=timeout, callback=callback)
@@ -356,10 +356,10 @@ class SwiftAPI(object):
         """
         Control the gripper
         :param catch: True/False, default is False (Open)
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param check: True/False, default is False, check the catch status or not if wait is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None  
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_gripper(catch=catch, wait=wait, timeout=timeout, check=check, callback=callback)
@@ -369,10 +369,10 @@ class SwiftAPI(object):
         Set digital output value
         :param pin: pin
         :param value: digital value
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: 'OK'/'Ex' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK'/'Ex' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_digital_output(pin=pin, value=value, wait=wait, timeout=timeout, callback=callback)
 
@@ -381,10 +381,10 @@ class SwiftAPI(object):
         Set digital direction
         :param pin: pin
         :param value: 0: input, 1: output
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_digital_direction(pin=pin, value=value, wait=wait, timeout=timeout, callback=callback)
 
@@ -392,9 +392,9 @@ class SwiftAPI(object):
         """
         Get the analog value from specific pin
         :param pin: pin, default is 0
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: analog value or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_analog(pin=pin, wait=wait, timeout=timeout, callback=callback)
@@ -403,9 +403,9 @@ class SwiftAPI(object):
         """
         Get the digital value from specific pin
         :param pin: pin, default is 0
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: digital value (0 or 1) or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_digital(pin=pin, wait=wait, timeout=timeout, callback=callback)
@@ -415,23 +415,23 @@ class SwiftAPI(object):
         Get data from eeprom
         :param address: 0 - 64K byte
         :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None  
+        :param callback: callback, default is None
         :return: int or float value or 'TIMEOUT' if wait is True
         Notes:
             EEPROM default data format, each item is one offline record data (no header at beginning):
               [p0, p1, p2, p3, p4, p5 ... p_end]
-            
+
             each record data is 10 bytes, and each item inside is 2 bytes:
               [a0, a1, a2, a3, accessories_state]
-            
+
             a0~3: unsigned fixed point of servos' angle (multiply by 100)
-            
+
             accessories_state:
               bit0: pump on/off
               bit4: griper on/off
-            
+
             p_end indicate the end of records, filled by 0xffff
         """
         return self._arm.get_rom_data(address, data_type=data_type, wait=wait, timeout=timeout, callback=callback)
@@ -442,9 +442,9 @@ class SwiftAPI(object):
         :param address: 0 - 64K byte
         :param data: data
         :param data_type: 4: EEPROM_DATA_TYPE_FLOAT, 2: EEPROM_DATA_TYPE_INTEGER, 1: EEPROM_DATA_TYPE_BYTE
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None  
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_rom_data(address, data, data_type=data_type, wait=wait, timeout=timeout, callback=callback)
@@ -452,9 +452,9 @@ class SwiftAPI(object):
     def get_limit_switch(self, wait=True, timeout=None, callback=None):
         """
         Get the status of the limit switch
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: True/False or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_limit_switch(wait=wait, timeout=timeout, callback=callback)
@@ -462,19 +462,19 @@ class SwiftAPI(object):
     def get_gripper_catch(self, wait=True, timeout=None, callback=None):
         """
         Get the status of the gripper
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: int value (0: stop, 1: working, 2: catch thing) or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_gripper_catch(wait=wait, timeout=timeout, callback=callback)
 
     def get_pump_status(self, wait=True, timeout=None, callback=None):
         """
         Get the status of the pump
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: int value (0: stop, 1: working, 2: pump thing) or 'TIMEOUT' if wait is True else None
         """
         return self._arm.get_pump_status(wait=wait, timeout=timeout, callback=callback)
@@ -483,11 +483,11 @@ class SwiftAPI(object):
         """
         Grove init, cmd: M2305 P{pin} N{grove_type} V{value}
         :param pin: pin/port, default is None, you must set the pin
-        :param grove_type: 
-        :param value: 
-        :param wait: True/False, deault is True
+        :param grove_type:
+        :param value:
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.grove_init(pin=pin, grove_type=grove_type, value=value, wait=wait, timeout=timeout, callback=callback)
@@ -496,11 +496,11 @@ class SwiftAPI(object):
         """
         Grove control, cmd: M2307 P{pin} V{value}
         :param pin: pin/port, default is None, you must set the pin
-        :param value: 
-        :param wait: True/False, deault is True
+        :param value:
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.grove_control(pin=pin, value=value, wait=wait, timeout=timeout, callback=callback)
 
@@ -508,10 +508,10 @@ class SwiftAPI(object):
         """
         Report position in (interval) seconds
         :param interval: seconds, default is 0, disable report if interval is 0
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_report_position(interval=interval, wait=wait, timeout=timeout, callback=callback)
 
@@ -519,11 +519,11 @@ class SwiftAPI(object):
         """
         Report the buttons event
         :param on: True/False, default is True (report)
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
+        :param callback: callback, default is None
         :param kwargs: compatible the pyuf params
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_report_keys(on=on, wait=wait, timeout=timeout, callback=callback, **kwargs)
 
@@ -531,18 +531,18 @@ class SwiftAPI(object):
         """
         Report the grove from specific pin, cmd: M2306 P{pin} V{interval}
         :param pin: pin/port, default is None, you must set the pin
-        :param interval: seconds, deault is 0, disable report if interval is 0
-        :param wait: True/False, deault is True
+        :param interval: seconds, default is 0, disable report if interval is 0
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_report_grove(pin=pin, interval=interval, wait=wait, timeout=timeout, callback=callback)
 
     def register_power_callback(self, callback=None):
         """
         Set the callback to handle power status change
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: True/False
         """
         return self._arm.register_power_callback(callback=callback)
@@ -551,14 +551,14 @@ class SwiftAPI(object):
         """
         Release the register callback
         :param callback: callback, default is None, will release all power callback
-        :return: 
+        :return:
         """
         return self._arm.release_power_callback(callback=callback)
 
     def register_report_position_callback(self, callback=None):
         """
         Set the callback to handle postiton report
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: True/False
         """
         return self._arm.register_report_position_callback(callback=callback)
@@ -567,14 +567,14 @@ class SwiftAPI(object):
         """
         Release the register callback
         :param callback: callback, default is None, will release all report position callback
-        :return: 
+        :return:
                 """
         return self._arm.release_report_position_callback(callback=callback)
 
     def register_key0_callback(self, callback=None):
         """
         Set the callback to handle key0 (BUTTON MENU) event
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: True/False
         """
         return self._arm.register_key0_callback(callback=callback)
@@ -583,15 +583,15 @@ class SwiftAPI(object):
         """
         Release the register callback
         :param callback: callback, default is None, will release all key0 callback
-        :return: 
+        :return:
         """
         return self._arm.release_key0_callback(callback=callback)
 
     def register_key1_callback(self, callback=None):
         """
         Set the callback to handle key1 (BUTTON PLAY) event
-        :param callback: callback, deault is None
-        :return: True/False 
+        :param callback: callback, default is None
+        :return: True/False
         """
         return self._arm.register_key1_callback(callback=callback)
 
@@ -599,14 +599,14 @@ class SwiftAPI(object):
         """
         Release the register callback
         :param callback: callback, default is None, will release all key1 callback
-        :return: 
+        :return:
         """
         return self._arm.release_key1_callback(callback=callback)
 
     def register_limit_switch_callback(self, callback=None):
         """
         Set the callback to handle limit switch status change
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: True/False
         """
         return self._arm.register_limit_switch_callback(callback=callback)
@@ -615,15 +615,15 @@ class SwiftAPI(object):
         """
         Release the register callback
         :param callback: callback, default is None, will release all limit switch callback
-        :return: 
+        :return:
         """
         return self._arm.release_limit_switch_callback(callback=callback)
 
     def register_grove_callback(self, pin=None, callback=None):
         """
         Set the callback to handle grove report
-        :param pin: pin/port, defualt is None, you must set it
-        :param callback: callback, deault is None
+        :param pin: pin/port, default is None, you must set it
+        :param callback: callback, default is None
         :return: True/False
         """
         return self._arm.register_grove_callback(pin=pin, callback=callback)
@@ -631,19 +631,19 @@ class SwiftAPI(object):
     def release_grove_callback(self, pin=None, callback=None):
         """
         Release the register callback
-        :param pin: pin/port, defualt is None, you must set it
+        :param pin: pin/port, default is None, you must set it
         :param callback: callback, default is None, will release all callback by pin
-        :return: 
+        :return:
         """
         return self._arm.release_grove_callback(pin=pin, callback=callback)
 
     def get_is_moving(self, wait=True, timeout=None, callback=None):
         """
         Check uArm is moving or not
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None 
-        :return: True/False if wait is True else None 
+        :param callback: callback, default is None
+        :return: True/False if wait is True else None
         """
         return self._arm.get_is_moving(wait=wait, timeout=timeout, callback=callback)
 
@@ -660,9 +660,9 @@ class SwiftAPI(object):
         """
         Control the fan, only support SwiftPro, will auto set the mode to 3D printing mode (2)
         :param on: True/False, default is False(close the fan)
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_fans(on=on, wait=wait, timeout=timeout, callback=callback)
@@ -672,9 +672,9 @@ class SwiftAPI(object):
         Set the temperature, only support SwiftPro, will auto set the mode to 3D printing mode (2)
         :param temperature: temperature, default is 0
         :param block: True/False, default is False, if block is True, the uArm system will block until the temperature over you set
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_temperature(temperature=temperature, wait=wait, timeout=timeout, callback=callback, block=block)
@@ -698,10 +698,10 @@ class SwiftAPI(object):
         :param x: move postition-X, default is None, not move it
         :param : move postition-Y, default is None, not move it
         :param z: move postition-Z, default is None, not move it
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is 30s
-        :param callback: callback, deault is None
-        :return: 'OK' or 'TIMEOUT' if wait is True else None 
+        :param callback: callback, default is None
+        :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_3d_feeding(distance=distance, speed=speed, relative=relative,
                                         x=x, y=y, z=z, wait=wait, timeout=timeout, callback=callback)
@@ -710,9 +710,9 @@ class SwiftAPI(object):
         """
         Set the acceleration, only support firmware version > 4.0
         :param acc: acc value
-        :param wait: True/False, deault is True
+        :param wait: True/False, default is True
         :param timeout: timeout, default is use the default cmd timeout
-        :param callback: callback, deault is None
+        :param callback: callback, default is None
         :return: 'OK' or 'TIMEOUT' if wait is True else None
         """
         return self._arm.set_acceleration(acc=acc, wait=wait, timeout=timeout, callback=callback)
