@@ -6,3 +6,11 @@ build/
 dist/
 *.egg-info/
 examples/debug/
+
+#notebooks I'm not finished with yet. 
+Emotive*
+
+
+#Notebooks extra bits
+*.pyc
+notebooks/.ipynb_checkpoints/*
